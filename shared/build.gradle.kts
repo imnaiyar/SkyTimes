@@ -54,13 +54,13 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.navigationevent)
+            implementation(libs.compose.navigation)
             implementation(libs.kotlinx.datetime)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.2")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

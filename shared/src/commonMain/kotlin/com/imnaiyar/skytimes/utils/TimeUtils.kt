@@ -16,9 +16,9 @@ class TimeUtils {
      * Returns the current time in the specified time zone.
      * If no time zone is provided, it returns the current time in the system's default
      */
-    fun getTime(timeZone: TimeZone = TimeZone.currentSystemDefault()): LocalTime {
+    fun getTime(timeZone: TimeZone = TimeZone.currentSystemDefault()): LocalDateTime {
         val now = Clock.System.now()
-        return now.toLocalDateTime(timeZone).time
+        return now.toLocalDateTime(timeZone)
     }
 
     fun toZone(time: Instant, timeZone: String? = null): LocalTime {
@@ -27,6 +27,27 @@ class TimeUtils {
         return time.toLocalDateTime(zone).time
     }
 
+    fun formatMillis(millis: Long): String {
+        var totalSeconds = millis / 1000
+
+        val days = totalSeconds / 86_400
+        totalSeconds %= 86_400
+
+        val hours = totalSeconds / 3_600
+        totalSeconds %= 3_600
+
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+
+        val parts = buildList {
+            if (days > 0) add("${days}d")
+            if (hours > 0 || isNotEmpty()) add("${hours.toString().padStart(2, '0')}h")
+            add("${minutes.toString().padStart(2, '0')}m")
+            add("${seconds.toString().padStart(2, '0')}s")
+        }
+
+        return parts.joinToString(" ")
+    }
 
     /**
      * Formats the given LocalTime into a string representation based on the specified clock format.
@@ -43,7 +64,10 @@ class TimeUtils {
             minute()
             char(':')
             second()
-            if (!is24) amPmMarker("AM", "PM")
+            if (!is24) {
+                char(' ')
+                amPmMarker("AM", "PM")
+            }
             }
         }
 

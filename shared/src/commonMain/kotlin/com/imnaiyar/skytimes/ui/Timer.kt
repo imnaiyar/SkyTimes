@@ -29,7 +29,8 @@ fun AnimatedTimer(
     time: String,
     size: TextStyle = MaterialTheme.typography.titleMedium,
     modifier: Modifier = Modifier,
-    withAnimation: Boolean = true
+    withAnimation: Boolean = true,
+    direction: ClockDirection = ClockDirection.UP
 ) {
     Row(
         modifier = modifier,
@@ -37,33 +38,34 @@ fun AnimatedTimer(
         verticalAlignment = Alignment.CenterVertically
     ) {
         time.forEachIndexed { index, c ->
-            if (c == ':') {
+            if (c == ':' || c == ' ') {
                 Text(
-                    ":",
+                    text = c.toString(),
                     style = size
                 )
             } else {
-                if (c == 'A' || c == 'P') {
-                    Text(text = " ")
-                }
-
                 AnimatedDigit(
                     digit = c,
                     label = "digit-$index",
                     size,
-                    withAnimation
+                    withAnimation,
+                    direction
                 )
             }
         }
     }
 }
 
+enum class ClockDirection {
+    UP, DOWN
+}
 @Composable
 private fun AnimatedDigit(
     digit: Char,
     label: String,
     size: TextStyle = MaterialTheme.typography.titleMedium,
-    withAnimation: Boolean
+    withAnimation: Boolean,
+    direction: ClockDirection = ClockDirection.UP
 ) {
     val width = rememberDigitWidth(size)
 
@@ -84,12 +86,19 @@ private fun AnimatedDigit(
     ) {
        if (withAnimation) AnimatedContent(
             targetState = digit,
-            transitionSpec = {
-                (slideInVertically { it } + fadeIn())
-                    .togetherWith(
-                        slideOutVertically { -it } + fadeOut()
-                    )
-            },
+           transitionSpec = {
+               if (direction == ClockDirection.UP) {
+                   (slideInVertically { it } + fadeIn())
+                       .togetherWith(
+                           slideOutVertically { -it } + fadeOut()
+                       )
+               } else {
+                   (slideInVertically { -it } + fadeIn())
+                       .togetherWith(
+                           slideOutVertically { it } + fadeOut()
+                       )
+               }
+           },
             label = label
         ) { value -> TextDisplay(value) }
         else

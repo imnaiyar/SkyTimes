@@ -139,7 +139,8 @@ fun MainScreen() {
                         contentPadding = PaddingValues(end = 10.dp),
                         scrollBehavior = scrollBehavior,
                         colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f)
+                            containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f),
+                            scrolledContainerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f)
                         ),
                         title = {
                             Text(

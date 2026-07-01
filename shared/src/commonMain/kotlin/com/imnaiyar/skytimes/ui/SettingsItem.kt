@@ -18,19 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 
-sealed interface SettingsAction {
-    data class SwitchAction(
-        val checked: Boolean,
-        val onCheckedChange: (Boolean) -> Unit
-    ) : SettingsAction
-
-    data class NavigateAction(
-        val onClick: () -> Unit
-    ) : SettingsAction
-}
 
 /**
  * A composable that represents a settings item with a title, optional subtitle, and an action.
@@ -44,33 +35,18 @@ sealed interface SettingsAction {
 fun SettingsItem(
     title: String,
     subtitle: String? = null,
-    action: SettingsAction,
+    action: @Composable (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
 
     val haptic = LocalHapticFeedback.current
 
-    val callBack = when (action) {
-        is SettingsAction.SwitchAction -> { isChecked: Boolean ->
-            haptic.performHapticFeedback(
-                if (isChecked) HapticFeedbackType.ToggleOn
-                else HapticFeedbackType.ToggleOff
-            )
-            action.onCheckedChange(isChecked)
-        }
-        is SettingsAction.NavigateAction -> { _: Boolean ->
-            action.onClick()
-        }
-    }
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(16.dp),
-        onClick = {
-            if (action is SettingsAction.SwitchAction)
-                callBack(!action.checked)
-            else callBack(true)
-        },
+        onClick = onClick ?: {},
     ) {
         Row(
             modifier = Modifier
@@ -98,23 +74,7 @@ fun SettingsItem(
 
             Spacer(Modifier.width(16.dp))
 
-            when (action) {
-                is SettingsAction.SwitchAction -> {
-                    Switch(
-                        checked = action.checked,
-                        onCheckedChange = callBack
-                    )
-                }
-                is SettingsAction.NavigateAction -> {
-                    Text(
-                        text = ">",
-                        modifier = Modifier
-                            .clickable(onClick = { callBack(true) })
-                            .padding(end = 5.dp, top = 5.dp, bottom = 5.dp),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-            }
+            if (action != null) action()
         }
     }
 }

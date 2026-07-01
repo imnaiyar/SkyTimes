@@ -1,5 +1,9 @@
 package com.imnaiyar.skytimes.utils
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.imnaiyar.skytimes.LocalViewModel
 import kotlinx.datetime.*
 import kotlinx.datetime.format.FormatStringsInDatetimeFormats
 import kotlinx.datetime.format.byUnicodePattern
@@ -55,8 +59,12 @@ class TimeUtils {
      * @param clockFormat The desired clock format (12-hour or 24-hour). Defaults to 24-hour format.
      * @return A string representation of the time in the specified format.
      */
-    @OptIn(FormatStringsInDatetimeFormats::class)
-    fun formatTime(time: LocalTime, clockFormat: ClockFormat = ClockFormat.HOUR_12): String {
+    @Composable
+    fun formatTime(time: LocalTime): String {
+
+        val settings by LocalViewModel.current.settings.collectAsState()
+        val clockFormat = if (settings.use24HourClock) ClockFormat.HOUR_24 else ClockFormat.HOUR_12
+
         val formatByHour = { is24: Boolean ->
             LocalTime.Format {
             if (!is24) amPmHour() else hour()

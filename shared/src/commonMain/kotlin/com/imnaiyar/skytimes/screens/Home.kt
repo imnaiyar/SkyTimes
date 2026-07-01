@@ -23,6 +23,7 @@ import kotlinx.coroutines.delay
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
@@ -54,7 +55,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun EventRow(
     eventData: EventData,
-    now: kotlin.time.Instant,
+    now: Instant,
     timeUtils: TimeUtils
 ) {
 
@@ -69,11 +70,8 @@ private fun EventRow(
     val formatted = timeUtils.formatMillis(difference)
 
     val atTimeText = remember(eventDetails) {
-        timeUtils.formatTime(
             eventDetails.nextOccurrence
-                .toLocalDateTime(TimeZone.currentSystemDefault()).time,
-            ClockFormat.HOUR_12
-        )
+                .toLocalDateTime(TimeZone.currentSystemDefault()).time
     }
 
     Row(
@@ -82,7 +80,7 @@ private fun EventRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(eventDetails.event.name, style = MaterialTheme.typography.titleMedium)
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(horizontalAlignment = Alignment.End) {
             AnimatedTimer(
                 time = formatted,
                 size = MaterialTheme.typography.titleSmall,
@@ -90,7 +88,7 @@ private fun EventRow(
                 direction = ClockDirection.DOWN,
             )
             Text(
-                text = "At: $atTimeText",
+                text = "At: ${timeUtils.formatTime(atTimeText)}",
                 color = MaterialTheme.colorScheme.tertiary,
                 style = MaterialTheme.typography.labelSmall
             )

@@ -12,55 +12,65 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import com.imnaiyar.skytimes.LocalViewModel
 import com.imnaiyar.skytimes.NavController
-import com.imnaiyar.skytimes.nav.SplashRoute
-import com.imnaiyar.skytimes.theme.LocalThemeState
-import com.imnaiyar.skytimes.theme.ThemeMode
-import com.imnaiyar.skytimes.ui.SettingsAction
+import com.imnaiyar.skytimes.settings.ThemeMode
 import com.imnaiyar.skytimes.ui.SettingsItem
+import com.imnaiyar.skytimes.ui.Switch
 import org.jetbrains.compose.resources.painterResource
 import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.contrast_circle
 import skytimes.shared.generated.resources.dark_mode
 import skytimes.shared.generated.resources.light_mode
+import skytimes.shared.generated.resources.open_in_browser
 
 @Composable
 fun SettingsScreen(
-    modifier: Modifier
+    modifier: Modifier,
 ) {
-    var clockAnimation by remember { mutableStateOf(true) }
-
+    val viewModel = LocalViewModel.current
+    val settings by viewModel.settings.collectAsState()
     val navigator = NavController.current
+    val uriHandler = LocalUriHandler.current
 
-    val themeProvider = LocalThemeState.current
+    val haptic = LocalHapticFeedback.current
+
+    val triggerSwitch = { isChecked: Boolean, action: (value: Boolean) -> Unit ->
+        haptic.performHapticFeedback(
+            if (isChecked) HapticFeedbackType.ToggleOff
+            else HapticFeedbackType.ToggleOn
+        )
+        action(!isChecked);
+    }
 
     LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
             SettingsSection {
-                SettingsHeader("Basic")
+                SettingsHeader("Preferences")
                 SettingsCard {
-                    SettingsItem(
+                    SwitchItem(
                         "Clock Animation",
                         "Enable or disable clock digit's animation",
-                        action = SettingsAction.SwitchAction(
-                            checked = clockAnimation,
-                            onCheckedChange = { clockAnimation = it }
-                        )
+                        checked = settings.clockAnimation,
+                        onClick = { triggerSwitch(settings.clockAnimation, viewModel::setClockAnimation) }
                     )
                     HorizontalDivider()
-                    SettingsItem(
-                        "Preferences",
-                        action = SettingsAction.NavigateAction(onClick = { navigator.navigate(SplashRoute) })
-                    )
-                    HorizontalDivider()
-                    SettingsItem(
+                    SwitchItem(
                         "Use 24 hour clock",
                         "Enable or disable 24 hour clock format",
-                        action = SettingsAction.SwitchAction(
-                            false,
-                            onCheckedChange = {}
-                        )
+                        checked = settings.use24HourClock,
+                        onClick = { triggerSwitch(settings.use24HourClock, viewModel::set24HourClock) }
+                    )
+                    HorizontalDivider()
+                    SwitchItem(
+                        "Notifications",
+                        "Enable or disable app notifications",
+                        checked = settings.notificationsEnabled,
+                        onClick = { triggerSwitch(settings.notificationsEnabled, viewModel::setNotificationsEnabled) }
                     )
                 }
             }
@@ -71,8 +81,8 @@ fun SettingsScreen(
                 Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
                     FilterChip(
                         label = { Text("Light") },
-                        selected = themeProvider.mode == ThemeMode.LIGHT,
-                        onClick = { themeProvider.setMode(ThemeMode.LIGHT) },
+                        selected = settings.themeMode == ThemeMode.LIGHT,
+                        onClick = { viewModel.updateTheme(ThemeMode.LIGHT) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(Res.drawable.light_mode),
@@ -83,8 +93,8 @@ fun SettingsScreen(
                     )
                     FilterChip(
                         label = { Text("Dark") },
-                        selected = themeProvider.mode == ThemeMode.DARK,
-                        onClick = { themeProvider.setMode(ThemeMode.DARK) },
+                        selected = settings.themeMode == ThemeMode.DARK,
+                        onClick = { viewModel.updateTheme(ThemeMode.DARK) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(Res.drawable.dark_mode),
@@ -95,8 +105,8 @@ fun SettingsScreen(
                     )
                     FilterChip(
                         label = { Text("System") },
-                        selected = themeProvider.mode == ThemeMode.SYSTEM,
-                        onClick = { themeProvider.setMode(ThemeMode.SYSTEM) },
+                        selected = settings.themeMode == ThemeMode.SYSTEM,
+                        onClick = { viewModel.updateTheme(ThemeMode.SYSTEM) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(Res.drawable.contrast_circle),
@@ -104,6 +114,21 @@ fun SettingsScreen(
                                 contentDescription = null
                             )
                         }
+                    )
+                }
+            }
+        }
+        item {
+            SettingsSection {
+                SettingsHeader("Links")
+                SettingsCard {
+                    SettingsItem("Privacy Policy",
+                        action = { Icon(
+                            painterResource(Res.drawable.open_in_browser),
+                            modifier = Modifier.size(30.dp),
+                            contentDescription = null)
+                                 },
+                        onClick = { uriHandler.openUri("https://next.skyhelper.xyz/privacy") }
                     )
                 }
             }
@@ -139,3 +164,15 @@ fun SettingsHeader(text: String) {
     )
 }
 
+
+@Composable
+fun SwitchItem(title: String, subtitle: String? = null, checked: Boolean, onClick: () -> Unit) {
+    SettingsItem(
+        title,
+        subtitle,
+        onClick = onClick,
+        action = {
+            Switch(checked = checked, onChange = { onClick() })
+        }
+    )
+}

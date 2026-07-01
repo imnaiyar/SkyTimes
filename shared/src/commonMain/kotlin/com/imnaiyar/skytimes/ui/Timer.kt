@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import com.imnaiyar.skytimes.LocalViewModel
 import com.imnaiyar.skytimes.utils.rememberDigitWidth
 
 
@@ -29,9 +32,11 @@ fun AnimatedTimer(
     time: String,
     size: TextStyle = MaterialTheme.typography.titleMedium,
     modifier: Modifier = Modifier,
-    withAnimation: Boolean = true,
-    direction: ClockDirection = ClockDirection.UP
+    direction: ClockDirection = ClockDirection.UP,
+    withAnimation: Boolean = true
 ) {
+    val settings by LocalViewModel.current.settings.collectAsState()
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center,
@@ -48,7 +53,9 @@ fun AnimatedTimer(
                     digit = c,
                     label = "digit-$index",
                     size,
-                    withAnimation,
+                    // if withAnimation is explicitly passed false, then it shouldn't use animation at all
+                    // otherwise depend on settings
+                    withAnimation = if (withAnimation) settings.clockAnimation else false,
                     direction
                 )
             }

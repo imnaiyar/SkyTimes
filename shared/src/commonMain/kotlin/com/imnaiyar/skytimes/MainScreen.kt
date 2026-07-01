@@ -43,6 +43,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.imnaiyar.skytimes.nav.VaultRoute
 import com.imnaiyar.skytimes.screens.*
+import com.imnaiyar.skytimes.settings.SettingsViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 

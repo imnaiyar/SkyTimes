@@ -8,10 +8,13 @@ import androidx.navigation.Navigator
 import androidx.navigation.compose.composable
 import com.imnaiyar.skytimes.MainScreen
 import com.imnaiyar.skytimes.SplashScreen
+import com.imnaiyar.skytimes.settings.SettingsViewModel
 import com.imnaiyar.skytimes.vault_archive.MainArchive
 
 @ExperimentalMaterial3Api
-fun NavGraphBuilder.mainGraph(navigator: NavHostController) {
+fun NavGraphBuilder.mainGraph(
+    navigator: NavHostController,
+) {
 
     composable<MainRoute> {
         MainScreen()

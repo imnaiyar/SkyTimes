@@ -4,12 +4,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
+import com.imnaiyar.skytimes.LocalViewModel
 import com.imnaiyar.skytimes.utils.ClockFormat
 import com.imnaiyar.skytimes.utils.TimeUtils
 import kotlinx.coroutines.delay
@@ -22,11 +24,10 @@ private val timeUtils = TimeUtils()
 fun ClockDisplay(
     modifier: Modifier = Modifier,
     gameZone: Boolean = false,
-    clockFormat: ClockFormat = ClockFormat.HOUR_12,
     size: TextStyle = MaterialTheme.typography.titleMedium,
-    withAnimation: Boolean = true
 ) {
    var now by remember { mutableStateOf(Clock.System.now()) }
+   val time = timeUtils.toZone(now, timeZone = if (gameZone) "America/Los_Angeles" else null)
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -37,13 +38,10 @@ fun ClockDisplay(
         }
     }
 
-    val time = timeUtils.toZone(now, timeZone = if (gameZone) "America/Los_Angeles" else null)
-
         AnimatedTimer(
-        time = timeUtils.formatTime(time, clockFormat),
+        time = timeUtils.formatTime(time),
         size,
-        modifier,
-        withAnimation
+        modifier
       )
 
 }

@@ -56,6 +56,7 @@ kotlin {
             implementation(libs.compose.navigationevent)
             implementation(libs.compose.navigation)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.reorderable)
             implementation(libs.multiplatform.settings.no.arg)
             implementation(libs.multiplatform.settings.coroutines)
             implementation(libs.compose.ui)

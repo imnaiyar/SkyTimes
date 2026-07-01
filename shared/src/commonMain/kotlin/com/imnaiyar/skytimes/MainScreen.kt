@@ -1,6 +1,8 @@
 package com.imnaiyar.skytimes
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,8 +32,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -46,6 +52,8 @@ import com.imnaiyar.skytimes.screens.*
 import com.imnaiyar.skytimes.settings.SettingsViewModel
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import skytimes.shared.generated.resources.Res
+import skytimes.shared.generated.resources.lightmend_lantern
 
 @ExperimentalMaterial3Api
 @Composable
@@ -55,6 +63,8 @@ fun MainScreen() {
     val pagerState = rememberPagerState {
         screens.size
     }
+
+    var showFab by remember { mutableStateOf(true) }
 
     val navController = NavController.current
     val scope = rememberCoroutineScope()
@@ -99,28 +109,20 @@ fun MainScreen() {
             }
         },
         floatingActionButton = {
-            Button(
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface),
-                shape = RoundedCornerShape(10.dp),
-                onClick = {
-                    navController.navigate(VaultRoute)
-                }
-            ) {
-                    Icon(
-                        painter = painterResource(Screen.Clock.icon),
-                        contentDescription = Screen.Clock.title,
-                        modifier = Modifier.size(30.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "Vault",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-
+            AnimatedVisibility(showFab) {
+                ExtendedFloatingActionButton(
+                    onClick = { navController.navigate(VaultRoute) },
+                    expanded = bottomScroll.state.collapsedFraction < 0.5f,
+                    text = { Text("Vault Archive") },
+                    icon = {
+                       Image(
+                           painterResource(Res.drawable.lightmend_lantern),
+                           contentDescription = "Lightmending Lantern",
+                           modifier = Modifier.size(30.dp)
+                       )
+                    }
+                )
+            }
         }
     ) { outerPadding ->
 
@@ -153,38 +155,20 @@ fun MainScreen() {
                     )
                 }
             ) { innerPadding ->
+                val modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
 
                 when (screens[page]) {
                     Screen.Clock -> HomeScreen(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
+                        modifier,
+                        setFabVisible = { value -> showFab = value}
                     )
-
-                    Screen.Quests -> QuestsScreen(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    )
-
-                    Screen.Shards -> ShardsScreen(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    )
-
-                    Screen.Settings -> SettingsScreen(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    )
+                    Screen.Quests -> QuestsScreen(modifier)
+                    Screen.Shards -> ShardsScreen(modifier)
+                    Screen.Settings -> SettingsScreen(modifier)
                 }
             }
         }
     }
-}
-
-
-fun NavGraphBuilder.mainGraph() {
-
 }

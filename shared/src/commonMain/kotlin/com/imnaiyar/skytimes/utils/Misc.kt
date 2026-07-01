@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.Dp
 fun rememberDigitWidth(
     textStyle: TextStyle
 ): Dp {
+
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
 

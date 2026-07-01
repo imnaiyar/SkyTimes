@@ -19,14 +19,18 @@ import com.imnaiyar.skytimes.ui.ClockDisplay
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.DrawableResource
 import skytimes.shared.generated.resources.Res
+import skytimes.shared.generated.resources.clock_analogue
+import skytimes.shared.generated.resources.cogwheel
 import skytimes.shared.generated.resources.compose_multiplatform
+import skytimes.shared.generated.resources.quest_icon
+import skytimes.shared.generated.resources.shards_icon
 
 enum class Screen(
     val title: String,
     val icon: DrawableResource,
     val actions: @Composable (RowScope.() -> Unit)? = null
 ) {
-    Clock("Clock", Res.drawable.compose_multiplatform, actions = {
+    Clock("Clock", Res.drawable.clock_analogue, actions = {
         var timeZone by remember { mutableStateOf(TimeZone.currentSystemDefault().id) }
         Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -48,7 +52,7 @@ enum class Screen(
             )
         }
     }),
-    Quests("Quests", Res.drawable.compose_multiplatform),
-    Shards("Shards", Res.drawable.compose_multiplatform),
-    Settings("Settings", Res.drawable.compose_multiplatform)
+    Quests("Quests", Res.drawable.quest_icon),
+    Shards("Shards", Res.drawable.shards_icon),
+    Settings("Settings", Res.drawable.cogwheel)
 }

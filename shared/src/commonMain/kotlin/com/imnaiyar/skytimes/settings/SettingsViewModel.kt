@@ -2,6 +2,7 @@ package com.imnaiyar.skytimes.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.imnaiyar.skytimes.constants.EventKey
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -31,6 +32,12 @@ class SettingsViewModel(
     fun setClockAnimation(enabled: Boolean) {
         viewModelScope.launch {
             repository.setClockAnimation(enabled)
+        }
+    }
+
+    fun setEventOrder(order: List<EventKey>) {
+        viewModelScope.launch {
+            repository.setEventOrder(order)
         }
     }
 }

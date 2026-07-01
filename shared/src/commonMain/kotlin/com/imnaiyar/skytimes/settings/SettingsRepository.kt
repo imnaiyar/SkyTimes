@@ -1,5 +1,6 @@
 package com.imnaiyar.skytimes.settings
 
+import com.imnaiyar.skytimes.constants.EventKey
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +32,10 @@ class SettingsRepository(
         update { current -> current.copy(clockAnimation = enabled) }
     }
 
+    suspend fun setEventOrder(order: List<EventKey>) {
+        update { current -> current.copy(eventOrder = order) }
+    }
+
     private suspend inline fun update(transform: (AppSettings) -> AppSettings) {
         updateMutex.withLock {
             val current = _settings.value
@@ -60,7 +65,12 @@ class SettingsRepository(
             clockAnimation = storage.getBoolean(
                 SettingsKeys.ClockAnimation,
                 AppSettings().clockAnimation
-            )
+            ),
+            eventOrder = storage.getString(
+                SettingsKeys.EventOrder,
+                AppSettings().eventOrder.joinToString("|"))
+                .split("|")
+                .map(EventKey::valueOf)
         )
     }
 
@@ -77,6 +87,9 @@ class SettingsRepository(
         if (current.clockAnimation != next.clockAnimation) {
             storage.putBoolean(SettingsKeys.ClockAnimation, next.clockAnimation)
         }
+        if (current.eventOrder != next.eventOrder) {
+            storage.putString(SettingsKeys.EventOrder, next.eventOrder.joinToString("|"))
+        }
     }
 
     private fun parseThemeMode(value: String): ThemeMode {
@@ -89,5 +102,6 @@ private object SettingsKeys {
     const val Use24HourClock = "use_24_hour_clock"
     const val NotificationsEnabled = "notifications_enabled"
     const val ClockAnimation = "clock_animation"
+    const val EventOrder = "event_order"
 }
 

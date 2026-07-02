@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val repository: SettingsRepository = SettingsRepository()
+    private val repository: SettingsRepository
 ) : ViewModel() {
     val settings: StateFlow<AppSettings> = repository.settings
 

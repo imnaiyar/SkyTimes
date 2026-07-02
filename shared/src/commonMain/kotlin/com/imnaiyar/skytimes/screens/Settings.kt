@@ -16,8 +16,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.LocalViewModel
 import com.imnaiyar.skytimes.NavController
+import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.settings.ThemeMode
 import com.imnaiyar.skytimes.ui.SettingsItem
 import com.imnaiyar.skytimes.ui.Switch
@@ -32,7 +32,7 @@ import skytimes.shared.generated.resources.open_in_browser
 fun SettingsScreen(
     modifier: Modifier,
 ) {
-    val viewModel = LocalViewModel.current
+    val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
     val navigator = NavController.current
     val uriHandler = LocalUriHandler.current

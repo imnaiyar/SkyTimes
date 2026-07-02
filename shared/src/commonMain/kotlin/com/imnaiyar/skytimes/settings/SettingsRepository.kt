@@ -12,9 +12,15 @@ class SettingsRepository(
     private val storage: Settings = Settings()
 ) {
     private val updateMutex = Mutex()
-    private val _settings = MutableStateFlow(loadSettings())
+    private val _settings = MutableStateFlow(AppSettings())
 
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
+
+    suspend fun initialize() {
+        updateMutex.withLock {
+            _settings.value = loadSettings()
+        }
+    }
 
     suspend fun updateTheme(mode: ThemeMode) {
         update { current -> current.copy(themeMode = mode) }

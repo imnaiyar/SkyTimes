@@ -1,18 +1,20 @@
 package com.imnaiyar.skytimes.theme
 
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
-import org.jetbrains.compose.resources.Font
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.Font
 import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.clash_bold
 import skytimes.shared.generated.resources.clash_regular
-import androidx.compose.material3.Typography
 
 @Composable
 fun appTypography(): Typography {
     val appFont = FontFamily(
-        Font(Res.font.clash_regular, FontWeight.Bold),
+        Font(Res.font.clash_regular, FontWeight.Normal),
         Font(Res.font.clash_bold, FontWeight.Bold)
     )
     return Typography(
@@ -33,3 +35,9 @@ fun appTypography(): Typography {
         labelSmall = Typography().labelSmall.copy(fontFamily = appFont)
     )
 }
+
+val Typography.labelTiny: TextStyle
+    get() = labelSmall.copy(
+        fontSize = 9.sp,
+        lineHeight = 11.sp
+    )

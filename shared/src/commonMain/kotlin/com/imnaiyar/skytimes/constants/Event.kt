@@ -128,7 +128,7 @@ val events = listOf(
         name = "Passage Quests",
         index = 7,
         offset = 0,
-        interval = 15,
+        interval = 4,
         displayAllTimes = true
     ),
     EventData(

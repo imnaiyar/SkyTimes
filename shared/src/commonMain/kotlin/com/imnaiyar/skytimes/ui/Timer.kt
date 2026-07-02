@@ -17,9 +17,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.LocalViewModel
+import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.utils.rememberDigitWidth
 
 
@@ -33,9 +33,10 @@ fun AnimatedTimer(
     size: TextStyle = MaterialTheme.typography.titleMedium,
     modifier: Modifier = Modifier,
     direction: ClockDirection = ClockDirection.UP,
+    color: Color = Color.Unspecified,
     withAnimation: Boolean = true
 ) {
-    val settings by LocalViewModel.current.settings.collectAsState()
+    val settings by LocalSettingsViewModel.current.settings.collectAsState()
 
     Row(
         modifier = modifier,
@@ -46,7 +47,8 @@ fun AnimatedTimer(
             if (c == ':' || c == ' ') {
                 Text(
                     text = c.toString(),
-                    style = size
+                    style = size,
+                    color = color
                 )
             } else {
                 AnimatedDigit(
@@ -56,6 +58,7 @@ fun AnimatedTimer(
                     // if withAnimation is explicitly passed false, then it shouldn't use animation at all
                     // otherwise depend on settings
                     withAnimation = if (withAnimation) settings.clockAnimation else false,
+                    color,
                     direction
                 )
             }
@@ -66,46 +69,48 @@ fun AnimatedTimer(
 enum class ClockDirection {
     UP, DOWN
 }
+
 @Composable
 private fun AnimatedDigit(
     digit: Char,
     label: String,
     size: TextStyle = MaterialTheme.typography.titleMedium,
     withAnimation: Boolean,
+    color: Color,
     direction: ClockDirection = ClockDirection.UP
 ) {
     val width = rememberDigitWidth(size)
 
     @Composable
-    fun TextDisplay (text: Char) {
+    fun TextDisplay(text: Char) {
         Text(
-        text = text.toString(),
-        style = size,
-        color = if (text in charArrayOf('A', 'P', 'M'))
-            MaterialTheme.colorScheme.tertiary
-        else
-            MaterialTheme.colorScheme.onSurface
-       )
+            text = text.toString(),
+            style = size,
+            color = if (text in charArrayOf('A', 'P', 'M'))
+                MaterialTheme.colorScheme.tertiary
+            else
+                if (color != Color.Unspecified) color else MaterialTheme.colorScheme.onSurface
+        )
     }
     Box(
         modifier = Modifier.width(width),
         contentAlignment = Alignment.Center
     ) {
-       if (withAnimation) AnimatedContent(
+        if (withAnimation) AnimatedContent(
             targetState = digit,
-           transitionSpec = {
-               if (direction == ClockDirection.UP) {
-                   (slideInVertically { it } + fadeIn())
-                       .togetherWith(
-                           slideOutVertically { -it } + fadeOut()
-                       )
-               } else {
-                   (slideInVertically { -it } + fadeIn())
-                       .togetherWith(
-                           slideOutVertically { it } + fadeOut()
-                       )
-               }
-           },
+            transitionSpec = {
+                if (direction == ClockDirection.UP) {
+                    (slideInVertically { it } + fadeIn())
+                        .togetherWith(
+                            slideOutVertically { -it } + fadeOut()
+                        )
+                } else {
+                    (slideInVertically { -it } + fadeIn())
+                        .togetherWith(
+                            slideOutVertically { it } + fadeOut()
+                        )
+                }
+            },
             label = label
         ) { value -> TextDisplay(value) }
         else

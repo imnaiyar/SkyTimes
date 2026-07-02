@@ -5,7 +5,4 @@ import kotlinx.serialization.Serializable
 data object MainRoute
 
 @Serializable
-data object SplashRoute
-
-@Serializable
 data object VaultRoute

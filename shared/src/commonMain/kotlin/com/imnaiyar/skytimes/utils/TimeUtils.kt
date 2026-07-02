@@ -3,11 +3,12 @@ package com.imnaiyar.skytimes.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.imnaiyar.skytimes.LocalViewModel
-import kotlinx.datetime.*
-import kotlinx.datetime.format.FormatStringsInDatetimeFormats
-import kotlinx.datetime.format.byUnicodePattern
+import com.imnaiyar.skytimes.di.LocalSettingsViewModel
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.char
+import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -15,6 +16,7 @@ enum class ClockFormat {
     HOUR_12,
     HOUR_24
 }
+
 class TimeUtils {
     /**
      * Returns the current time in the specified time zone.
@@ -26,12 +28,12 @@ class TimeUtils {
     }
 
     fun toZone(time: Instant, timeZone: String? = null): LocalTime {
-        val zone = if (timeZone != null)  TimeZone.of(timeZone) else TimeZone.currentSystemDefault()
+        val zone = if (timeZone != null) TimeZone.of(timeZone) else TimeZone.currentSystemDefault()
 
         return time.toLocalDateTime(zone).time
     }
 
-    fun formatMillis(millis: Long): String {
+    fun formatMillis(millis: Long, withSeconds: Boolean = true): String {
         var totalSeconds = millis / 1000
 
         val days = totalSeconds / 86_400
@@ -47,7 +49,7 @@ class TimeUtils {
             if (days > 0) add("${days}d")
             if (hours > 0 || isNotEmpty()) add("${hours.toString().padStart(2, '0')}h")
             add("${minutes.toString().padStart(2, '0')}m")
-            add("${seconds.toString().padStart(2, '0')}s")
+            if (withSeconds) add("${seconds.toString().padStart(2, '0')}s")
         }
 
         return parts.joinToString(" ")
@@ -60,29 +62,38 @@ class TimeUtils {
      * @return A string representation of the time in the specified format.
      */
     @Composable
-    fun formatTime(time: LocalTime): String {
-
-        val settings by LocalViewModel.current.settings.collectAsState()
+    fun formatTime(timeValue: TimeValue): String {
+        val time = when (timeValue) {
+            is TimeValue.localTime -> timeValue.time
+            is TimeValue.instant -> timeValue.instant.toLocalDateTime(TimeZone.currentSystemDefault()).time
+        }
+        val settings by LocalSettingsViewModel.current.settings.collectAsState()
         val clockFormat = if (settings.use24HourClock) ClockFormat.HOUR_24 else ClockFormat.HOUR_12
 
         val formatByHour = { is24: Boolean ->
             LocalTime.Format {
-            if (!is24) amPmHour() else hour()
-            char(':')
-            minute()
-            char(':')
-            second()
-            if (!is24) {
-                char(' ')
-                amPmMarker("AM", "PM")
-            }
+                if (!is24) amPmHour() else hour()
+                char(':')
+                minute()
+                char(':')
+                second()
+                if (!is24) {
+                    char(' ')
+                    amPmMarker("AM", "PM")
+                }
             }
         }
 
-      return when (clockFormat) {
+        return when (clockFormat) {
             ClockFormat.HOUR_12 -> formatByHour(false).format(time)
             ClockFormat.HOUR_24 -> formatByHour(true).format(time)
         }
     }
 
+}
+
+
+sealed interface TimeValue {
+    data class instant(val instant: Instant) : TimeValue
+    data class localTime(val time: LocalTime) : TimeValue
 }

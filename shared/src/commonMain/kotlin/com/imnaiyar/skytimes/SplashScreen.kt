@@ -1,83 +1,71 @@
 package com.imnaiyar.skytimes
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
+import org.jetbrains.compose.resources.painterResource
+import skytimes.shared.generated.resources.Res
+import skytimes.shared.generated.resources.shard_fragment
 
 @Composable
 fun SplashScreen(
-    onFinished: () -> Unit
+    modifier: Modifier = Modifier,
+    message: String? = null,
+    isError: Boolean = false,
+    onRetry: (() -> Unit)? = null
 ) {
-    var visible by remember { mutableStateOf(true) }
-
-    LaunchedEffect(Unit) {
-        delay(700.milliseconds)          // Show splash
-        visible = false     // Start exit animation
-        delay(400.milliseconds)          // Wait for animation
-        onFinished()
-    }
-
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
-        AnimatedVisibility(
-            visible = visible,
-            exit = fadeOut(
-                animationSpec = tween(
-                    durationMillis = 400,
-                    easing = FastOutSlowInEasing
-                )
-            ) + scaleOut(
-                targetScale = 0.85f,
-                animationSpec = tween(
-                    durationMillis = 400,
-                    easing = FastOutSlowInEasing
-                )
-            )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
 
-                // Placeholder logo
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .background(
-                            MaterialTheme.colorScheme.primary
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "☁️",
-                        style = MaterialTheme.typography.displayLarge
-                    )
-                }
-
+            Image(
+                painter = painterResource(Res.drawable.shard_fragment),
+                contentDescription = "SkyTimes",
+                modifier = Modifier.size(180.dp)
+            )
+            if (message != null) {
                 Text(
-                    text = "SkyTimes",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isError) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
+            }
+
+            Spacer(modifier = Modifier.size(2.dp))
+            if (onRetry == null) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(36.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            } else {
+                Button(onClick = onRetry) {
+                    Text("Retry")
+                }
             }
         }
     }

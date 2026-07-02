@@ -16,7 +16,7 @@ class SettingsRepositoryTest {
     }
 
     @Test
-    fun storedValuesAreLoadedOnInitialization() {
+    fun storedValuesAreLoadedOnInitialization() = runTest {
         val storage = TestSettings().apply {
             putString("theme_mode", ThemeMode.DARK.name)
             putBoolean("use_24_hour_clock", false)
@@ -25,6 +25,9 @@ class SettingsRepositoryTest {
         }
 
         val repository = SettingsRepository(storage)
+        assertEquals(AppSettings(), repository.settings.value)
+
+        repository.initialize()
 
         assertEquals(
             AppSettings(
@@ -38,12 +41,13 @@ class SettingsRepositoryTest {
     }
 
     @Test
-    fun invalidStoredThemeFallsBackToSystem() {
+    fun invalidStoredThemeFallsBackToSystem() = runTest {
         val storage = TestSettings().apply {
             putString("theme_mode", "invalid")
         }
 
         val repository = SettingsRepository(storage)
+        repository.initialize()
 
         assertEquals(ThemeMode.SYSTEM, repository.settings.value.themeMode)
     }
@@ -76,6 +80,7 @@ class SettingsRepositoryTest {
             putBoolean("notifications_enabled", false)
         }
         val repository = SettingsRepository(storage)
+        repository.initialize()
 
         repository.setNotificationsEnabled(true)
 

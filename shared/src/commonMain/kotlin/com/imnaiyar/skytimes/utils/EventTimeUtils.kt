@@ -32,17 +32,16 @@ data class EventDetails(
     val status: Times,
 )
 
-val timeUtils = TimeUtils()
 object EventTimeUtils {
 
     private val zone = TimeZone.of("America/Los_Angeles")
 
-    private fun todayInZone(): LocalDate {
-        return timeUtils.getTime(zone).date
+    private fun todayInZone(now: Instant): LocalDate {
+        return now.toLocalDateTime(zone).date
     }
 
-    private fun getOccurrenceDay(event: EventData): Instant {
-        var date = todayInZone()
+    private fun getOccurrenceDay(event: EventData, now: Instant): Instant {
+        var date = todayInZone(now)
 
         if (event.occursOn != null) {
 
@@ -64,10 +63,8 @@ object EventTimeUtils {
             .plus(event.offset.minutes)
     }
 
-    fun getNextOccurrence(event: EventData): Instant {
-        val now = Clock.System.now()
-
-        var nextOccurrence = getOccurrenceDay(event)
+    fun getNextOccurrence(event: EventData, now: Instant = Clock.System.now()): Instant {
+        var nextOccurrence = getOccurrenceDay(event, now)
 
         val interval = event.interval ?: return nextOccurrence
 
@@ -78,13 +75,16 @@ object EventTimeUtils {
         return nextOccurrence
     }
 
-    fun getAllOccurrences(event: EventData): List<Instant> {
+    fun getAllOccurrences(
+        event: EventData,
+        now: Instant = Clock.System.now()
+    ): List<Instant> {
         val intervalMinutes = event.interval
-            ?: return listOf(getOccurrenceDay(event))
+            ?: return listOf(getOccurrenceDay(event, now))
 
         val occurrences = mutableListOf<Instant>()
 
-        val firstOccurrence = getOccurrenceDay(event)
+        val firstOccurrence = getOccurrenceDay(event, now)
         var current = firstOccurrence
 
         val day = firstOccurrence.toLocalDateTime(zone).date
@@ -99,10 +99,9 @@ object EventTimeUtils {
 
     fun getStatus(
         event: EventData,
-        nextOccurrence: Instant
+        nextOccurrence: Instant,
+        now: Instant = Clock.System.now()
     ): Times {
-        val now = Clock.System.now()
-
         val remaining = nextOccurrence - now
 
         val duration = event.duration
@@ -135,17 +134,21 @@ object EventTimeUtils {
         }
     }
 
-    fun getEventDetails(event: EventData): EventDetails {
-        val nextOccurrence = getNextOccurrence(event)
+    fun getEventDetails(
+        event: EventData,
+        now: Instant = Clock.System.now(),
+        includeAllOccurrences: Boolean = true
+    ): EventDetails {
+        val nextOccurrence = getNextOccurrence(event, now)
 
         return EventDetails(
             event = event,
             nextOccurrence = nextOccurrence,
-            allOccurrences = getAllOccurrences(event),
-            status = getStatus(event, nextOccurrence)
+            allOccurrences = if (includeAllOccurrences) getAllOccurrences(event, now) else emptyList(),
+            status = getStatus(event, nextOccurrence, now)
         )
     }
 
-    fun allEventDetails(): List<EventDetails> =
-        events.map(::getEventDetails)
+    fun allEventDetails(now: Instant = Clock.System.now()): List<EventDetails> =
+        events.map { getEventDetails(it, now) }
 }

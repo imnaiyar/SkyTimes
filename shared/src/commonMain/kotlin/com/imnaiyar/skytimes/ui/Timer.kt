@@ -13,13 +13,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.utils.rememberDigitWidth
 
 
@@ -36,8 +33,7 @@ fun AnimatedTimer(
     color: Color = Color.Unspecified,
     withAnimation: Boolean = true
 ) {
-    val settings by LocalSettingsViewModel.current.settings.collectAsState()
-
+    val digits = listOf(0..9)
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center,
@@ -55,9 +51,7 @@ fun AnimatedTimer(
                     digit = c,
                     label = "digit-$index",
                     size,
-                    // if withAnimation is explicitly passed false, then it shouldn't use animation at all
-                    // otherwise depend on settings
-                    withAnimation = if (withAnimation) settings.clockAnimation else false,
+                    withAnimation = withAnimation,
                     color,
                     direction
                 )

@@ -74,9 +74,15 @@ class SettingsRepository(
             ),
             eventOrder = storage.getString(
                 SettingsKeys.EventOrder,
-                AppSettings().eventOrder.joinToString("|"))
+                AppSettings().eventOrder.joinToString("|")
+            )
                 .split("|")
                 .map(EventKey::valueOf)
+                .let { ordered ->
+                    // this is bcz if new keys are introduced, it will not be included in the list
+                    // so just append them at the end here
+                    ordered + EventKey.entries.filterNot { it in ordered }
+                }
         )
     }
 

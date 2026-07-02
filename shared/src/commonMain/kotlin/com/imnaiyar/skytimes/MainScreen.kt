@@ -121,7 +121,8 @@ fun MainScreen() {
             state = pagerState,
             modifier = Modifier
                 .padding(bottom = outerPadding.calculateBottomPadding())
-                .fillMaxSize()
+                .fillMaxSize(),
+            beyondViewportPageCount = screens.size - 1
         ) { page ->
 
 

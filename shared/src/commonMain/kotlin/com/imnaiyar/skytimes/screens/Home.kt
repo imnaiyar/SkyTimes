@@ -1,7 +1,6 @@
 package com.imnaiyar.skytimes.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
@@ -18,9 +17,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +48,7 @@ import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.theme.labelTiny
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.ClockDirection
+import com.imnaiyar.skytimes.ui.Grid
 import com.imnaiyar.skytimes.utils.EventTimeUtils
 import com.imnaiyar.skytimes.utils.TimeUtils
 import com.imnaiyar.skytimes.utils.TimeValue
@@ -55,12 +56,13 @@ import com.imnaiyar.skytimes.utils.Times
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
+import sh.calvin.reorderable.rememberReorderableLazyGridState
 import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.close
 import skytimes.shared.generated.resources.drag_indicator
 import skytimes.shared.generated.resources.list_arrow
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, setFabVisible: (Boolean) -> Unit) {
@@ -70,74 +72,73 @@ fun HomeScreen(modifier: Modifier = Modifier, setFabVisible: (Boolean) -> Unit) 
     val orderedKey = remember(settings.eventOrder) {
         settings.eventOrder.toMutableStateList()
     }
+    val orderSnapshot = orderedKey.toList()
 
     val byKey = remember {
         events.associateBy { it.key }
     }
 
-    val eventDataList = orderedKey.mapNotNull(byKey::get)
+    val eventDataList = remember(orderSnapshot) {
+        orderSnapshot.mapNotNull(byKey::get)
+    }
 
-    val reorderMode = remember { mutableStateOf(false) }
+    var reorderMode by remember { mutableStateOf(false) }
+    var orderChanged by remember { mutableStateOf(false) }
 
-    LaunchedEffect(reorderMode.value) {
-        setFabVisible(!reorderMode.value)
+    LaunchedEffect(reorderMode) {
+        setFabVisible(!reorderMode)
+    }
+
+    LaunchedEffect(orderSnapshot) {
+        if (orderChanged) {
+            delay(300)
+            viewModel.setEventOrder(orderSnapshot)
+            orderChanged = false
+        }
     }
 
     val timeUtils = remember { TimeUtils() }
+    val nowState = rememberCurrentSecondState()
     val hapticFeedback = LocalHapticFeedback.current
 
-    val lazyListState = rememberLazyListState()
+    val lazyGridState = rememberLazyGridState()
 
-    val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+    val reorderableLazyGridState = rememberReorderableLazyGridState(lazyGridState) { from, to ->
         orderedKey.apply {
             add(to.index - 1, removeAt(from.index - 1))
         }
 
-        viewModel.setEventOrder(orderedKey)
+        orderChanged = true
         hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
     }
 
 
-    LazyColumn(
-        modifier = modifier,
-        state = lazyListState,
-        horizontalAlignment = Alignment.End
-    ) {
-        item() {
-            IconButton(
-                onClick = { reorderMode.value = !reorderMode.value }) {
-                Icon(
-                    painterResource(if (!reorderMode.value) Res.drawable.list_arrow else Res.drawable.close),
-                    contentDescription = "Reorder Mode Button"
-                )
+    Grid(modifier, state = lazyGridState) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                IconButton(
+                    onClick = { reorderMode = !reorderMode }) {
+                    Icon(
+                        painterResource(if (!reorderMode) Res.drawable.list_arrow else Res.drawable.close),
+                        contentDescription = "Reorder Mode Button"
+                    )
+                }
             }
         }
         items(eventDataList, key = { it.key }) { eventData ->
-            ReorderableItem(reorderableLazyListState, key = eventData.key) { isDragging ->
+            ReorderableItem(reorderableLazyGridState, key = eventData.key) { isDragging ->
                 val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
-
-                val transition = rememberInfiniteTransition()
-
-                val blur by transition.animateFloat(
-                    initialValue = 8f,
-                    targetValue = 20f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(1200),
-                        repeatMode = RepeatMode.Reverse
-                    )
-                )
 
                 Surface(shadowElevation = elevation) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .animateContentSize()
                             .padding(5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
                         AnimatedVisibility(
-                            visible = reorderMode.value,
+                            visible = reorderMode,
                             enter = expandHorizontally() + fadeIn(),
                             exit = shrinkHorizontally() + fadeOut()
                         ) {
@@ -151,7 +152,14 @@ fun HomeScreen(modifier: Modifier = Modifier, setFabVisible: (Boolean) -> Unit) 
                                 )
                             }
                         }
-                        EventRow(eventData, timeUtils, reorderMode.value)
+                        EventRow(
+                            eventData = eventData,
+                            timeUtils = timeUtils,
+                            nowState = nowState,
+                            reorderMode = reorderMode,
+                            clockAnimation = settings.clockAnimation,
+                            use24HourClock = settings.use24HourClock
+                        )
                     }
                 }
             }
@@ -164,23 +172,16 @@ fun HomeScreen(modifier: Modifier = Modifier, setFabVisible: (Boolean) -> Unit) 
 private fun EventRow(
     eventData: EventData,
     timeUtils: TimeUtils,
+    nowState: State<Instant>,
+    clockAnimation: Boolean,
+    use24HourClock: Boolean,
     reorderMode: Boolean
 ) {
+    val now = nowState.value
 
-
-    var now by remember { mutableStateOf(Clock.System.now()) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            val current = Clock.System.now()
-            now = current
-            delay(timeMillis = 1000 - (current.toEpochMilliseconds() % 1000))
-        }
+    val eventDetails = remember(eventData, now) {
+        EventTimeUtils.getEventDetails(eventData, now, includeAllOccurrences = false)
     }
-
-    val eventDetails = EventTimeUtils.getEventDetails(eventData)
-
-    val nextOccursOn = remember { eventDetails.nextOccurrence }
 
     // reorder mode too because ideally here we only want to display event name
     // so no event status related customization  should be done
@@ -190,36 +191,48 @@ private fun EventRow(
         if (isActive)
             eventDetails.status.remaining.inWholeMilliseconds
         else
-            difference
+            difference,
+        false
     )
 
 
-    val transition = rememberInfiniteTransition()
+    val y: Float
+    val scale: Float
+    if (isActive) {
+        val transition = rememberInfiniteTransition()
 
-    val y by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = -3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
+        val animatedY by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = -3f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000),
+                repeatMode = RepeatMode.Reverse
+            )
         )
-    )
 
-    val scale by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.015f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
+        val animatedScale by transition.animateFloat(
+            initialValue = 1f,
+            targetValue = 1.015f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000),
+                repeatMode = RepeatMode.Reverse
+            )
         )
-    )
+
+        y = animatedY
+        scale = animatedScale
+    } else {
+        y = 0f
+        scale = 1f
+    }
 
     val nextAT = if (isActive) eventDetails.status.endTime else eventDetails.nextOccurrence
 
     val eventNameStyle =
         if (isActive) MaterialTheme.colorScheme.onError else Color.Unspecified
     val nextOcStyle =
-        if (isActive) MaterialTheme.colorScheme.onError.copy(0.8f) else MaterialTheme.colorScheme.tertiary
+        if (isActive) MaterialTheme.colorScheme.onError.copy(0.8f)
+        else MaterialTheme.colorScheme.tertiary
 
     Row(
         modifier = Modifier.fillMaxWidth().graphicsLayer {
@@ -227,9 +240,8 @@ private fun EventRow(
                 translationY = y
                 scaleX = scale
                 scaleY = scale
-            } else 0f
+            }
         }
-            .animateContentSize()
             .background(
                 color = if (isActive) MaterialTheme.colorScheme.error else Color.Unspecified,
                 shape = RoundedCornerShape(12.dp)
@@ -238,26 +250,25 @@ private fun EventRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        if (isActive) {
-            Column(horizontalAlignment = Alignment.Start) {
-                Text(
-                    eventDetails.event.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = eventNameStyle,
-                )
 
-                Text(
-                    "Active (Next at ${
-                        timeUtils.formatTime(TimeValue.instant(nextOccursOn))
-                    })", style = MaterialTheme.typography.labelTiny,
-                    color = eventNameStyle
-                )
-            }
+        Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f)) {
+            Text(
+                eventDetails.event.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = eventNameStyle,
+                softWrap = true
+            )
+            if (isActive) Text(
+                "Active (Next at ${
+                    timeUtils.formatTime(
+                        TimeValue.instant(eventDetails.nextOccurrence),
+                        use24HourClock
+                    )
+                })", style = MaterialTheme.typography.labelTiny,
+                color = eventNameStyle
+            )
+        }
 
-        } else Text(
-            eventDetails.event.name,
-            style = MaterialTheme.typography.titleMedium,
-        )
         AnimatedVisibility(
             visible = !reorderMode,
             enter = expandHorizontally(expandFrom = Alignment.End) + fadeIn(),
@@ -275,9 +286,10 @@ private fun EventRow(
                     color = eventNameStyle,
                     modifier = Modifier.padding(start = 8.dp),
                     direction = ClockDirection.DOWN,
+                    withAnimation = clockAnimation
                 )
                 Text(
-                    text = "At: ${timeUtils.formatTime(TimeValue.instant(nextAT))}",
+                    text = "At: ${timeUtils.formatTime(TimeValue.instant(nextAT), use24HourClock)}",
                     color = nextOcStyle,
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -286,3 +298,17 @@ private fun EventRow(
     }
 }
 
+@Composable
+private fun rememberCurrentSecondState(): State<Instant> {
+    val nowState = remember { mutableStateOf(Clock.System.now()) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            val current = Clock.System.now()
+            nowState.value = current
+            delay(timeMillis = 60_000 - (current.toEpochMilliseconds() % 60_000))
+        }
+    }
+
+    return nowState
+}

@@ -39,9 +39,17 @@ enum class EventKey {
     NEST_SUNSET,
     FIREWORKS_FESTIVAL,
     FAIRY_RING,
-    BROOK_RAINBOW
+    BROOK_RAINBOW,
+    WORKSHOP_RESET,
+    DYE_EXCHANGE_SHOP
 }
 
+enum class EventCategory {
+    Pinned,
+    Wax,
+    Resets,
+    Activity
+}
 
 private fun hours(value: Int) = value * 60
 
@@ -97,7 +105,6 @@ val events = listOf(
         name = "Eden/Weekly Reset",
         index = 4,
         offset = 0,
-        interval = hours(24 * 7),
         occursOn = OccursOn(
             weekDays = listOf(7)
         )
@@ -128,7 +135,7 @@ val events = listOf(
         name = "Passage Quests",
         index = 7,
         offset = 0,
-        interval = 4,
+        interval = 15,
         displayAllTimes = true
     ),
     EventData(
@@ -166,5 +173,23 @@ val events = listOf(
         offset = hours(5),
         interval = hours(12),
         displayAllTimes = true
+    ),
+    EventData(
+        key = EventKey.WORKSHOP_RESET,
+        name = "Nesting Workshop Rotation",
+        index = 13,
+        occursOn = OccursOn(
+            weekDays = listOf(5)
+        ),
+        offset = 0
+    ),
+    EventData(
+        key = EventKey.DYE_EXCHANGE_SHOP,
+        name = "Dye Exchange Shop",
+        index = 13,
+        occursOn = OccursOn(
+            weekDays = listOf(5)
+        ),
+        offset = 0
     )
 )

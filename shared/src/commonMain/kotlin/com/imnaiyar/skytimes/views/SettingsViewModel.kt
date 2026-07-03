@@ -1,8 +1,11 @@
-package com.imnaiyar.skytimes.settings
+package com.imnaiyar.skytimes.views
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.imnaiyar.skytimes.constants.EventKey
+import com.imnaiyar.skytimes.repositories.AppSettings
+import com.imnaiyar.skytimes.repositories.SettingsRepository
+import com.imnaiyar.skytimes.theme.ThemeMode
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -41,4 +44,3 @@ class SettingsViewModel(
         }
     }
 }
-

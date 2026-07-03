@@ -1,7 +1,7 @@
 package com.imnaiyar.skytimes.di
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.imnaiyar.skytimes.settings.SettingsViewModel
+import com.imnaiyar.skytimes.views.SettingsViewModel
 
 val LocalAppContainer =
     staticCompositionLocalOf<AppContainer> {

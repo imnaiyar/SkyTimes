@@ -120,7 +120,6 @@ fun MainScreen() {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
-                .padding(bottom = outerPadding.calculateBottomPadding())
                 .fillMaxSize(),
             beyondViewportPageCount = screens.size - 1
         ) { page ->

@@ -1,5 +1,8 @@
 package com.imnaiyar.skytimes.settings
 
+import com.imnaiyar.skytimes.repositories.AppSettings
+import com.imnaiyar.skytimes.repositories.SettingsRepository
+import com.imnaiyar.skytimes.theme.ThemeMode
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -10,7 +13,8 @@ import kotlin.test.assertTrue
 class SettingsRepositoryTest {
     @Test
     fun emptyStorageEmitsDefaultSettings() {
-        val repository = SettingsRepository(TestSettings())
+        val repository =
+            SettingsRepository(TestSettings())
 
         assertEquals(AppSettings(), repository.settings.value)
     }
@@ -24,9 +28,10 @@ class SettingsRepositoryTest {
             putBoolean("clock_animation", false)
         }
 
-        val repository = SettingsRepository(storage)
+        val repository =
+            SettingsRepository(storage)
+        
         assertEquals(AppSettings(), repository.settings.value)
-
         repository.initialize()
 
         assertEquals(
@@ -46,7 +51,8 @@ class SettingsRepositoryTest {
             putString("theme_mode", "invalid")
         }
 
-        val repository = SettingsRepository(storage)
+        val repository =
+            SettingsRepository(storage)
         repository.initialize()
 
         assertEquals(ThemeMode.SYSTEM, repository.settings.value.themeMode)
@@ -55,7 +61,8 @@ class SettingsRepositoryTest {
     @Test
     fun updateThemePersistsAndEmits() = runTest {
         val storage = TestSettings()
-        val repository = SettingsRepository(storage)
+        val repository =
+            SettingsRepository(storage)
 
         repository.updateTheme(ThemeMode.LIGHT)
 
@@ -66,7 +73,8 @@ class SettingsRepositoryTest {
     @Test
     fun setting24HourClockPersistsAndEmits() = runTest {
         val storage = TestSettings()
-        val repository = SettingsRepository(storage)
+        val repository =
+            SettingsRepository(storage)
 
         repository.set24HourClock(false)
 
@@ -79,7 +87,8 @@ class SettingsRepositoryTest {
         val storage = TestSettings().apply {
             putBoolean("notifications_enabled", false)
         }
-        val repository = SettingsRepository(storage)
+        val repository =
+            SettingsRepository(storage)
         repository.initialize()
 
         repository.setNotificationsEnabled(true)
@@ -91,7 +100,8 @@ class SettingsRepositoryTest {
     @Test
     fun settingClockAnimationPersistsAndEmits() = runTest {
         val storage = TestSettings()
-        val repository = SettingsRepository(storage)
+        val repository =
+            SettingsRepository(storage)
 
         repository.setClockAnimation(false)
 
@@ -101,7 +111,8 @@ class SettingsRepositoryTest {
 
     @Test
     fun updatesPreserveUnrelatedSettings() = runTest {
-        val repository = SettingsRepository(TestSettings())
+        val repository =
+            SettingsRepository(TestSettings())
 
         repository.updateTheme(ThemeMode.DARK)
         repository.set24HourClock(false)

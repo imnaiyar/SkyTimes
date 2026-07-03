@@ -1,8 +1,11 @@
 package com.imnaiyar.skytimes.utils
 
+import com.imnaiyar.skytimes.constants.GameTimeZone
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -92,6 +95,28 @@ class TimeUtils {
 
 }
 
+val isoDateFormat = DateTimeComponents.Format {
+    day()
+    char('-')
+    monthNumber()
+    char('-')
+    year()
+}
+
+fun isTodayInGame(value: String): Boolean {
+    val lastUpdatedDate = parseAsGameDate(value) ?: return false
+    val today = Clock.System.now().toLocalDateTime(GameTimeZone).date
+    return lastUpdatedDate == today
+}
+
+fun parseAsGameDate(value: String): LocalDate? {
+    return runCatching { Instant.parse(value).toLocalDateTime(GameTimeZone).date }
+        .getOrNull()
+        ?: runCatching { LocalDateTime.parse(value).date }.getOrNull()
+        ?: value.take(10).let { date ->
+            runCatching { LocalDate.parse(date) }.getOrNull()
+        }
+}
 
 sealed interface TimeValue {
     data class instant(val instant: Instant) : TimeValue

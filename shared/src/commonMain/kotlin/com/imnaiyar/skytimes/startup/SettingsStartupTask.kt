@@ -1,6 +1,6 @@
 package com.imnaiyar.skytimes.startup
 
-import com.imnaiyar.skytimes.settings.SettingsRepository
+import com.imnaiyar.skytimes.repositories.SettingsRepository
 
 class SettingsStartupTask(
     private val settingsRepository: SettingsRepository

@@ -1,13 +1,16 @@
 package com.imnaiyar.skytimes.di
 
-import com.imnaiyar.skytimes.settings.SettingsRepository
-import com.imnaiyar.skytimes.settings.SettingsViewModel
+import com.imnaiyar.skytimes.repositories.QuestRepository
+import com.imnaiyar.skytimes.repositories.SettingsRepository
 import com.imnaiyar.skytimes.startup.AppInitializer
-import com.imnaiyar.skytimes.startup.AppViewModel
 import com.imnaiyar.skytimes.startup.SettingsStartupTask
+import com.imnaiyar.skytimes.views.AppViewModel
+import com.imnaiyar.skytimes.views.QuestsViewModel
+import com.imnaiyar.skytimes.views.SettingsViewModel
 
 class AppContainer {
     val settingsRepository = SettingsRepository()
+    val questRepository = QuestRepository()
 
     private val startupTasks = listOf(
         SettingsStartupTask(settingsRepository)
@@ -21,5 +24,9 @@ class AppContainer {
 
     fun createSettingsViewModel(): SettingsViewModel {
         return SettingsViewModel(settingsRepository)
+    }
+
+    fun createQuestsViewModel(): QuestsViewModel {
+        return QuestsViewModel(questRepository)
     }
 }

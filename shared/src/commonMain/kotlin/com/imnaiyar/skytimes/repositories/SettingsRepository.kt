@@ -1,6 +1,7 @@
-package com.imnaiyar.skytimes.settings
+package com.imnaiyar.skytimes.repositories
 
 import com.imnaiyar.skytimes.constants.EventKey
+import com.imnaiyar.skytimes.theme.ThemeMode
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -8,11 +9,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+data class AppSettings(
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val use24HourClock: Boolean = true,
+    val notificationsEnabled: Boolean = true,
+    val clockAnimation: Boolean = true,
+    val eventOrder: List<EventKey> = EventKey.entries
+)
+
+
 class SettingsRepository(
     private val storage: Settings = Settings()
 ) {
     private val updateMutex = Mutex()
-    private val _settings = MutableStateFlow(AppSettings())
+    private val _settings =
+        MutableStateFlow(AppSettings())
 
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
@@ -74,7 +85,9 @@ class SettingsRepository(
             ),
             eventOrder = storage.getString(
                 SettingsKeys.EventOrder,
-                AppSettings().eventOrder.joinToString("|")
+                AppSettings().eventOrder.joinToString(
+                    "|"
+                )
             )
                 .split("|")
                 .map(EventKey::valueOf)
@@ -86,7 +99,10 @@ class SettingsRepository(
         )
     }
 
-    private fun saveChangedSettings(current: AppSettings, next: AppSettings) {
+    private fun saveChangedSettings(
+        current: AppSettings,
+        next: AppSettings
+    ) {
         if (current.themeMode != next.themeMode) {
             storage.putString(SettingsKeys.ThemeMode, next.themeMode.name)
         }
@@ -105,7 +121,8 @@ class SettingsRepository(
     }
 
     private fun parseThemeMode(value: String): ThemeMode {
-        return ThemeMode.entries.firstOrNull { it.name == value } ?: ThemeMode.SYSTEM
+        return ThemeMode.entries.firstOrNull { it.name == value }
+            ?: ThemeMode.SYSTEM
     }
 }
 

@@ -49,6 +49,7 @@ import com.imnaiyar.skytimes.theme.labelTiny
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.ClockDirection
 import com.imnaiyar.skytimes.ui.Grid
+import com.imnaiyar.skytimes.ui.GridType
 import com.imnaiyar.skytimes.utils.EventTimeUtils
 import com.imnaiyar.skytimes.utils.TimeUtils
 import com.imnaiyar.skytimes.utils.TimeValue
@@ -112,8 +113,7 @@ fun HomeScreen(modifier: Modifier = Modifier, setFabVisible: (Boolean) -> Unit) 
         hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
     }
 
-
-    Grid(modifier, state = lazyGridState) {
+    Grid(modifier, type = GridType.GRID, state = lazyGridState) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 IconButton(
@@ -231,8 +231,7 @@ private fun EventRow(
     val eventNameStyle =
         if (isActive) MaterialTheme.colorScheme.onError else Color.Unspecified
     val nextOcStyle =
-        if (isActive) MaterialTheme.colorScheme.onError.copy(0.8f)
-        else MaterialTheme.colorScheme.tertiary
+        if (isActive) MaterialTheme.colorScheme.onError.copy(0.8f) else MaterialTheme.colorScheme.tertiary
 
     Row(
         modifier = Modifier.fillMaxWidth().graphicsLayer {
@@ -250,25 +249,29 @@ private fun EventRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        if (isActive) {
+            Column(horizontalAlignment = Alignment.Start) {
+                Text(
+                    eventDetails.event.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = eventNameStyle,
+                )
 
-        Column(horizontalAlignment = Alignment.Start, modifier = Modifier.weight(1f)) {
-            Text(
-                eventDetails.event.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = eventNameStyle,
-                softWrap = true
-            )
-            if (isActive) Text(
-                "Active (Next at ${
-                    timeUtils.formatTime(
-                        TimeValue.instant(eventDetails.nextOccurrence),
-                        use24HourClock
-                    )
-                })", style = MaterialTheme.typography.labelTiny,
-                color = eventNameStyle
-            )
-        }
+                Text(
+                    "Active (Next at ${
+                        timeUtils.formatTime(
+                            TimeValue.instant(eventDetails.nextOccurrence),
+                            use24HourClock
+                        )
+                    })", style = MaterialTheme.typography.labelTiny,
+                    color = eventNameStyle
+                )
+            }
 
+        } else Text(
+            eventDetails.event.name,
+            style = MaterialTheme.typography.titleMedium,
+        )
         AnimatedVisibility(
             visible = !reorderMode,
             enter = expandHorizontally(expandFrom = Alignment.End) + fadeIn(),

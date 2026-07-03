@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.FlexBox
 import androidx.compose.foundation.layout.FlexBoxConfig
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -39,7 +38,6 @@ import com.imnaiyar.skytimes.ui.LoadingSpinner
 import com.imnaiyar.skytimes.ui.RemoteImage
 import com.imnaiyar.skytimes.utils.Image
 import com.imnaiyar.skytimes.utils.Quest
-import com.imnaiyar.skytimes.utils.QuestResponse
 import com.imnaiyar.skytimes.utils.isTodayInGame
 import com.imnaiyar.skytimes.utils.isoDateFormat
 import com.imnaiyar.skytimes.views.QuestsUiState
@@ -93,8 +91,6 @@ private fun QuestContent(
 ) {
     val response = state.response
     Column {
-        QuestHeader(response = response, errorMessage = state.errorMessage)
-
         Grid {
             item {
                 if (isTodayInGame(response.rotatingCandles.date)) QuestCard(
@@ -124,45 +120,6 @@ private fun QuestContent(
                     showTitleFromQuest = false
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun QuestHeader(
-    response: QuestResponse,
-    errorMessage: String?,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "Daily Quests",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = Instant.parse(response.lastUpdated).format(isoDateFormat),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.tertiary,
-            )
-        }
-
-        errorMessage?.let { message ->
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-            )
         }
     }
 }

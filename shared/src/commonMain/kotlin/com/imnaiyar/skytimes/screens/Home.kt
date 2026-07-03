@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.constants.EventData
 import com.imnaiyar.skytimes.constants.events
+import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.theme.labelTiny
 import com.imnaiyar.skytimes.ui.AnimatedTimer
@@ -62,7 +63,6 @@ import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.close
 import skytimes.shared.generated.resources.drag_indicator
 import skytimes.shared.generated.resources.list_arrow
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 @Composable
@@ -99,7 +99,9 @@ fun HomeScreen(modifier: Modifier = Modifier, setFabVisible: (Boolean) -> Unit) 
     }
 
     val timeUtils = remember { TimeUtils() }
-    val nowState = rememberCurrentSecondState()
+    val nowState =
+        LocalAppContainer.current.clockRepository.observeEveryMinute()
+
     val hapticFeedback = LocalHapticFeedback.current
 
     val lazyGridState = rememberLazyGridState()
@@ -299,19 +301,4 @@ private fun EventRow(
             }
         }
     }
-}
-
-@Composable
-private fun rememberCurrentSecondState(): State<Instant> {
-    val nowState = remember { mutableStateOf(Clock.System.now()) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            val current = Clock.System.now()
-            nowState.value = current
-            delay(timeMillis = 60_000 - (current.toEpochMilliseconds() % 60_000))
-        }
-    }
-
-    return nowState
 }

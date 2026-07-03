@@ -7,3 +7,7 @@ import kotlinx.datetime.TimeZone
 val RoundedCorner = RoundedCornerShape(16.dp);
 
 val GameTimeZone = TimeZone.of("America/Los_Angeles")
+
+val skyhelperApi = "https://api.skyhelper.xyz";
+
+val skyhelperCdn = "https://cdn.skyhelper.xyz"

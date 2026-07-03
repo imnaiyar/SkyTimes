@@ -6,6 +6,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -95,12 +96,20 @@ class TimeUtils {
 
 }
 
-val isoDateFormat = DateTimeComponents.Format {
+private fun DateTimeFormatBuilder.WithDate.dayMonthYear() {
     day()
     char('-')
     monthNumber()
     char('-')
     year()
+}
+
+val isoDateFormat = DateTimeComponents.Format {
+    dayMonthYear()
+}
+
+val localDateToIso = LocalDate.Format {
+    dayMonthYear()
 }
 
 fun isTodayInGame(value: String): Boolean {

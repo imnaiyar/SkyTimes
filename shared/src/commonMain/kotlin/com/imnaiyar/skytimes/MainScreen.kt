@@ -151,7 +151,7 @@ fun MainScreen() {
                     .padding(innerPadding)
 
                 when (screens[page]) {
-                    Screen.Clock -> HomeScreen(
+                    Screen.SkyTimes -> HomeScreen(
                         modifier,
                         setFabVisible = { value -> showFab = value }
                     )

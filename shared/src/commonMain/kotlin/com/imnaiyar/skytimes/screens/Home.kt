@@ -14,6 +14,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -66,7 +67,11 @@ import skytimes.shared.generated.resources.list_arrow
 import kotlin.time.Instant
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, setFabVisible: (Boolean) -> Unit) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    setFabVisible: (Boolean) -> Unit,
+    fabPad: PaddingValues
+) {
 
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
@@ -115,7 +120,7 @@ fun HomeScreen(modifier: Modifier = Modifier, setFabVisible: (Boolean) -> Unit) 
         hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
     }
 
-    Grid(modifier, type = GridType.GRID, state = lazyGridState) {
+    Grid(modifier, type = GridType.GRID, state = lazyGridState, contentPadding = fabPad) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 IconButton(

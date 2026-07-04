@@ -13,6 +13,9 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
+class OutdatedQuestException :
+    Exception("Quests are not updated yet, please retry after some time.");
+
 class QuestRepository(
     private val storage: Settings = Settings(),
     private val client: HttpClient = HttpClient(),
@@ -66,6 +69,7 @@ class QuestRepository(
         return runCatching {
             val body = client.get(QuestApiUrl).bodyAsText()
             val response = json.decodeFromString<QuestResponse>(body)
+            if (!isTodayInGame(response.lastUpdated)) throw OutdatedQuestException()
             storage.putString(QuestCacheKey, body)
             response
         }
@@ -91,6 +95,7 @@ class QuestRepository(
 
     private fun Throwable.userMessage(): String {
         return when (this) {
+            is OutdatedQuestException -> this.message!!
             is SerializationException -> "Quest data could not be read."
             else -> "Unable to load quests. Check your connection and try again."
         }

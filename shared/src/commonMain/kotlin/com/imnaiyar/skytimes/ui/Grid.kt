@@ -1,6 +1,7 @@
 package com.imnaiyar.skytimes.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -28,15 +29,18 @@ enum class GridType {
 fun Grid(
     modifier: Modifier = Modifier,
     columns: GridCells = GridCells.Adaptive(minWidth),
+    /** This is only here so that overload is uniques and can be distinguished */
     type: GridType,
     state: LazyGridState = rememberLazyGridState(),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.End,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     content: LazyGridScope.() -> Unit,
 ) {
     LazyVerticalGrid(
         modifier = modifier.fillMaxSize(),
         columns = columns,
         state = state,
+        contentPadding = contentPadding,
         horizontalArrangement = horizontalArrangement
     ) {
         content()
@@ -50,12 +54,14 @@ fun Grid(
     columns: StaggeredGridCells = StaggeredGridCells.Adaptive(minWidth),
     state: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.End,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     content: LazyStaggeredGridScope.() -> Unit,
 ) {
     LazyVerticalStaggeredGrid(
         modifier = modifier.fillMaxSize(),
         columns = columns,
         state = state,
+        contentPadding = contentPadding,
         horizontalArrangement = horizontalArrangement
     ) {
         content()

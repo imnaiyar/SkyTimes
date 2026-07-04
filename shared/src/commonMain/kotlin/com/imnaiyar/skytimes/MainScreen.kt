@@ -29,6 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.navigationevent.NavigationEventInfo
@@ -69,6 +71,12 @@ fun MainScreen() {
     }
 
     val bottomScroll = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+    var fabHeight by remember {
+        mutableStateOf(0)
+    }
+
+    val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
+    val fabPad = PaddingValues(bottom = heightInDp + 16.dp)
     Scaffold(
         modifier = Modifier.nestedScroll(bottomScroll.nestedScrollConnection),
         bottomBar = {
@@ -103,6 +111,7 @@ fun MainScreen() {
             AnimatedVisibility(showFab) {
                 ExtendedFloatingActionButton(
                     onClick = { navController.navigate(VaultRoute) },
+                    modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
                     expanded = bottomScroll.state.collapsedFraction < 0.5f,
                     text = { Text("Vault Archive") },
                     icon = {
@@ -115,16 +124,13 @@ fun MainScreen() {
                 )
             }
         }
-    ) { outerPadding ->
-
+    ) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize(),
             beyondViewportPageCount = screens.size - 1
         ) { page ->
-
-
             val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
             Scaffold(
                 modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -148,18 +154,23 @@ fun MainScreen() {
             ) { innerPadding ->
                 val modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(paddingValues = innerPadding)
+                    // horizontal padding to align FAB
+                    .padding(horizontal = 11.dp)
 
                 when (screens[page]) {
                     Screen.SkyTimes -> HomeScreen(
                         modifier,
-                        setFabVisible = { value -> showFab = value }
+                        setFabVisible = { value -> showFab = value },
+                        fabPad
                     )
 
-                    Screen.Quests -> QuestsScreen(modifier)
-                    Screen.Shards -> ShardsScreen(modifier)
-                    Screen.Settings -> SettingsScreen(modifier)
+                    Screen.Quests -> QuestsScreen(modifier, fabPad)
+                    Screen.Shards -> ShardsScreen(modifier, fabPad)
+                    Screen.Settings -> SettingsScreen(modifier, fabPad)
                 }
+
+                Text(("Hii"))
             }
         }
     }

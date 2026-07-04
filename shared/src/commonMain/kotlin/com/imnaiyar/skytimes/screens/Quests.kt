@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalFlexBoxApi
 import androidx.compose.foundation.layout.FlexBox
 import androidx.compose.foundation.layout.FlexBoxConfig
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,6 +48,7 @@ import kotlin.time.Instant
 @Composable
 fun QuestsScreen(
     modifier: Modifier,
+    fabPad: PaddingValues,
 ) {
     val appContainer = LocalAppContainer.current
     val viewModel = viewModel {
@@ -56,21 +57,20 @@ fun QuestsScreen(
     val state by viewModel.state.collectAsState()
 
     val p2RState = rememberPullToRefreshState()
-
     when (val current = state) {
-        QuestsUiState.Loading -> LoadingSpinner(modifier)
+        QuestsUiState.Loading -> LoadingSpinner(modifier.padding(fabPad))
         is QuestsUiState.Error -> QuestError(
             message = current.message,
             onRetry = viewModel::retry,
-            modifier = modifier,
+            modifier = modifier.padding(fabPad)
         )
 
         is QuestsUiState.Content -> {
             PullToRefreshBox(
                 state = p2RState,
+                modifier = modifier,
                 isRefreshing = current.isRefreshing,
                 onRefresh = viewModel::refresh,
-                modifier = modifier.fillMaxSize(),
                 indicator = {
                     PullToRefreshDefaults.LoadingIndicator(
                         state = p2RState,
@@ -79,7 +79,7 @@ fun QuestsScreen(
                     )
                 }
             ) {
-                QuestContent(state = current)
+                QuestContent(state = current, fabPad)
             }
         }
     }
@@ -88,40 +88,40 @@ fun QuestsScreen(
 @Composable
 private fun QuestContent(
     state: QuestsUiState.Content,
+    fabPad: PaddingValues
 ) {
     val response = state.response
-    Column {
-        Grid {
+    Grid(contentPadding = fabPad) {
+        item {
+            if (isTodayInGame(response.rotatingCandles.date)) QuestCard(
+                title = "Rotating Candles",
+                quest = response.rotatingCandles
+            )
+        }
+
+
+        response.seasonalCandles?.let { seasonalCandles ->
+
             item {
-                if (isTodayInGame(response.rotatingCandles.date)) QuestCard(
-                    title = "Rotating Candles",
-                    quest = response.rotatingCandles
-                )
-            }
-
-
-            response.seasonalCandles?.let { seasonalCandles ->
-
-                item {
-                    if (isTodayInGame(seasonalCandles.date)) QuestCard(
-                        title = "Seasonal Candles",
-                        quest = seasonalCandles
-                    )
-                }
-            }
-
-            items(
-                items = response.quests,
-                key = { quest -> "${quest.date}:${quest.title}" },
-            ) { quest ->
-                if (isTodayInGame(quest.date)) QuestCard(
-                    title = quest.title,
-                    quest = quest,
-                    showTitleFromQuest = false
+                if (isTodayInGame(seasonalCandles.date)) QuestCard(
+                    title = "Seasonal Candles",
+                    quest = seasonalCandles
                 )
             }
         }
+
+        items(
+            items = response.quests,
+            key = { quest -> "${quest.date}:${quest.title}" },
+        ) { quest ->
+            if (isTodayInGame(quest.date)) QuestCard(
+                title = quest.title,
+                quest = quest,
+                showTitleFromQuest = false
+            )
+        }
     }
+
 }
 
 @OptIn(ExperimentalFlexBoxApi::class)
@@ -140,14 +140,13 @@ private fun QuestCard(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyMedium,
             )
 
             if (showTitleFromQuest && quest.title != title) {
                 Text(
                     text = quest.title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
 
@@ -220,7 +219,7 @@ private fun QuestImageCredit(
 private fun QuestError(
     message: String,
     onRetry: () -> Unit,
-    modifier: Modifier,
+    modifier: Modifier
 ) {
     Box(
         modifier = modifier.fillMaxSize(),

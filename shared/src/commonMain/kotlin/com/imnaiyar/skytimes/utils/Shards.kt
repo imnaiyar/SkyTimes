@@ -125,9 +125,9 @@ val skyChangeOffset = (-32).minutes + (-10).seconds
 val shardLandOffset = 8.minutes + 40.seconds
 val shardEndOffset = 4.hours
 
-val blackShardMusic = "An Abrupt Premonition"
-val redShardMusic = "Lights Afar"
-val mediumShardMusic = "Of The Essence"
+const val blackShardMusic = "An Abrupt Premonition"
+const val redShardMusic = "Lights Afar"
+const val mediumShardMusic = "Of The Essence"
 
 data class ShardOccurrence(
     val skyChange: Instant,
@@ -139,7 +139,6 @@ data class ShardOccurrence(
 data class ShardData(
     val isRed: Boolean,
     val reward: Double? = null,
-    val firstInstant: Instant,
     val area: Areas,
     val realm: Realm,
     val occurrences: List<ShardOccurrence>,
@@ -195,7 +194,6 @@ fun getShard(date: LocalDate): ShardData? {
         isRed = isRedShard,
         reward = rewardsOverride[area] ?: shard.rewards,
         occurrences = occurrences,
-        firstInstant = firstInstant,
         area = area,
         realm = Realm.entries[realmIndex],
         music = if (!isRedShard) blackShardMusic else

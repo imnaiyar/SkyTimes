@@ -1,6 +1,11 @@
 package com.imnaiyar.skytimes.utils
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import com.imnaiyar.skytimes.constants.GameTimeZone
+import com.imnaiyar.skytimes.di.LocalAppContainer
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -17,7 +22,7 @@ enum class ClockFormat {
     HOUR_24
 }
 
-class TimeUtils {
+open class TimeUtils {
     private val hour12Format = LocalTime.Format {
         amPmHour()
         char(':')
@@ -45,10 +50,17 @@ class TimeUtils {
         return now.toLocalDateTime(timeZone)
     }
 
-    fun toZone(time: Instant, timeZone: String? = null): LocalTime {
-        val zone = if (timeZone != null) TimeZone.of(timeZone) else TimeZone.currentSystemDefault()
+    private fun _toZone(time: Instant, timeZone: TimeZone): LocalTime {
 
-        return time.toLocalDateTime(zone).time
+        return time.toLocalDateTime(timeZone).time
+    }
+
+    fun toZone(time: Instant): LocalTime {
+        return _toZone(time, TimeZone.currentSystemDefault())
+    }
+
+    fun toZone(time: Instant, timeZone: TimeZone): LocalTime {
+        return _toZone(time, timeZone)
     }
 
     fun formatMillis(millis: Long, withSeconds: Boolean = true): String {
@@ -81,7 +93,7 @@ class TimeUtils {
      * @param clockFormat The desired clock format (12-hour or 24-hour). Defaults to 24-hour format.
      * @return A string representation of the time in the specified format.
      */
-    fun formatTime(timeValue: TimeValue, use24HourClock: Boolean): String {
+    open fun formatTime(timeValue: TimeValue, use24HourClock: Boolean): String {
         val time = when (timeValue) {
             is TimeValue.localTime -> timeValue.time
             is TimeValue.instant -> timeValue.instant.toLocalDateTime(TimeZone.currentSystemDefault()).time
@@ -94,6 +106,35 @@ class TimeUtils {
         }
     }
 
+}
+
+@Stable
+class TimeFormatter(
+    private val use24HourClock: Boolean,
+) : TimeUtils() {
+
+    fun formatTime(time: TimeValue): String =
+        super.formatTime(time, use24HourClock)
+
+    fun format(instant: Instant): String =
+        formatTime(TimeValue.instant(instant))
+
+    fun format(localTime: LocalTime): String =
+        formatTime(TimeValue.localTime(localTime))
+}
+
+/**
+ * Helper utility with user settings respected passed
+ */
+@Composable
+fun rememberTimeFormatter(): TimeFormatter {
+    val settings = LocalAppContainer.current.settingsRepository.settings.collectAsState()
+
+    return remember(settings.value.use24HourClock) {
+        TimeFormatter(
+            use24HourClock = settings.value.use24HourClock,
+        )
+    }
 }
 
 private fun DateTimeFormatBuilder.WithDate.dayMonthYear() {

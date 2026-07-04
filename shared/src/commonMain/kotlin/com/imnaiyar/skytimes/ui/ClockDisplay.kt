@@ -3,20 +3,17 @@ package com.imnaiyar.skytimes.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
-import com.imnaiyar.skytimes.di.LocalSettingsViewModel
-import com.imnaiyar.skytimes.utils.TimeUtils
-import com.imnaiyar.skytimes.utils.TimeValue
+import com.imnaiyar.skytimes.constants.GameTimeZone
+import com.imnaiyar.skytimes.utils.rememberTimeFormatter
 import kotlinx.coroutines.delay
+import kotlinx.datetime.TimeZone
 import kotlin.time.Clock
-
-private val timeUtils = TimeUtils()
 
 @Composable
 fun ClockDisplay(
@@ -24,9 +21,10 @@ fun ClockDisplay(
     gameZone: Boolean = false,
     size: TextStyle = MaterialTheme.typography.titleMedium,
 ) {
-    val settings by LocalSettingsViewModel.current.settings.collectAsState()
     var now by remember { mutableStateOf(Clock.System.now()) }
-    val time = timeUtils.toZone(now, timeZone = if (gameZone) "America/Los_Angeles" else null)
+    val timeUtils = rememberTimeFormatter()
+    val time =
+        timeUtils.toZone(now, if (gameZone) GameTimeZone else TimeZone.currentSystemDefault())
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -38,10 +36,9 @@ fun ClockDisplay(
     }
 
     AnimatedTimer(
-        time = timeUtils.formatTime(TimeValue.localTime(time), settings.use24HourClock),
+        time = timeUtils.format(time),
         size,
-        modifier,
-        withAnimation = settings.clockAnimation
+        modifier
     )
 
 }

@@ -2,7 +2,13 @@ package com.imnaiyar.skytimes.utils
 
 import com.imnaiyar.skytimes.constants.EventData
 import com.imnaiyar.skytimes.constants.events
-import kotlinx.datetime.*
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -144,7 +150,10 @@ object EventTimeUtils {
         return EventDetails(
             event = event,
             nextOccurrence = nextOccurrence,
-            allOccurrences = if (includeAllOccurrences) getAllOccurrences(event, now) else emptyList(),
+            allOccurrences = if (includeAllOccurrences) getAllOccurrences(
+                event,
+                now
+            ) else emptyList(),
             status = getStatus(event, nextOccurrence, now)
         )
     }

@@ -38,6 +38,7 @@ import com.imnaiyar.skytimes.constants.GameTimeZone
 import com.imnaiyar.skytimes.constants.RoundedCorner
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.ui.ClockDisplay
+import com.imnaiyar.skytimes.ui.DecoratedText
 import com.imnaiyar.skytimes.utils.localDateToIso
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
@@ -74,11 +75,10 @@ enum class Screen(
                 }
             )) {
             ClockDisplay(gameZone = timeZone == GameTimeZone)
-            Text(
+            DecoratedText(
                 text = if (timeZone == GameTimeZone) "LA (Game) Time" else "Local Time",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
-                textDecoration = TextDecoration.Underline,
             )
         }
     }),
@@ -119,6 +119,7 @@ enum class Screen(
         )
         val tooltipState = rememberTooltipState()
 
+        val isToday = shardDate.value == todayDate.value
         Row(
             modifier = Modifier.animateContentSize(),
             verticalAlignment = Alignment.CenterVertically,
@@ -146,11 +147,11 @@ enum class Screen(
 
                     Spacer(Modifier.width(ButtonDefaults.IconSpacing))
 
-                    Text(shardDate.value.format(localDateToIso))
+                    Text(if (isToday) "Today" else shardDate.value.format(localDateToIso))
                 }
             }
 
-            if (shardDate.value != todayDate.value) IconButton(onClick = {
+            if (!isToday) IconButton(onClick = {
                 clockRepository.setShardDate(
                     todayDate.value
                 )

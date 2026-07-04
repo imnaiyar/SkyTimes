@@ -3,6 +3,7 @@ package com.imnaiyar.skytimes.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,6 +38,7 @@ import skytimes.shared.generated.resources.open_in_browser
 @Composable
 fun SettingsScreen(
     modifier: Modifier,
+    fabPad: PaddingValues
 ) {
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
@@ -52,7 +54,11 @@ fun SettingsScreen(
         action(!isChecked);
     }
 
-    LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    LazyColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        contentPadding = fabPad
+    ) {
         item {
             SettingsSection {
                 SettingsHeader("Preferences")
@@ -166,7 +172,6 @@ fun SettingsScreen(
 @Composable
 fun SettingsSection(content: @Composable () -> Unit) {
     Column(
-        modifier = Modifier.padding(all = 10.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         content()

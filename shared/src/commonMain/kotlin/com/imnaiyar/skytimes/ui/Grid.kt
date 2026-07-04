@@ -34,6 +34,7 @@ fun Grid(
     state: LazyGridState = rememberLazyGridState(),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.End,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    userScrollEnabled: Boolean = true,
     content: LazyGridScope.() -> Unit,
 ) {
     LazyVerticalGrid(
@@ -41,6 +42,7 @@ fun Grid(
         columns = columns,
         state = state,
         contentPadding = contentPadding,
+        userScrollEnabled = userScrollEnabled,
         horizontalArrangement = horizontalArrangement
     ) {
         content()
@@ -55,13 +57,15 @@ fun Grid(
     state: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.End,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    userScrollEnabled: Boolean = true,
     content: LazyStaggeredGridScope.() -> Unit,
 ) {
     LazyVerticalStaggeredGrid(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         columns = columns,
         state = state,
         contentPadding = contentPadding,
+        userScrollEnabled = userScrollEnabled,
         horizontalArrangement = horizontalArrangement
     ) {
         content()

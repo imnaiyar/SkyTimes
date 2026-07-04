@@ -47,6 +47,7 @@ import com.imnaiyar.skytimes.constants.EventData
 import com.imnaiyar.skytimes.constants.events
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
+import com.imnaiyar.skytimes.theme.DarkColor
 import com.imnaiyar.skytimes.theme.labelTiny
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.ClockDirection
@@ -236,9 +237,9 @@ private fun EventRow(
     val nextAT = if (isActive) eventDetails.status.endTime else eventDetails.nextOccurrence
 
     val eventNameStyle =
-        if (isActive) MaterialTheme.colorScheme.onError else Color.Unspecified
+        if (isActive) DarkColor.onSecondary else Color.Unspecified
     val nextOcStyle =
-        if (isActive) MaterialTheme.colorScheme.onError.copy(0.8f) else MaterialTheme.colorScheme.tertiary
+        if (isActive) DarkColor.onSecondary.copy(0.5f) else MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier.fillMaxWidth().graphicsLayer {
@@ -249,7 +250,7 @@ private fun EventRow(
             }
         }
             .background(
-                color = if (isActive) MaterialTheme.colorScheme.error else Color.Unspecified,
+                color = if (isActive) DarkColor.secondary else Color.Unspecified,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(all = 5.dp),
@@ -286,7 +287,7 @@ private fun EventRow(
         ) {
             Column(horizontalAlignment = Alignment.End) {
                 if (isActive) Text(
-                    "End in",
+                    "Ends in",
                     color = eventNameStyle,
                     style = MaterialTheme.typography.labelTiny
                 )
@@ -299,7 +300,7 @@ private fun EventRow(
                     withAnimation = clockAnimation
                 )
                 Text(
-                    text = "At: ${timeUtils.formatTime(TimeValue.instant(nextAT), use24HourClock)}",
+                    text = "At ${timeUtils.formatTime(TimeValue.instant(nextAT), use24HourClock)}",
                     color = nextOcStyle,
                     style = MaterialTheme.typography.labelSmall
                 )

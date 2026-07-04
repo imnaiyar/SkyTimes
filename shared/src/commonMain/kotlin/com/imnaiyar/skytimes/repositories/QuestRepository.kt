@@ -1,5 +1,6 @@
 package com.imnaiyar.skytimes.repositories
 
+import com.imnaiyar.skytimes.constants.SkyHelperApi
 import com.imnaiyar.skytimes.utils.QuestResponse
 import com.imnaiyar.skytimes.utils.isTodayInGame
 import com.russhwolf.settings.Settings
@@ -66,8 +67,9 @@ class QuestRepository(
     }
 
     private suspend fun fetchFresh(): Result<QuestResponse> {
+
         return runCatching {
-            val body = client.get(QuestApiUrl).bodyAsText()
+            val body = client.get(SkyHelperApi + QuestApiPath).bodyAsText()
             val response = json.decodeFromString<QuestResponse>(body)
             if (!isTodayInGame(response.lastUpdated)) throw OutdatedQuestException()
             storage.putString(QuestCacheKey, body)
@@ -102,7 +104,7 @@ class QuestRepository(
     }
 
     private companion object {
-        const val QuestApiUrl = "https://api.skyhelper.xyz/update/quests"
+        const val QuestApiPath = "/update/quests"
         const val QuestCacheKey = "quests_response_json"
         val RefreshCooldown = 5.seconds
     }

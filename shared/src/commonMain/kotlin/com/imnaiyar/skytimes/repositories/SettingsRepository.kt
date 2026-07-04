@@ -1,6 +1,7 @@
 package com.imnaiyar.skytimes.repositories
 
 import com.imnaiyar.skytimes.constants.EventKey
+import com.imnaiyar.skytimes.theme.ThemeContrast
 import com.imnaiyar.skytimes.theme.ThemeMode
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,9 @@ data class AppSettings(
     val use24HourClock: Boolean = true,
     val notificationsEnabled: Boolean = true,
     val clockAnimation: Boolean = true,
-    val eventOrder: List<EventKey> = EventKey.entries
+    val eventOrder: List<EventKey> = EventKey.entries,
+    val themeContrast: ThemeContrast = ThemeContrast.Normal,
+    val themeColor: String? = null
 )
 
 
@@ -43,6 +46,14 @@ class SettingsRepository(
 
     suspend fun setNotificationsEnabled(enabled: Boolean) {
         update { current -> current.copy(notificationsEnabled = enabled) }
+    }
+
+    suspend fun setThemeColor(color: String?) {
+        update { current -> current.copy(themeColor = color) }
+    }
+
+    suspend fun setThemeContrast(contrast: ThemeContrast) {
+        update { current -> current.copy(themeContrast = contrast) }
     }
 
     suspend fun setClockAnimation(enabled: Boolean) {
@@ -83,6 +94,11 @@ class SettingsRepository(
                 SettingsKeys.ClockAnimation,
                 AppSettings().clockAnimation
             ),
+            themeColor = storage.getStringOrNull(SettingsKeys.ThemeColor),
+            themeContrast = storage.getStringOrNull(SettingsKeys.ThemeContrast)
+                ?.let(ThemeContrast::valueOf)
+                ?: ThemeContrast.Normal,
+            
             eventOrder = storage.getString(
                 SettingsKeys.EventOrder,
                 AppSettings().eventOrder.joinToString(
@@ -118,6 +134,16 @@ class SettingsRepository(
         if (current.eventOrder != next.eventOrder) {
             storage.putString(SettingsKeys.EventOrder, next.eventOrder.joinToString("|"))
         }
+        if (current.themeColor != next.themeColor) {
+            if (next.themeColor == null)
+            // if it was set to null, then delete it
+                storage.remove(SettingsKeys.ThemeColor)
+            else
+                storage.putString(SettingsKeys.ThemeColor, next.themeColor)
+        }
+        if (current.themeContrast != next.themeContrast) {
+            storage.putString(SettingsKeys.ThemeContrast, next.themeContrast.name)
+        }
     }
 
     private fun parseThemeMode(value: String): ThemeMode {
@@ -132,5 +158,7 @@ private object SettingsKeys {
     const val NotificationsEnabled = "notifications_enabled"
     const val ClockAnimation = "clock_animation"
     const val EventOrder = "event_order"
+    const val ThemeColor = "theme_color"
+    const val ThemeContrast = "theme_contrast"
 }
 

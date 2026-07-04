@@ -48,7 +48,7 @@ fun App() {
     CompositionLocalProvider(
         LocalAppContainer provides appContainer
     ) {
-        AppTheme(themeMode = settings.themeMode) {
+        AppTheme(themeMode = settings.themeMode, settings.themeContrast, settings.themeColor) {
             Box() {
                 val settingsViewModel = viewModel {
                     appContainer.createSettingsViewModel()

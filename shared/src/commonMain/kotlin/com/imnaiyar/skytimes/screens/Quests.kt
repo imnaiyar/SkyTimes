@@ -153,7 +153,6 @@ private fun QuestCard(
             Text(
                 text = Instant.parse(quest.date).format(isoDateFormat),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.tertiary,
             )
 
             quest.description?.takeIf { it.isNotBlank() }?.let { description ->

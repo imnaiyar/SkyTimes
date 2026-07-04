@@ -5,6 +5,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import com.imnaiyar.skytimes.constants.GameTimeZone
+import com.imnaiyar.skytimes.constants.LocalTimeZone
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -45,7 +46,7 @@ open class TimeUtils {
      * Returns the current time in the specified time zone.
      * If no time zone is provided, it returns the current time in the system's default
      */
-    fun getTime(timeZone: TimeZone = TimeZone.currentSystemDefault()): LocalDateTime {
+    fun getTime(timeZone: TimeZone = LocalTimeZone): LocalDateTime {
         val now = Clock.System.now()
         return now.toLocalDateTime(timeZone)
     }
@@ -56,7 +57,7 @@ open class TimeUtils {
     }
 
     fun toZone(time: Instant): LocalTime {
-        return _toZone(time, TimeZone.currentSystemDefault())
+        return _toZone(time, LocalTimeZone)
     }
 
     fun toZone(time: Instant, timeZone: TimeZone): LocalTime {
@@ -93,10 +94,14 @@ open class TimeUtils {
      * @param clockFormat The desired clock format (12-hour or 24-hour). Defaults to 24-hour format.
      * @return A string representation of the time in the specified format.
      */
-    open fun formatTime(timeValue: TimeValue, use24HourClock: Boolean): String {
+    open fun formatTime(
+        timeValue: TimeValue,
+        use24HourClock: Boolean,
+        zone: TimeZone = LocalTimeZone
+    ): String {
         val time = when (timeValue) {
             is TimeValue.localTime -> timeValue.time
-            is TimeValue.instant -> timeValue.instant.toLocalDateTime(TimeZone.currentSystemDefault()).time
+            is TimeValue.instant -> toZone(timeValue.instant, zone)
         }
         val clockFormat = if (use24HourClock) ClockFormat.HOUR_24 else ClockFormat.HOUR_12
 
@@ -113,14 +118,14 @@ class TimeFormatter(
     private val use24HourClock: Boolean,
 ) : TimeUtils() {
 
-    fun formatTime(time: TimeValue): String =
-        super.formatTime(time, use24HourClock)
+    fun formatTime(time: TimeValue, zone: TimeZone = LocalTimeZone): String =
+        super.formatTime(time, use24HourClock, zone)
 
-    fun format(instant: Instant): String =
-        formatTime(TimeValue.instant(instant))
+    fun format(instant: Instant, zone: TimeZone = LocalTimeZone): String =
+        formatTime(TimeValue.instant(instant), zone)
 
-    fun format(localTime: LocalTime): String =
-        formatTime(TimeValue.localTime(localTime))
+    fun format(localTime: LocalTime, zone: TimeZone = LocalTimeZone): String =
+        formatTime(TimeValue.localTime(localTime), zone)
 }
 
 /**

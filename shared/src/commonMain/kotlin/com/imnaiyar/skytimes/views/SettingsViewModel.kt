@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.imnaiyar.skytimes.constants.EventKey
 import com.imnaiyar.skytimes.repositories.AppSettings
 import com.imnaiyar.skytimes.repositories.SettingsRepository
+import com.imnaiyar.skytimes.theme.ThemeContrast
 import com.imnaiyar.skytimes.theme.ThemeMode
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -35,6 +36,18 @@ class SettingsViewModel(
     fun setClockAnimation(enabled: Boolean) {
         viewModelScope.launch {
             repository.setClockAnimation(enabled)
+        }
+    }
+
+    fun setThemeColor(color: String?) {
+        viewModelScope.launch {
+            repository.setThemeColor(color)
+        }
+    }
+
+    fun setThemeContrast(contrast: ThemeContrast) {
+        viewModelScope.launch {
+            repository.setThemeContrast(contrast)
         }
     }
 

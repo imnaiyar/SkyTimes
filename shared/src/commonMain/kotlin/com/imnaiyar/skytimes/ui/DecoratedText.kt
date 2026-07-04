@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -31,12 +33,12 @@ fun DecoratedText(
     modifier: Modifier = Modifier,
     color: Color = LocalContentColor.current,
     style: TextStyle = LocalTextStyle.current,
+    textDecoration: TextDecoration = TextDecoration.None,
     underlineStyle: UnderlineStyle = UnderlineStyle.Dotted,
     underlineColor: Color = color,
     strokeWidth: Dp = 1.dp,
     dashLength: Dp = 4.dp,
     gapLength: Dp = 2.dp,
-    underlineGap: Dp = 1.dp // vertical space between text baseline and the line
 ) {
     var layoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     val density = LocalDensity.current
@@ -45,13 +47,13 @@ fun DecoratedText(
         text = text,
         style = style,
         color = color,
+        textDecoration = textDecoration,
         onTextLayout = { layoutResult = it },
         modifier = modifier.drawWithContent {
             drawContent()
 
             val layout = layoutResult ?: return@drawWithContent
             val strokeWidthPx = with(density) { strokeWidth.toPx() }
-            val gapPx = with(density) { underlineGap.toPx() }
 
             val pathEffect = when (underlineStyle) {
                 UnderlineStyle.Solid -> null
@@ -89,4 +91,11 @@ fun DecoratedText(
             }
         }
     )
+}
+
+
+@Composable
+@Preview
+fun TextPrev() {
+    DecoratedText("This is a text!")
 }

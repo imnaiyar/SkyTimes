@@ -25,6 +25,7 @@ reorderable = "3.1.0"
 windowsizeclass = "1.2.0"
 coil_image = "3.5.0"
 image-zoom = "1.4.0"
+material-kolor = "4.1.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -62,6 +63,7 @@ coil-image = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil_ima
 coil-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil_image" }
 image-zoom = { module = "io.github.panpf.zoomimage:zoomimage-compose", version.ref = "image-zoom" }
 image-zoom-coil = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version.ref = "image-zoom" }
+material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "material-kolor" }
 
 
 [plugins]

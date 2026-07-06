@@ -4,5 +4,5 @@ interface StartupTask {
     val name: String
     val critical: Boolean
 
-    suspend fun run()
+    suspend fun initialize()
 }

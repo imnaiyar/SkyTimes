@@ -72,6 +72,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.image.zoom)
             implementation(libs.image.zoom.coil)
+            implementation(libs.material.kolor)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

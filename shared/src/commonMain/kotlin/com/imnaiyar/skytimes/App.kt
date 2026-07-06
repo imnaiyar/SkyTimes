@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -34,62 +35,81 @@ val NavController =
 @ExperimentalMaterial3Api
 @Composable
 fun App() {
+    SideEffect {
+        println("FIRST COMPOSITION")
+    }
     val appContainer = remember { AppContainer() }
     val appViewModel = viewModel { appContainer.createAppViewModel() }
     val appState by appViewModel.state.collectAsState()
-    val settings by appContainer.settingsRepository.settings.collectAsState()
-    val navController = rememberNavController()
-
     val progress by animateFloatAsState(
         targetValue = if (appState is AppState.Ready) 1f else 0f,
         animationSpec = tween(600)
     )
 
-    CompositionLocalProvider(
-        LocalAppContainer provides appContainer
-    ) {
-        AppTheme(themeMode = settings.themeMode, settings.themeContrast, settings.themeColor) {
-            Box() {
-                val settingsViewModel = viewModel {
-                    appContainer.createSettingsViewModel()
-                }
-
-                CompositionLocalProvider(
-                    LocalSettingsViewModel provides settingsViewModel,
-                    NavController provides navController
-                ) {
-                    NavHost(
-                        navController = navController,
-                        startDestination = MainRoute
-                    ) {
-                        mainGraph()
+    when (appState) {
+        AppState.Loading ->
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .drawWithContent() {
+                        clipRect(
+                            top = size.height * progress,
+                            bottom = size.height
+                        ) {
+                            this@drawWithContent.drawContent()
+                        }
                     }
+            ) {
+                SplashScreen(
+                    message = if (appState is AppState.Error)
+                        (appState as AppState.Error).message
+                    else null,
+                    isError = appState is AppState.Error,
+                    onRetry = if (appState is AppState.Error)
+                        appViewModel::retry
+                    else null,
+                )
+            }
 
-                    // Reveal from top to bottom
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .drawWithContent() {
-                                clipRect(
-                                    top = size.height * progress,
-                                    bottom = size.height
-                                ) {
-                                    this@drawWithContent.drawContent()
-                                }
+        is AppState.Error -> SplashScreen(
+            message = (appState as AppState.Error).message,
+            isError = true,
+            onRetry = appViewModel::retry
+        )
+
+        is AppState.Ready -> {
+            CompositionLocalProvider(
+                LocalAppContainer provides appContainer
+            ) {
+
+                val settings by appContainer.settingsRepository.settings.collectAsState()
+                val theme by appContainer.themeController.theme.collectAsState()
+
+                val navController = rememberNavController()
+                AppTheme(themeMode = settings.themeMode, theme.contrast, theme.color) {
+                    Box {
+                        val settingsViewModel = viewModel {
+                            appContainer.createSettingsViewModel()
+                        }
+
+                        CompositionLocalProvider(
+                            LocalSettingsViewModel provides settingsViewModel,
+                            NavController provides navController
+                        ) {
+                            NavHost(
+                                navController = navController,
+                                startDestination = MainRoute
+                            ) {
+                                mainGraph()
                             }
-                    ) {
-                        SplashScreen(
-                            message = if (appState is AppState.Error)
-                                (appState as AppState.Error).message
-                            else null,
-                            isError = appState is AppState.Error,
-                            onRetry = if (appState is AppState.Error)
-                                appViewModel::retry
-                            else null,
-                        )
+
+                            // Reveal from top to bottom
+                        }
                     }
                 }
             }
         }
+
     }
+
 }

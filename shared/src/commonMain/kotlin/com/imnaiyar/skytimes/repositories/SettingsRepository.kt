@@ -1,8 +1,10 @@
 package com.imnaiyar.skytimes.repositories
 
 import com.imnaiyar.skytimes.constants.EventKey
-import com.imnaiyar.skytimes.theme.ThemeContrast
+import com.imnaiyar.skytimes.startup.StartupTask
+import com.imnaiyar.skytimes.theme.DefaultThemeColor
 import com.imnaiyar.skytimes.theme.ThemeMode
+import com.materialkolor.Contrast
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,21 +18,23 @@ data class AppSettings(
     val notificationsEnabled: Boolean = true,
     val clockAnimation: Boolean = true,
     val eventOrder: List<EventKey> = EventKey.entries,
-    val themeContrast: ThemeContrast = ThemeContrast.Normal,
-    val themeColor: String? = null
+    val themeContrast: Contrast = Contrast.Default,
+    val themeColor: Int = DefaultThemeColor.toInt()
 )
 
 
 class SettingsRepository(
     private val storage: Settings = Settings()
-) {
+) : StartupTask {
+    override val name = "Settings"
+    override val critical = true
     private val updateMutex = Mutex()
     private val _settings =
         MutableStateFlow(AppSettings())
 
     val settings: StateFlow<AppSettings> = _settings.asStateFlow()
 
-    suspend fun initialize() {
+    override suspend fun initialize() {
         updateMutex.withLock {
             _settings.value = loadSettings()
         }
@@ -48,12 +52,16 @@ class SettingsRepository(
         update { current -> current.copy(notificationsEnabled = enabled) }
     }
 
-    suspend fun setThemeColor(color: String?) {
+    suspend fun setThemeColor(color: Int) {
         update { current -> current.copy(themeColor = color) }
     }
 
-    suspend fun setThemeContrast(contrast: ThemeContrast) {
+    suspend fun setThemeContrast(contrast: Contrast) {
         update { current -> current.copy(themeContrast = contrast) }
+    }
+
+    suspend fun setTheme(color: Int, contrast: Contrast) {
+        update { current -> current.copy(themeColor = color, themeContrast = contrast) }
     }
 
     suspend fun setClockAnimation(enabled: Boolean) {
@@ -62,6 +70,13 @@ class SettingsRepository(
 
     suspend fun setEventOrder(order: List<EventKey>) {
         update { current -> current.copy(eventOrder = order) }
+    }
+
+    /**
+     * Only updates locally without  writing to storage
+     */
+    fun updateLocal(transform: (AppSettings) -> AppSettings) {
+        _settings.value = transform(_settings.value)
     }
 
     private suspend inline fun update(transform: (AppSettings) -> AppSettings) {
@@ -78,30 +93,34 @@ class SettingsRepository(
     }
 
     private fun loadSettings(): AppSettings {
+        val defaults = AppSettings()
         return AppSettings(
             themeMode = storage.getStringOrNull(SettingsKeys.ThemeMode)
                 ?.let(::parseThemeMode)
-                ?: AppSettings().themeMode,
+                ?: defaults.themeMode,
             use24HourClock = storage.getBoolean(
                 SettingsKeys.Use24HourClock,
-                AppSettings().use24HourClock
+                defaults.use24HourClock
             ),
             notificationsEnabled = storage.getBoolean(
                 SettingsKeys.NotificationsEnabled,
-                AppSettings().notificationsEnabled
+                defaults.notificationsEnabled
             ),
             clockAnimation = storage.getBoolean(
                 SettingsKeys.ClockAnimation,
-                AppSettings().clockAnimation
+                defaults.clockAnimation
             ),
-            themeColor = storage.getStringOrNull(SettingsKeys.ThemeColor),
+            themeColor = storage.getInt(
+                SettingsKeys.ThemeColor,
+                defaults.themeColor
+            ),
             themeContrast = storage.getStringOrNull(SettingsKeys.ThemeContrast)
-                ?.let(ThemeContrast::valueOf)
-                ?: ThemeContrast.Normal,
-            
+                ?.let(Contrast::valueOf)
+                ?: Contrast.Default,
+
             eventOrder = storage.getString(
                 SettingsKeys.EventOrder,
-                AppSettings().eventOrder.joinToString(
+                defaults.eventOrder.joinToString(
                     "|"
                 )
             )
@@ -139,7 +158,7 @@ class SettingsRepository(
             // if it was set to null, then delete it
                 storage.remove(SettingsKeys.ThemeColor)
             else
-                storage.putString(SettingsKeys.ThemeColor, next.themeColor)
+                storage.putInt(SettingsKeys.ThemeColor, next.themeColor)
         }
         if (current.themeContrast != next.themeContrast) {
             storage.putString(SettingsKeys.ThemeContrast, next.themeContrast.name)

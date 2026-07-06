@@ -47,7 +47,6 @@ import com.imnaiyar.skytimes.constants.EventData
 import com.imnaiyar.skytimes.constants.events
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
-import com.imnaiyar.skytimes.theme.DarkColor
 import com.imnaiyar.skytimes.theme.labelTiny
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.ClockDirection
@@ -237,9 +236,9 @@ private fun EventRow(
     val nextAT = if (isActive) eventDetails.status.endTime else eventDetails.nextOccurrence
 
     val eventNameStyle =
-        if (isActive) DarkColor.onSecondary else Color.Unspecified
+        if (isActive) MaterialTheme.colorScheme.onSecondary else Color.Unspecified
     val nextOcStyle =
-        if (isActive) DarkColor.onSecondary.copy(0.5f) else MaterialTheme.colorScheme.primary
+        if (isActive) MaterialTheme.colorScheme.onSecondary.copy(0.5f) else MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier.fillMaxWidth().graphicsLayer {
@@ -250,7 +249,7 @@ private fun EventRow(
             }
         }
             .background(
-                color = if (isActive) DarkColor.secondary else Color.Unspecified,
+                color = if (isActive) MaterialTheme.colorScheme.secondary else Color.Unspecified,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(all = 5.dp),

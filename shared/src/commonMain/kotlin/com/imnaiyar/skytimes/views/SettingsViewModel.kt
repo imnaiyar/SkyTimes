@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.imnaiyar.skytimes.constants.EventKey
 import com.imnaiyar.skytimes.repositories.AppSettings
 import com.imnaiyar.skytimes.repositories.SettingsRepository
-import com.imnaiyar.skytimes.theme.ThemeContrast
 import com.imnaiyar.skytimes.theme.ThemeMode
+import com.materialkolor.Contrast
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -39,13 +39,13 @@ class SettingsViewModel(
         }
     }
 
-    fun setThemeColor(color: String?) {
+    fun setThemeColor(color: Int) {
         viewModelScope.launch {
             repository.setThemeColor(color)
         }
     }
 
-    fun setThemeContrast(contrast: ThemeContrast) {
+    fun setThemeContrast(contrast: Contrast) {
         viewModelScope.launch {
             repository.setThemeContrast(contrast)
         }

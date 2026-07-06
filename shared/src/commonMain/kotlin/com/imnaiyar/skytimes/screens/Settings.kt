@@ -23,13 +23,16 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import com.imnaiyar.skytimes.NavController
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
+import com.imnaiyar.skytimes.nav.ThemeSettingsRoute
 import com.imnaiyar.skytimes.theme.ThemeMode
 import com.imnaiyar.skytimes.ui.Card
 import com.imnaiyar.skytimes.ui.SettingsItem
 import com.imnaiyar.skytimes.ui.Switch
 import org.jetbrains.compose.resources.painterResource
 import skytimes.shared.generated.resources.Res
+import skytimes.shared.generated.resources.chevron_right
 import skytimes.shared.generated.resources.contrast_circle
 import skytimes.shared.generated.resources.dark_mode
 import skytimes.shared.generated.resources.light_mode
@@ -44,6 +47,7 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsState()
     val uriHandler = LocalUriHandler.current
 
+    val navController = NavController.current
     val haptic = LocalHapticFeedback.current
 
     val triggerSwitch = { isChecked: Boolean, action: (value: Boolean) -> Unit ->
@@ -53,6 +57,8 @@ fun SettingsScreen(
         )
         action(!isChecked);
     }
+
+
 
     LazyColumn(
         modifier = modifier,
@@ -101,6 +107,8 @@ fun SettingsScreen(
                 }
             }
         }
+
+        // Appearences
         item {
             SettingsSection {
                 SettingsHeader("Appearance")
@@ -147,6 +155,24 @@ fun SettingsScreen(
                 }
             }
         }
+
+        // Contrast
+        item {
+            SettingsCard {
+                SettingsItem(
+                    "Theme",
+                    "Configure app's theme",
+                    {
+                        Icon(
+                            painterResource(Res.drawable.chevron_right),
+                            contentDescription = "Chevron"
+                        )
+                    },
+                    onClick = { navController.navigate(ThemeSettingsRoute) }
+                )
+            }
+        }
+        // Links
         item {
             SettingsSection {
                 SettingsHeader("Links")

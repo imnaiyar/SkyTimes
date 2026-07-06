@@ -51,7 +51,7 @@ import skytimes.shared.generated.resources.lightmend_lantern
 fun MainScreen() {
     val screens = remember { Screen.entries }
 
-    val pagerState = rememberPagerState {
+    val pagerState = rememberPagerState(2) {
         screens.size
     }
 
@@ -76,7 +76,7 @@ fun MainScreen() {
     }
 
     val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
-    val fabPad = PaddingValues(bottom = heightInDp + 16.dp)
+    val fabPad = PaddingValues(bottom = heightInDp + 16.dp, top = 11.dp)
     Scaffold(
         modifier = Modifier.nestedScroll(bottomScroll.nestedScrollConnection),
         bottomBar = {

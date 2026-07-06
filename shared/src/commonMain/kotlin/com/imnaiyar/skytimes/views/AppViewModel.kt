@@ -13,18 +13,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AppViewModel(
-    private val appInitializer: AppInitializer
+    private val appInitializer: AppInitializer,
 ) : ViewModel() {
     private val _state = MutableStateFlow<AppState>(AppState.Loading)
     val state: StateFlow<AppState> = _state.asStateFlow()
     private var initializationJob: Job? = null
 
+
     init {
-        initialize()
+        viewModelScope.launch {
+            initialize()
+        }
     }
 
     fun retry() {
-        initialize()
+        viewModelScope.launch {
+            initialize()
+        }
     }
 
     private fun initialize() {

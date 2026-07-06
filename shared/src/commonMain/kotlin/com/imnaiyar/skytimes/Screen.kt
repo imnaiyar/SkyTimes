@@ -11,24 +11,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,11 +32,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.constants.GameTimeZone
 import com.imnaiyar.skytimes.constants.RoundedCorner
+import com.imnaiyar.skytimes.constants.dateDisclaimer
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.ui.ClockDisplay
 import com.imnaiyar.skytimes.ui.DecoratedText
+import com.imnaiyar.skytimes.ui.Tooltip
 import com.imnaiyar.skytimes.utils.localDateToIso
-import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.format
@@ -56,6 +53,8 @@ import skytimes.shared.generated.resources.replay
 import skytimes.shared.generated.resources.shards_icon
 import kotlin.time.Instant
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 enum class Screen(
     val title: String,
     val icon: DrawableResource,
@@ -85,22 +84,8 @@ enum class Screen(
     Quests("Daily Quests", Res.drawable.quest_icon, {
         val date = LocalAppContainer.current.clockRepository.observeDate()
 
-        val tooltipState = rememberTooltipState()
-        val scope = rememberCoroutineScope()
-
-        TooltipBox(
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Below),
-            state = tooltipState,
-            tooltip = {
-                PlainTooltip {
-                    Text(
-                        "The displayed date reflects the game's reset date at midnight, which is in LA timezone where TGC is based on."
-                    )
-                }
-            },
-        ) {
+        Tooltip(dateDisclaimer) {
             Text(
-                modifier = Modifier.clickable { scope.launch { tooltipState.show() } },
                 text = date.value.format(localDateToIso),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
@@ -109,7 +94,7 @@ enum class Screen(
         }
     }),
     Shards("Shards", Res.drawable.shards_icon, {
-        val clockRepository = LocalAppContainer.current.clockRepository;
+        val clockRepository = LocalAppContainer.current.clockRepository
         val todayDate = clockRepository.observeDate()
         val shardDate = clockRepository.shardDate.collectAsState()
         var showPicker by remember { mutableStateOf(false) }
@@ -117,7 +102,13 @@ enum class Screen(
         val pickerState = rememberDatePickerState(
             shardDate.value.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
         )
-        val tooltipState = rememberTooltipState()
+
+        LaunchedEffect(shardDate.value) {
+            pickerState.selectedDateMillis =
+                shardDate.value
+                    .atStartOfDayIn(TimeZone.UTC)
+                    .toEpochMilliseconds()
+        }
 
         val isToday = shardDate.value == todayDate.value
         Row(
@@ -125,20 +116,7 @@ enum class Screen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            TooltipBox(
-                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                    TooltipAnchorPosition.Below
-                ),
-                state = tooltipState,
-                tooltip = {
-                    PlainTooltip {
-                        Text(
-                            "The displayed date reflects the game's reset date at midnight," +
-                                    " which is in LA timezone where TGC is based on. It may differ from your actual local date"
-                        )
-                    }
-                },
-            ) {
+            Tooltip(dateDisclaimer, showOnClick = false) {
                 OutlinedButton(onClick = { showPicker = !showPicker }, shape = RoundedCorner) {
                     Icon(
                         painterResource(Res.drawable.calendar),

@@ -42,7 +42,7 @@ class AppInitializer(
 
     private suspend fun runTask(task: StartupTask): StartupTaskResult {
         return try {
-            task.run()
+            task.initialize()
             StartupTaskResult.Success(task.name)
         } catch (cancellation: CancellationException) {
             throw cancellation

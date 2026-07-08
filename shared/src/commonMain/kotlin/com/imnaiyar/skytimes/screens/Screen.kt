@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes
+package com.imnaiyar.skytimes.screens
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -52,7 +52,6 @@ import skytimes.shared.generated.resources.quest_icon
 import skytimes.shared.generated.resources.replay
 import skytimes.shared.generated.resources.shards_icon
 import kotlin.time.Instant
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 enum class Screen(

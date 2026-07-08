@@ -38,6 +38,7 @@ import skytimes.shared.generated.resources.dark_mode
 import skytimes.shared.generated.resources.light_mode
 import skytimes.shared.generated.resources.open_in_browser
 
+
 @Composable
 fun SettingsScreen(
     modifier: Modifier,

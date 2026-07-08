@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -24,6 +23,7 @@ import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.nav.MainRoute
 import com.imnaiyar.skytimes.nav.mainGraph
+import com.imnaiyar.skytimes.screens.SplashScreen
 import com.imnaiyar.skytimes.startup.AppState
 import com.imnaiyar.skytimes.theme.AppTheme
 
@@ -35,9 +35,6 @@ val NavController =
 @ExperimentalMaterial3Api
 @Composable
 fun App() {
-    SideEffect {
-        println("FIRST COMPOSITION")
-    }
     val appContainer = remember { AppContainer() }
     val appViewModel = viewModel { appContainer.createAppViewModel() }
     val appState by appViewModel.state.collectAsState()
@@ -59,17 +56,7 @@ fun App() {
                             this@drawWithContent.drawContent()
                         }
                     }
-            ) {
-                SplashScreen(
-                    message = if (appState is AppState.Error)
-                        (appState as AppState.Error).message
-                    else null,
-                    isError = appState is AppState.Error,
-                    onRetry = if (appState is AppState.Error)
-                        appViewModel::retry
-                    else null,
-                )
-            }
+            ) { SplashScreen() }
 
         is AppState.Error -> SplashScreen(
             message = (appState as AppState.Error).message,
@@ -84,7 +71,6 @@ fun App() {
 
                 val settings by appContainer.settingsRepository.settings.collectAsState()
                 val theme by appContainer.themeController.theme.collectAsState()
-
                 val navController = rememberNavController()
                 AppTheme(themeMode = settings.themeMode, theme.contrast, theme.color) {
                     Box {

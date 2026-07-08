@@ -1,12 +1,15 @@
 package com.imnaiyar.skytimes.screens
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,23 +21,37 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
@@ -43,11 +60,15 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.imnaiyar.skytimes.constants.GameTimeZone
+import com.imnaiyar.skytimes.constants.SkyHelperCdn
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.Card
 import com.imnaiyar.skytimes.ui.ClockDirection
 import com.imnaiyar.skytimes.ui.DecoratedText
+import com.imnaiyar.skytimes.ui.LiveIndicator
+import com.imnaiyar.skytimes.ui.RemoteImage
+import com.imnaiyar.skytimes.ui.SlidingIconToggle
 import com.imnaiyar.skytimes.ui.Tooltip
 import com.imnaiyar.skytimes.utils.ShardData
 import com.imnaiyar.skytimes.utils.ShardOccurrence
@@ -55,6 +76,7 @@ import com.imnaiyar.skytimes.utils.TimeUtils
 import com.imnaiyar.skytimes.utils.getShard
 import com.imnaiyar.skytimes.utils.rememberTimeFormatter
 import com.imnaiyar.skytimes.utils.toOrdinal
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.MonthNames
@@ -63,7 +85,8 @@ import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.ac
-import skytimes.shared.generated.resources.chevron_right
+import skytimes.shared.generated.resources.data
+import skytimes.shared.generated.resources.map
 import skytimes.shared.generated.resources.wax
 import kotlin.math.abs
 import kotlin.time.Clock
@@ -71,46 +94,172 @@ import kotlin.time.Instant
 
 @Composable
 fun ShardsScreen(modifier: Modifier, fabPad: PaddingValues) {
-    val clockRepository = LocalAppContainer.current.clockRepository
-
+    val appCont = LocalAppContainer.current
+    val clockRepository = appCont.clockRepository
     val now = clockRepository.now.collectAsState()
     val shardDate = clockRepository.shardDate.collectAsState()
-    val shard = getShard(shardDate.value)
-    if (shard == null) {
-        NoShardDisplay(modifier.padding(fabPad), shardDate.value)
-        return
+
+    val centerPage = Int.MAX_VALUE / 2
+    val anchorDate = remember { shardDate.value }
+
+    fun dateForPage(page: Int): LocalDate =
+        LocalDate.fromEpochDays(anchorDate.toEpochDays() + (page - centerPage))
+
+    fun pageForDate(date: LocalDate): Int =
+        centerPage + (date.toEpochDays() - anchorDate.toEpochDays()).toInt()
+
+    val pagerState = rememberPagerState(initialPage = centerPage) { Int.MAX_VALUE }
+
+    // update page when shard date changes (from header date picker)
+    LaunchedEffect(shardDate.value) {
+        val targetPage = pageForDate(shardDate.value)
+        if (targetPage != pagerState.currentPage && targetPage != pagerState.targetPage) {
+            pagerState.animateScrollToPage(targetPage)
+        }
     }
 
+    // update date when page change
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }
+            .collect { page ->
+                val date = dateForPage(page)
+                if (date != shardDate.value) {
+                    clockRepository.setShardDate(date)
+                }
+            }
+    }
+
+    VerticalPager(
+        state = pagerState,
+        modifier = modifier.fillMaxSize(),
+    ) { page ->
+        ShardsPage(
+            date = dateForPage(page),
+            now = now.value,
+            fabPad = fabPad,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ShardsPage(date: LocalDate, now: Instant, fabPad: PaddingValues) {
+    val shard = getShard(date)
+    if (shard == null) {
+        NoShardDisplay(Modifier.padding(fabPad), date)
+        return
+    }
     val upcomingOrActive =
-        shard.occurrences.find { occurrence -> occurrence.shardEnd > now.value }
+        shard.occurrences.find { occurrence -> occurrence.shardEnd > now }
+    val sheetState = rememberModalBottomSheetState()
+    var showSheet by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
-
-    LazyColumn(modifier = modifier, contentPadding = fabPad) {
-
-        // some space at the start
-        item { Spacer(Modifier.height(15.dp)) }
-        // shard title
-        item { ShardTitle(shard) }
-
-        // shard area
-        item {
+    Box(
+        modifier = Modifier.fillMaxSize().padding(fabPad),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(modifier = Modifier.widthIn(max = 600.dp)) {
+            Spacer(Modifier.height(15.dp))
+            ShardTitle(shard)
             ShardArea(shard)
+            Spacer(Modifier.height(30.dp))
+            ShardCountdown(upcomingOrActive, now, shard) { showSheet = true }
+            Spacer(Modifier.height(30.dp))
+            ShardInfographics(shard)
+            Spacer(Modifier.height(30.dp))
         }
+    }
 
-        item { Spacer(Modifier.height(30.dp)) }
-
-        // current upcoming shard countdown/info
-        item { ShardCountdown(upcomingOrActive, now.value, shard) }
-
-        item { Spacer(Modifier.height(30.dp)) }
-        // timeline
-        item {
-            ShardTimeline(upcomingOrActive.takeIf { it != null } ?: shard.occurrences.last(),
-                now.value)
+    if (showSheet) {
+        ShardBottomSheet(
+            shard,
+            shard.occurrences.indexOf(upcomingOrActive).let { if (it == -1) 0 else it },
+            sheetState,
+            now,
+        ) {
+            scope.launch {
+                sheetState.hide()
+            }.invokeOnCompletion {
+                if (!sheetState.isVisible) {
+                    showSheet = false
+                }
+            }
         }
     }
 }
 
+@Composable
+@ExperimentalMaterial3Api
+private fun ShardBottomSheet(
+    shard: ShardData,
+    index: Int,
+    sheetState: SheetState,
+    now: Instant,
+    onDismiss: () -> Unit
+) {
+    val pagerState = rememberPagerState(
+        initialPage = index,
+        pageCount = { 3 }
+    )
+
+    val activeIndex = shard.occurrences.indexOfFirst { it.shardLand < now && it.shardEnd > now }
+
+    val scope = rememberCoroutineScope()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        tonalElevation = 5.dp,
+        sheetState = sheetState,
+    ) {
+        PrimaryTabRow(
+            selectedTabIndex = pagerState.currentPage,
+            modifier = Modifier.padding(5.dp),
+            containerColor = Color.Unspecified
+        ) {
+            listOf("1st", "2nd", "3rd").forEachIndexed { page, title ->
+                Tab(
+                    selected = pagerState.currentPage == page,
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(page)
+                        }
+                    },
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text("$title Shard")
+                            if (index == page) {
+                                LiveIndicator()
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize(),
+            overscrollEffect = null
+        ) { page ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(5.dp)
+            ) {
+                item {
+                    ShardTimeline(
+                        shard.occurrences[page],
+                        now
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun NoShardDisplay(modifier: Modifier, date: LocalDate) {
@@ -134,6 +283,7 @@ private fun NoShardDisplay(modifier: Modifier, date: LocalDate) {
 }
 
 
+@OptIn(ExperimentalGridApi::class)
 @Composable
 private fun ShardTimeline(occurrence: ShardOccurrence, now: Instant) {
     val list = mapOf(
@@ -143,71 +293,51 @@ private fun ShardTimeline(occurrence: ShardOccurrence, now: Instant) {
         "Shard Ends" to occurrence.shardEnd
     ).entries
 
-    var showTimeline by remember { mutableStateOf(false) }
     val timeUtils = rememberTimeFormatter()
 
-    val rotation by animateFloatAsState(
-        targetValue = if (showTimeline) 90f else 0f,
-        label = "ChevronRotation"
+    Text(
+        "Shard Timelines",
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.padding(15.dp)
     )
 
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(5.dp).clickable {
-                showTimeline = !showTimeline
-            },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Shard Timelines",
-                style = MaterialTheme.typography.bodyMedium
-            )
+    FlowRow() {
+        repeat(4) { index ->
+            val (title, dur) = list.elementAt(index)
 
-            Icon(
-                painterResource(Res.drawable.chevron_right),
-                contentDescription = "Chevron",
-                modifier = Modifier.rotate(rotation)
-            )
-        }
+            Card(
+                modifier = Modifier.widthIn(min = 150.dp).weight(1f),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(15.dp)
+                ) {
+                    Text(title, style = MaterialTheme.typography.labelMedium)
 
-        // timeline row (could  also be separated)
-        AnimatedVisibility(showTimeline) {
-            FlowRow() {
-                repeat(4) { index ->
-                    val (title, dur) = list.elementAt(index)
-                    Card(
-                        modifier = Modifier.widthIn(min = 150.dp).weight(1f),
-                        shape = RoundedCornerShape(10.dp)
+
+                    Spacer(Modifier.height(5.dp))
+                    HorizontalDivider()
+
+                    Spacer(Modifier.height(10.dp))
+
+                    Tooltip(
+                        "${
+                            timeUtils.format(
+                                dur,
+                                GameTimeZone
+                            )
+                        } in Los Angeles (Game's Timezone)"
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text(title, style = MaterialTheme.typography.labelMedium)
-
-
-                            Spacer(Modifier.height(5.dp))
-                            HorizontalDivider()
-
-                            Spacer(Modifier.height(10.dp))
-
-                            Tooltip(
-                                "${
-                                    timeUtils.format(
-                                        dur,
-                                        GameTimeZone
-                                    )
-                                } in Los Angeles (Game's Timezone)"
-                            ) {
-                                DecoratedText(
-                                    text = timeUtils.format(dur),
-                                    textDecoration =
-                                        if (now > dur) TextDecoration.LineThrough
-                                        else TextDecoration.None,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
+                        DecoratedText(
+                            text = timeUtils.format(dur),
+                            textDecoration =
+                                if (now > dur) TextDecoration.LineThrough
+                                else TextDecoration.None,
+                            color = if (now > dur) LocalContentColor.current.copy(0.5f)
+                            else LocalContentColor.current,
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
             }
@@ -224,7 +354,14 @@ private fun ShardTitle(shard: ShardData) {
         text = buildAnnotatedString {
             withStyle(
                 MaterialTheme.typography.titleLargeEmphasized.toSpanStyle()
-                    .copy(if (shard.isRed) Color.Red else Color.Black)
+                    .copy(
+                        if (shard.isRed) Color.Red else Color.Black,
+                        shadow = Shadow(
+                            LocalContentColor.current,
+                            blurRadius = 1f,
+                            offset = Offset.VisibilityThreshold
+                        )
+                    )
             ) {
                 append(
                     if (shard.isRed) "Red Shard" else "Black Shard"
@@ -279,7 +416,12 @@ private fun ShardArea(shard: ShardData) {
 }
 
 @Composable
-private fun ShardCountdown(occurrence: ShardOccurrence?, now: Instant, shard: ShardData) {
+private fun ShardCountdown(
+    occurrence: ShardOccurrence?,
+    now: Instant,
+    shard: ShardData,
+    onClick: () -> Unit
+) {
     var timer: Long
     var timerHeader: String
     var timerSubtitle: String
@@ -310,7 +452,7 @@ private fun ShardCountdown(occurrence: ShardOccurrence?, now: Instant, shard: Sh
     }
 
     Box(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -330,6 +472,84 @@ private fun ShardCountdown(occurrence: ShardOccurrence?, now: Instant, shard: Sh
             )
 
             Text(timerSubtitle, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+
+@Composable
+fun ShardInfographics(shard: ShardData) {
+    // Internal state used only if the caller doesn't hoist it themselves.
+    var isFlipped by remember { mutableStateOf(false) }
+
+    val rotation by animateFloatAsState(
+        targetValue = if (isFlipped) 180f else 0f,
+        animationSpec = tween(durationMillis = 500)
+    )
+
+    val getInfographicsUrl =
+        { type: String -> SkyHelperCdn + "/shards/${type.lowercase()}/${shard.area.key}.png" }
+
+    val getImageDisplay = @Composable { type: String ->
+        val url = getInfographicsUrl(type)
+        RemoteImage(
+            url,
+            contentDescription = "Shard $type",
+            modifier = Modifier.size(300.dp)
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            buildAnnotatedString {
+                append(if (!isFlipped) "Shard Location" else "Shard Data")
+                append(" ")
+                withStyle(
+                    MaterialTheme.typography.labelMedium.toSpanStyle()
+                        .copy(LocalContentColor.current.copy(0.5f))
+                ) {
+                    if (isFlipped) append("(By Gale)") else append("(By clement)")
+                }
+            },
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.animateContentSize()
+        )
+
+        SlidingIconToggle(
+            icons = listOf(Res.drawable.map, Res.drawable.data),
+            selectedIndex = if (isFlipped) 1 else 0,
+            itemSize = 30.dp,
+            usehaptics = true,
+            roundedCornerIndicator = RoundedCornerShape(8.dp),
+            onSelectedChange = { isFlipped = it == 1 }
+        )
+    }
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                rotationY = rotation
+                cameraDistance = 12f * density
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        if (rotation <= 90f) {
+            getImageDisplay("Location")
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { rotationY = 180f },
+                contentAlignment = Alignment.Center
+            ) {
+                getImageDisplay("Data")
+            }
         }
     }
 }

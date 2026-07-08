@@ -16,9 +16,8 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.imnaiyar.skytimes.constants.MinFlowRowWidth
 
-
-private val minWidth = 400.dp
 
 enum class GridType {
     GRID,
@@ -28,11 +27,12 @@ enum class GridType {
 @Composable
 fun Grid(
     modifier: Modifier = Modifier,
-    columns: GridCells = GridCells.Adaptive(minWidth),
+    columns: GridCells = GridCells.Adaptive(MinFlowRowWidth.dp),
     /** This is only here so that overload is uniques and can be distinguished */
     type: GridType,
     state: LazyGridState = rememberLazyGridState(),
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.End,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(16.dp),
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(16.dp),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     userScrollEnabled: Boolean = true,
     content: LazyGridScope.() -> Unit,
@@ -43,7 +43,8 @@ fun Grid(
         state = state,
         contentPadding = contentPadding,
         userScrollEnabled = userScrollEnabled,
-        horizontalArrangement = horizontalArrangement
+        horizontalArrangement = horizontalArrangement,
+        verticalArrangement = verticalArrangement
     ) {
         content()
     }
@@ -52,10 +53,10 @@ fun Grid(
 @Composable
 fun Grid(
     modifier: Modifier = Modifier,
-    type: GridType = GridType.STAGGERED,
-    columns: StaggeredGridCells = StaggeredGridCells.Adaptive(minWidth),
+    columns: StaggeredGridCells = StaggeredGridCells.Adaptive(MinFlowRowWidth.dp),
     state: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.End,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(16.dp),
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(16.dp),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     userScrollEnabled: Boolean = true,
     content: LazyStaggeredGridScope.() -> Unit,
@@ -66,7 +67,8 @@ fun Grid(
         state = state,
         contentPadding = contentPadding,
         userScrollEnabled = userScrollEnabled,
-        horizontalArrangement = horizontalArrangement
+        horizontalArrangement = horizontalArrangement,
+        verticalItemSpacing = verticalArrangement.spacing
     ) {
         content()
     }

@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import com.github.panpf.zoomimage.CoilZoomAsyncImage
 import com.github.panpf.zoomimage.rememberCoilZoomState
 import com.imnaiyar.skytimes.constants.RoundedCorner
@@ -62,13 +62,14 @@ fun RemoteImage(
 ) {
     var isFullScreen by remember { mutableStateOf(false) }
 
-    AsyncImage(
+    SubcomposeAsyncImage(
         model = imageUri,
         contentDescription = contentDescription,
         contentScale = contentScale,
         modifier = modifier
             .clickable { isFullScreen = true }
             .clip(RoundedCorner),
+        loading = { LoadingSpinner() }
     )
 
     if (isFullScreen && allowFullScreen) {

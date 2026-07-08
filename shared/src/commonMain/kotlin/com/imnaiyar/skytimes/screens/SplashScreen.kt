@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes
+package com.imnaiyar.skytimes.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

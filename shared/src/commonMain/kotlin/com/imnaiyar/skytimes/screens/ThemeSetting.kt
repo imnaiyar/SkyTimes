@@ -29,16 +29,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -72,6 +71,8 @@ import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.theme.DefaultThemeColor
 import com.imnaiyar.skytimes.ui.BackScaffold
 import com.imnaiyar.skytimes.ui.ConfirmDialogue
+import com.imnaiyar.skytimes.ui.Grid
+import com.imnaiyar.skytimes.ui.GridType
 import com.materialkolor.Contrast
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -180,54 +181,63 @@ fun ThemePage() {
             }
         }
     ) { padding ->
-        Column(
+        Grid(
+            type = GridType.GRID,
+            columns = GridCells.Adaptive(500.dp),
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 20.dp),
+            contentPadding = padding
         ) {
-            Spacer(Modifier.height(4.dp))
+            item(span = { GridItemSpan(maxLineSpan) }) { SectionLabel("Color") }
+            item {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
 
-            SectionLabel("Color")
-            SaturationValuePanel(
-                hue = hue,
-                saturation = sat,
-                value = value,
-                onChange = { s, v -> preview(hue, s, v) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(16.dp))
-            )
+                    SaturationValuePanel(
+                        hue = hue,
+                        saturation = sat,
+                        value = value,
+                        onChange = { s, v -> preview(hue, s, v) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                    )
 
-            HueSlider(
-                hue = hue,
-                onHueChange = { preview(it, sat, value) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(28.dp)
-                    .clip(RoundedCornerShape(14.dp))
-            )
-
-            ColorInput(
-                hue,
-                sat,
-                value,
-                onColorChange = preview
-            )
-
-            SectionLabel("Contrast")
-            ContrastSelector(
-                current = contrast,
-                onChange = { c ->
-                    contrast = c
-                    preview(hue, sat, value)
+                    HueSlider(
+                        hue = hue,
+                        onHueChange = { preview(it, sat, value) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(28.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                    )
                 }
-            )
+            }
 
-            Spacer(Modifier.height(24.dp))
+            item {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    ColorInput(
+                        hue,
+                        sat,
+                        value,
+                        onColorChange = preview
+                    )
+
+                    SectionLabel("Contrast")
+                    ContrastSelector(
+                        current = contrast,
+                        onChange = { c ->
+                            contrast = c
+                            preview(hue, sat, value)
+                        }
+                    )
+
+                }
+            }
         }
     }
 }

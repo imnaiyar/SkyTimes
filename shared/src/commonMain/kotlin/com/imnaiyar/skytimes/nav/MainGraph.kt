@@ -4,7 +4,7 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.imnaiyar.skytimes.MainScreen
+import com.imnaiyar.skytimes.screens.MainScreen
 import com.imnaiyar.skytimes.screens.ThemePage
 import com.imnaiyar.skytimes.vault_archive.MainArchive
 

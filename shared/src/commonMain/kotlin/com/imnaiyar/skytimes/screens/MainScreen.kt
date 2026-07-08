@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes
+package com.imnaiyar.skytimes.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -36,11 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import com.imnaiyar.skytimes.NavController
 import com.imnaiyar.skytimes.nav.VaultRoute
-import com.imnaiyar.skytimes.screens.HomeScreen
-import com.imnaiyar.skytimes.screens.QuestsScreen
-import com.imnaiyar.skytimes.screens.SettingsScreen
-import com.imnaiyar.skytimes.screens.ShardsScreen
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import skytimes.shared.generated.resources.Res
@@ -75,6 +72,7 @@ fun MainScreen() {
         mutableStateOf(0)
     }
 
+
     val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
     val fabPad = PaddingValues(bottom = heightInDp + 16.dp, top = 11.dp)
     Scaffold(
@@ -101,7 +99,9 @@ fun MainScreen() {
                             Text(screen.title)
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            indicatorColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimary
                         )
                     )
                 }
@@ -112,6 +112,8 @@ fun MainScreen() {
                 ExtendedFloatingActionButton(
                     onClick = { navController.navigate(VaultRoute) },
                     modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     expanded = bottomScroll.state.collapsedFraction < 0.5f,
                     text = { Text("Vault Archive") },
                     icon = {
@@ -131,13 +133,11 @@ fun MainScreen() {
                 .fillMaxSize(),
             beyondViewportPageCount = screens.size - 1
         ) { page ->
-            val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
             Scaffold(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 topBar = {
                     TopAppBar(
                         contentPadding = PaddingValues(end = 10.dp),
-                        scrollBehavior = scrollBehavior,
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = BottomAppBarDefaults.containerColor,
                             scrolledContainerColor = BottomAppBarDefaults.containerColor,
@@ -169,8 +169,6 @@ fun MainScreen() {
                     Screen.Shards -> ShardsScreen(modifier, fabPad)
                     Screen.Settings -> SettingsScreen(modifier, fabPad)
                 }
-
-                Text(("Hii"))
             }
         }
     }

@@ -29,6 +29,7 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -36,6 +37,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +54,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
@@ -68,7 +71,7 @@ import com.imnaiyar.skytimes.ui.ClockDirection
 import com.imnaiyar.skytimes.ui.DecoratedText
 import com.imnaiyar.skytimes.ui.LiveIndicator
 import com.imnaiyar.skytimes.ui.RemoteImage
-import com.imnaiyar.skytimes.ui.SlidingIconToggle
+import com.imnaiyar.skytimes.ui.SlidingToggle
 import com.imnaiyar.skytimes.ui.Tooltip
 import com.imnaiyar.skytimes.utils.ShardData
 import com.imnaiyar.skytimes.utils.ShardOccurrence
@@ -87,10 +90,16 @@ import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.ac
 import skytimes.shared.generated.resources.data
 import skytimes.shared.generated.resources.map
+import skytimes.shared.generated.resources.open_in_browser
 import skytimes.shared.generated.resources.wax
 import kotlin.math.abs
 import kotlin.time.Clock
 import kotlin.time.Instant
+
+
+private const val earlySkyDesc = "The time at which sky color changes in all realms"
+private const val gateShardDesc =
+    "The time at which shard crystal appears on the realm door of the realm where shard is to fall"
 
 @Composable
 fun ShardsScreen(modifier: Modifier, fabPad: PaddingValues) {
@@ -203,9 +212,11 @@ private fun ShardBottomSheet(
         pageCount = { 3 }
     )
 
+    // get any shard that is currently active, meaning has landed but not ended yet
     val activeIndex = shard.occurrences.indexOfFirst { it.shardLand < now && it.shardEnd > now }
 
     val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -229,11 +240,11 @@ private fun ShardBottomSheet(
                     text = {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Text("$title Shard")
-                            if (index == page) {
-                                LiveIndicator()
+                            if (activeIndex == page) {
+                                LiveIndicator(size = 8.dp)
                             }
                         }
                     }
@@ -248,13 +259,42 @@ private fun ShardBottomSheet(
         ) { page ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(5.dp)
+                verticalArrangement = Arrangement.spacedBy(15.dp),
+                contentPadding = PaddingValues(15.dp)
             ) {
+                // timeline
                 item {
                     ShardTimeline(
                         shard.occurrences[page],
                         now
                     )
+                }
+
+                // music
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Shard Music: ")
+                        Tooltip(
+                            "Open this in Spotify",
+                            tooltipPosition = TooltipAnchorPosition.Above,
+                            showOnClick = false
+                        ) {
+                            DecoratedText(
+                                shard.music.name,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.clickable(onClick = {
+                                    uriHandler.openUri(shard.music.spotifyLink)
+                                })
+                            )
+
+                        }
+                        Spacer(modifier = Modifier.size(5.dp))
+                        Icon(
+                            painterResource(Res.drawable.open_in_browser),
+                            contentDescription = "Open in Spotify",
+                            modifier = Modifier.size(10.dp)
+                        )
+                    }
                 }
             }
         }
@@ -298,7 +338,6 @@ private fun ShardTimeline(occurrence: ShardOccurrence, now: Instant) {
     Text(
         "Shard Timelines",
         style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.padding(15.dp)
     )
 
     FlowRow() {
@@ -313,7 +352,14 @@ private fun ShardTimeline(occurrence: ShardOccurrence, now: Instant) {
                 Column(
                     modifier = Modifier.padding(15.dp)
                 ) {
-                    Text(title, style = MaterialTheme.typography.labelMedium)
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.labelMedium,
+                        // highlight shard landing and ending as they are the most relevant
+                        color = if (index == 2 || index == 3)
+                            MaterialTheme.colorScheme.primary
+                        else LocalContentColor.current
+                    )
 
 
                     Spacer(Modifier.height(5.dp))
@@ -519,11 +565,11 @@ fun ShardInfographics(shard: ShardData) {
             modifier = Modifier.animateContentSize()
         )
 
-        SlidingIconToggle(
+        SlidingToggle(
             icons = listOf(Res.drawable.map, Res.drawable.data),
             selectedIndex = if (isFlipped) 1 else 0,
             itemSize = 30.dp,
-            usehaptics = true,
+            useHaptics = true,
             roundedCornerIndicator = RoundedCornerShape(8.dp),
             onSelectedChange = { isFlipped = it == 1 }
         )

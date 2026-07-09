@@ -75,6 +75,7 @@ fun MainScreen() {
 
     val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
     val fabPad = PaddingValues(bottom = heightInDp + 16.dp, top = 11.dp)
+    
     Scaffold(
         modifier = Modifier.nestedScroll(bottomScroll.nestedScrollConnection),
         bottomBar = {

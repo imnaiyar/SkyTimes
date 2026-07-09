@@ -19,6 +19,7 @@ data class AppSettings(
     val clockAnimation: Boolean = true,
     val eventOrder: List<EventKey> = EventKey.entries,
     val themeContrast: Contrast = Contrast.Default,
+    val pinnedEvents: List<EventKey> = emptyList(),
     val themeColor: Int = DefaultThemeColor.toInt()
 )
 
@@ -52,14 +53,6 @@ class SettingsRepository(
         update { current -> current.copy(notificationsEnabled = enabled) }
     }
 
-    suspend fun setThemeColor(color: Int) {
-        update { current -> current.copy(themeColor = color) }
-    }
-
-    suspend fun setThemeContrast(contrast: Contrast) {
-        update { current -> current.copy(themeContrast = contrast) }
-    }
-
     suspend fun setTheme(color: Int, contrast: Contrast) {
         update { current -> current.copy(themeColor = color, themeContrast = contrast) }
     }
@@ -68,15 +61,12 @@ class SettingsRepository(
         update { current -> current.copy(clockAnimation = enabled) }
     }
 
-    suspend fun setEventOrder(order: List<EventKey>) {
-        update { current -> current.copy(eventOrder = order) }
+    suspend fun setPinnedEvents(events: List<EventKey>) {
+        update { current -> current.copy(pinnedEvents = events) }
     }
 
-    /**
-     * Only updates locally without  writing to storage
-     */
-    fun updateLocal(transform: (AppSettings) -> AppSettings) {
-        _settings.value = transform(_settings.value)
+    suspend fun setEventOrder(order: List<EventKey>) {
+        update { current -> current.copy(eventOrder = order) }
     }
 
     private suspend inline fun update(transform: (AppSettings) -> AppSettings) {
@@ -94,6 +84,7 @@ class SettingsRepository(
 
     private fun loadSettings(): AppSettings {
         val defaults = AppSettings()
+        println("Pinned: ${storage.getStringOrNull(SettingsKeys.PinnedEvents)}")
         return AppSettings(
             themeMode = storage.getStringOrNull(SettingsKeys.ThemeMode)
                 ?.let(::parseThemeMode)
@@ -117,6 +108,13 @@ class SettingsRepository(
             themeContrast = storage.getStringOrNull(SettingsKeys.ThemeContrast)
                 ?.let(Contrast::valueOf)
                 ?: Contrast.Default,
+
+            pinnedEvents = storage.getStringOrNull(SettingsKeys.PinnedEvents)
+                // in case it returns empty string, valueOf will throw errors
+                ?.let { it.ifEmpty { null } }
+                ?.split("|")
+                ?.map(EventKey::valueOf)
+                ?: emptyList(),
 
             eventOrder = storage.getString(
                 SettingsKeys.EventOrder,
@@ -154,14 +152,16 @@ class SettingsRepository(
             storage.putString(SettingsKeys.EventOrder, next.eventOrder.joinToString("|"))
         }
         if (current.themeColor != next.themeColor) {
-            if (next.themeColor == null)
-            // if it was set to null, then delete it
-                storage.remove(SettingsKeys.ThemeColor)
-            else
-                storage.putInt(SettingsKeys.ThemeColor, next.themeColor)
+            storage.putInt(SettingsKeys.ThemeColor, next.themeColor)
         }
         if (current.themeContrast != next.themeContrast) {
             storage.putString(SettingsKeys.ThemeContrast, next.themeContrast.name)
+        }
+        if (current.pinnedEvents != next.pinnedEvents) {
+            if (next.pinnedEvents.isEmpty())
+                storage.remove(SettingsKeys.PinnedEvents)
+            else
+                storage.putString(SettingsKeys.PinnedEvents, next.pinnedEvents.joinToString("|"))
         }
     }
 
@@ -177,6 +177,7 @@ private object SettingsKeys {
     const val NotificationsEnabled = "notifications_enabled"
     const val ClockAnimation = "clock_animation"
     const val EventOrder = "event_order"
+    const val PinnedEvents = "pinned_events"
     const val ThemeColor = "theme_color"
     const val ThemeContrast = "theme_contrast"
 }

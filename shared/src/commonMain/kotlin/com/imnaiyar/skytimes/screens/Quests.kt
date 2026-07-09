@@ -1,5 +1,6 @@
 package com.imnaiyar.skytimes.screens
 
+import VideoPlayer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.FlexBoxConfig
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.imnaiyar.skytimes.di.LocalAppContainer
+import com.imnaiyar.skytimes.repositories.OutdatedQuestException
 import com.imnaiyar.skytimes.ui.Card
 import com.imnaiyar.skytimes.ui.Grid
 import com.imnaiyar.skytimes.ui.LoadingSpinner
@@ -41,6 +44,7 @@ import com.imnaiyar.skytimes.utils.Quest
 import com.imnaiyar.skytimes.utils.isTodayInGame
 import com.imnaiyar.skytimes.utils.isoDateFormat
 import com.imnaiyar.skytimes.views.QuestsUiState
+import io.ktor.http.Url
 import kotlinx.datetime.format
 import kotlin.time.Instant
 
@@ -79,6 +83,13 @@ fun QuestsScreen(
                     )
                 }
             ) {
+                if (current.response.quests.none { isTodayInGame(it.date) }) {
+                    QuestError(
+                        onRetry = viewModel::refresh,
+                        message = OutdatedQuestException().message!!,
+                        modifier = Modifier
+                    )
+                }
                 QuestContent(state = current, fabPad)
             }
         }
@@ -209,7 +220,13 @@ private fun QuestImageCredit(
             )
         }
         Box(modifier = Modifier.size(120.dp)) {
-            RemoteImage(imageUri = image.url)
+            if (isVideo(image.url)) {
+                VideoPlayer(
+                    image.url,
+                    modifier = Modifier.fillMaxWidth().height(120.dp),
+                    autoPlay = false
+                )
+            } else RemoteImage(imageUri = image.url)
         }
     }
 }
@@ -241,4 +258,18 @@ private fun QuestError(
             }
         }
     }
+}
+
+
+private val videoExtensions = setOf(
+    "mp4", "webm", "mov", "avi", "mkv", "m4v", "3gp", "mpeg", "mpg"
+)
+
+private fun isVideo(url: String): Boolean {
+    val extension = Url(url).encodedPath
+        .substringAfterLast('.', "")
+        .lowercase()
+        .takeIf { it.isNotEmpty() }
+
+    return extension in videoExtensions
 }

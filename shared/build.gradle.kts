@@ -49,29 +49,44 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.client.okhttp)
+            implementation("androidx.media3:media3-exoplayer:1.8.0")
+            implementation("androidx.media3:media3-ui:1.8.0")
         }
         commonMain.dependencies {
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
+            // navigation
             implementation(libs.compose.navigationevent)
-            implementation(libs.coil.image)
-            implementation(libs.coil.ktor)
-            implementation(libs.windows.sizeclass)
             implementation(libs.compose.navigation)
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.reorderable)
-            implementation(libs.multiplatform.settings.no.arg)
-            implementation(libs.multiplatform.settings.coroutines)
+
+            // platform
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.ktor.client.core)
-            implementation(libs.compose.ui)
-            implementation(libs.compose.components.resources)
-            implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.compose.runtime)
+            implementation(libs.windows.sizeclass)
+
+            // ui
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.ui)
+            implementation(libs.reorderable)
+            implementation(libs.compose.components.resources)
+            implementation(libs.compose.uiToolingPreview)
+            implementation(libs.kotlinx.datetime)
+
+            // settings
+            implementation(libs.multiplatform.settings.no.arg)
+            implementation(libs.multiplatform.settings.coroutines)
+
+            // http
+            implementation(libs.ktor.client.core)
+
+            // media
+            implementation(libs.coil.image)
+            implementation(libs.coil.ktor)
             implementation(libs.image.zoom)
             implementation(libs.image.zoom.coil)
+
+            // Theme color generation
             implementation(libs.material.kolor)
         }
         iosMain.dependencies {

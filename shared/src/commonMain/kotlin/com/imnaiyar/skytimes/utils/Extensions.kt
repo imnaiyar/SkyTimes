@@ -11,3 +11,8 @@ fun Int.toOrdinal(): String = when {
     this % 10 == 3 -> "${this}rd"
     else -> "${this}th"
 }
+
+/**
+ * Just a small helper
+ */
+fun <T> List<T>.indexOfKey(key: Any?): Int = indexOfFirst { it == key }

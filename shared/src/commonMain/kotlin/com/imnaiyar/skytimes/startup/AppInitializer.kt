@@ -47,6 +47,7 @@ class AppInitializer(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (cause: Throwable) {
+            println(cause)
             StartupTaskResult.Failure(
                 taskName = task.name,
                 critical = task.critical,

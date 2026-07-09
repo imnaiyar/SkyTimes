@@ -4,14 +4,12 @@ import com.imnaiyar.skytimes.constants.GameTimeZone
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.isoDayNumber
-import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-@Serializable
 enum class Realm(val displayName: String) {
     PRAIRIE("Daylight Prairie"),
     FOREST("Hidden Forest"),
@@ -20,7 +18,7 @@ enum class Realm(val displayName: String) {
     VAULT("Vault of Knowledge")
 }
 
-@Serializable
+
 enum class Areas(val displayName: String, val key: String) {
     PRAIRIE_BUTTERFLY("Butterfly Fields", "prairie.butterfly"),
     PRAIRIE_VILLAGE("Prairie Village", "prairie.village"),
@@ -44,12 +42,16 @@ enum class Areas(val displayName: String, val key: String) {
     VAULT_JELLY("Jellyfish Cove", "vault.jelly")
 }
 
-@Serializable
 data class ShardInfo(
     val offset: Duration,
     val noShardDays: List<Int>,
     val rewards: Double? = null,
     val areas: List<Areas>,
+)
+
+data class ShardMusic(
+    val name: String,
+    val spotifyLink: String
 )
 
 val shardInfos = listOf(
@@ -125,9 +127,17 @@ val skyChangeOffset = (-32).minutes + (-10).seconds
 val shardLandOffset = 8.minutes + 40.seconds
 val shardEndOffset = 4.hours
 
-const val blackShardMusic = "An Abrupt Premonition"
-const val redShardMusic = "Lights Afar"
-const val mediumShardMusic = "Of The Essence"
+private const val blackShardMusic = "An Abrupt Premonition"
+private const val blackShardMusicLink =
+    "https://open.spotify.com/track/11FRruXhXnDJtZUsQyLXjP?si=c3fa48ba2e2e4e6e"
+
+private const val redShardMusic = "Lights Afar"
+private const val redShardMusicLink =
+    "https://open.spotify.com/track/7jiyGCWrxYnVeXJZihRGFf?si=743089ef433d4983"
+
+private const val mediumShardMusic = "Of The Essence"
+private const val mediumShardMusicLink =
+    "https://open.spotify.com/track/5Xf6BwbnHfpUhSU7Z7Upqr?si=c58586809d23462f"
 
 data class ShardOccurrence(
     val skyChange: Instant,
@@ -142,7 +152,7 @@ data class ShardData(
     val area: Areas,
     val realm: Realm,
     val occurrences: List<ShardOccurrence>,
-    val music: String
+    val music: ShardMusic
 )
 
 val rewardsOverride = mapOf(
@@ -155,7 +165,7 @@ val rewardsOverride = mapOf(
 fun getShard(date: LocalDate): ShardData? {
     val today = date.atStartOfDayIn(GameTimeZone)
 
-    val day = date.day;
+    val day = date.day
 
     // red shards occur on odd days and black on even
     // @see https://github.com/PlutoyDev/sky-shards/blob/production/ShardPredictionRule.md
@@ -196,10 +206,10 @@ fun getShard(date: LocalDate): ShardData? {
         occurrences = occurrences,
         area = area,
         realm = Realm.entries[realmIndex],
-        music = if (!isRedShard) blackShardMusic else
-        // medium shard is at index 1 in info list
+        music = if (!isRedShard) ShardMusic(blackShardMusic, blackShardMusicLink) else
+        // medium shard is at index 2 in info list
         // I agree not the best way to determine this nor is it future-proof, but alas
-            if (realmIndex == 1) mediumShardMusic
-            else redShardMusic
+            if (infoIndex == 2) ShardMusic(mediumShardMusic, mediumShardMusicLink)
+            else ShardMusic(redShardMusic, redShardMusicLink)
     )
 }

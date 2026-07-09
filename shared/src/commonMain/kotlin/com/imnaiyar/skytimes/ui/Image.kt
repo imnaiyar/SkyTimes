@@ -37,21 +37,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/**
- * A tappable image loaded from [imageUri]. Tapping it opens a fullscreen
- * overlay showing the same image; tapping the overlay (or the close button)
- * dismisses it.
- *
- * Requires Coil3's Compose Multiplatform artifact for cross-platform async
- * image loading. In your build.gradle.kts (commonMain):
- *
- *   implementation("io.coil-kt.coil3:coil-compose:3.0.4")
- *   implementation("io.coil-kt.coil3:coil-network-ktor3:3.0.4")
- *
- * You also need to set up a SingletonImageLoader / ImageLoader with a
- * network fetcher once at app startup (see Coil3 KMP docs) so AsyncImage
- * can resolve remote URIs on every platform.
- */
 @Composable
 fun RemoteImage(
     imageUri: String,

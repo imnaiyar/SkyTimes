@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,22 +42,24 @@ import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.chevron_right
 
 @Composable
-fun SlidingIconToggle(
-    icons: List<DrawableResource>,
+fun _SlidingToggle(
+    count: Int,
     selectedIndex: Int,
     onSelectedChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    itemSize: Dp = 48.dp,
+    itemWidth: Dp = 48.dp,
+    itemHeight: Dp = 48.dp,
     roundedCornerCard: Shape = RoundedCorner,
     roundedCornerIndicator: Shape = RoundedCorner,
-    usehaptics: Boolean = false,
-    indicatorColor: Color = MaterialTheme.colorScheme.primary
+    useHaptics: Boolean = false,
+    indicatorColor: Color = MaterialTheme.colorScheme.primary,
+    content: @Composable (selected: Boolean, index: Int) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
 
     Box(
         modifier = modifier
-            .height(itemSize + 12.dp)
+            .height(itemHeight + 12.dp)
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outline,
@@ -70,14 +73,13 @@ fun SlidingIconToggle(
     ) {
 
         val indicatorOffset by animateDpAsState(
-            targetValue = itemSize * selectedIndex,
+            targetValue = itemWidth * selectedIndex,
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
                 stiffness = Spring.StiffnessMedium
             ),
             label = "indicatorOffset"
         )
-
 
         val indicatorElevation by animateDpAsState(
             targetValue = 20.dp,
@@ -90,10 +92,8 @@ fun SlidingIconToggle(
 
         Surface(
             modifier = Modifier
-                .offset(
-                    x = indicatorOffset
-                )
-                .size(itemSize),
+                .offset(x = indicatorOffset)
+                .size(width = itemWidth, height = itemHeight),
             shape = roundedCornerIndicator,
             color = indicatorColor,
             shadowElevation = indicatorElevation,
@@ -103,36 +103,103 @@ fun SlidingIconToggle(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            icons.forEachIndexed { index, icon ->
-
+            repeat(count) { index ->
                 val selected = index == selectedIndex
 
                 Box(
                     modifier = Modifier
-                        .size(itemSize)
+                        .size(width = itemWidth, height = itemHeight)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
                             onSelectedChange(index)
-                            if (usehaptics) haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                            if (useHaptics) {
+                                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                            }
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        tint = if (selected)
-                            MaterialTheme.colorScheme.onPrimary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    content(selected, index)
                 }
             }
         }
     }
 }
 
+
+// icon overload
+@Composable
+fun SlidingToggle(
+    icons: List<DrawableResource>,
+    selectedIndex: Int,
+    onSelectedChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    itemSize: Dp = 48.dp,
+    roundedCornerCard: Shape = RoundedCorner,
+    roundedCornerIndicator: Shape = RoundedCorner,
+    useHaptics: Boolean = false,
+    indicatorColor: Color = MaterialTheme.colorScheme.primary
+) {
+    _SlidingToggle(
+        count = icons.size,
+        selectedIndex = selectedIndex,
+        onSelectedChange = onSelectedChange,
+        modifier = modifier,
+        itemWidth = itemSize,
+        itemHeight = itemSize,
+        roundedCornerCard = roundedCornerCard,
+        roundedCornerIndicator = roundedCornerIndicator,
+        useHaptics = useHaptics,
+        indicatorColor = indicatorColor
+    ) { selected, index ->
+        Icon(
+            painter = painterResource(icons[index]),
+            contentDescription = null,
+            tint = if (selected)
+                MaterialTheme.colorScheme.onPrimary
+            else
+                MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+// text overload
+@Composable
+fun SlidingToggle(
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectedChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    itemWidth: Dp = 72.dp,
+    itemHeight: Dp = 48.dp,
+    roundedCornerCard: Shape = RoundedCorner,
+    roundedCornerIndicator: Shape = RoundedCorner,
+    useHaptics: Boolean = false,
+    indicatorColor: Color = MaterialTheme.colorScheme.primary
+) {
+    _SlidingToggle(
+        count = items.size,
+        selectedIndex = selectedIndex,
+        onSelectedChange = onSelectedChange,
+        modifier = modifier,
+        itemWidth = itemWidth,
+        itemHeight = itemHeight,
+        roundedCornerCard = roundedCornerCard,
+        roundedCornerIndicator = roundedCornerIndicator,
+        useHaptics = useHaptics,
+        indicatorColor = indicatorColor
+    ) { selected, index ->
+        Text(
+            text = items[index],
+            style = MaterialTheme.typography.labelLarge,
+            color = if (selected)
+                MaterialTheme.colorScheme.onPrimary
+            else
+                MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
 
 /**
  * Example usage with three icons.
@@ -152,7 +219,7 @@ fun SlidingIconToggleExample() {
         colorScheme = color,
         typography = appTypography()
     ) {
-        SlidingIconToggle(
+        SlidingToggle(
             icons = listOf(
                 Res.drawable.chevron_right,
                 Res.drawable.chevron_right,

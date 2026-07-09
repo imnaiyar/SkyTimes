@@ -1,21 +1,4 @@
 package com.imnaiyar.skytimes.screens
-/*
- * Theme Settings Page — Jetpack Compose Multiplatform
- *
- * Contains:
- *  1. ThemeContrast enum + ThemeSettings data class
- *  2. ThemeController — holds the app-wide StateFlow<ThemeSettings>.
- *     Every drag on the color picker / slider calls preview*() which
- *     mutates the StateFlow directly, so the WHOLE APP reflects the
- *     change live. commit() saves it as the new baseline, reset()
- *     reverts back to the last saved baseline.
- *  3. ThemePage — the actual screen: color wheel, hue slider,
- *     contrast slider, live sample preview, Reset / Apply buttons.
- *
- * Drop ThemeController as a singleton (or inject it) and read
- * `themeController.themeState` anywhere in your app (e.g. in your
- * root MaterialTheme) to apply the color/contrast globally.
- */
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
@@ -40,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -73,6 +55,7 @@ import com.imnaiyar.skytimes.ui.BackScaffold
 import com.imnaiyar.skytimes.ui.ConfirmDialogue
 import com.imnaiyar.skytimes.ui.Grid
 import com.imnaiyar.skytimes.ui.GridType
+import com.imnaiyar.skytimes.ui.SlidingToggle
 import com.materialkolor.Contrast
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -117,7 +100,7 @@ fun ThemePage() {
         themeController.discardPreview()
         val (h, s, v) = colorToHsv(
             Color(
-                settings.themeColor ?: DefaultThemeColor.toInt()
+                settings.themeColor
             )
         )
         hue = h
@@ -144,7 +127,7 @@ fun ThemePage() {
                                 DefaultThemeColor.toInt(),
                                 Contrast.Default
                             )
-                        }
+                        }.invokeOnCompletion { themeController.discardPreview() }
                     }
                 ) {
                     OutlinedButton(
@@ -435,14 +418,15 @@ private fun ColorInput(
                     .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
             )
             Spacer(Modifier.width(10.dp))
-            ColorInputMode.entries.forEach { m ->
-                FilterChip(
-                    selected = mode == m,
-                    onClick = { mode = m },
-                    label = { Text(m.name) },
-                    modifier = Modifier.padding(end = 6.dp)
-                )
-            }
+            SlidingToggle(
+                ColorInputMode.entries.map { it.name },
+                selectedIndex = mode.ordinal,
+                itemHeight = 30.dp,
+                itemWidth = 50.dp,
+                roundedCornerIndicator = RoundedCornerShape(8.dp),
+                useHaptics = true,
+                onSelectedChange = { mode = ColorInputMode.entries[it] }
+            )
         }
 
         when (mode) {

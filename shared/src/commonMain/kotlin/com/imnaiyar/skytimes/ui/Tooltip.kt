@@ -21,10 +21,14 @@ private fun _ToolTip(
     tooltipState: TooltipState = rememberTooltipState(),
     tooltipPosition: TooltipAnchorPosition = TooltipAnchorPosition.Below,
     showOnClick: Boolean = true,
+    enabled: Boolean,
     tooltip: @Composable () -> Unit,
     content: @Composable () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+
+    if (!enabled) return content()
+
     TooltipBox(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
             tooltipPosition
@@ -51,10 +55,11 @@ fun Tooltip(
     tooltipState: TooltipState = rememberTooltipState(),
     tooltipPosition: TooltipAnchorPosition = TooltipAnchorPosition.Below,
     showOnClick: Boolean = true,
+    enabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
 
-    _ToolTip(tooltipState, tooltipPosition, showOnClick, { Text(text) }, content)
+    _ToolTip(tooltipState, tooltipPosition, showOnClick, enabled, { Text(text) }, content)
 }
 
 @Composable
@@ -63,8 +68,9 @@ fun Tooltip(
     tooltipState: TooltipState = rememberTooltipState(),
     tooltipPosition: TooltipAnchorPosition = TooltipAnchorPosition.Below,
     showOnClick: Boolean = true,
+    enabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
 
-    _ToolTip(tooltipState, tooltipPosition, showOnClick, tooltip, content)
+    _ToolTip(tooltipState, tooltipPosition, showOnClick, enabled, tooltip, content)
 }

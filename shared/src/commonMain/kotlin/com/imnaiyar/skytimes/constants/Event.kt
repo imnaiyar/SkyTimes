@@ -44,6 +44,7 @@ enum class EventKey {
     DYE_EXCHANGE_SHOP
 }
 
+// TODO
 enum class EventCategory {
     Pinned,
     Wax,

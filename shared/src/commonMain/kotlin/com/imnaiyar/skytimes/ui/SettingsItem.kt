@@ -33,6 +33,7 @@ fun SettingsItem(
     action: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    content: @Composable () -> Unit = {}
 ) {
 
     Surface(
@@ -51,7 +52,7 @@ fun SettingsItem(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleSmall
                 )
 
                 if (subtitle != null) {
@@ -63,6 +64,8 @@ fun SettingsItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                content()
             }
 
             Spacer(Modifier.width(16.dp))

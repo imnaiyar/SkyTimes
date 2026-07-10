@@ -80,7 +80,7 @@ enum class Screen(
             )
         }
     }),
-    Quests("Daily Quests", Res.drawable.quest_icon, {
+    Quests("Quests", Res.drawable.quest_icon, {
         val date = LocalAppContainer.current.clockRepository.observeDate()
 
         Tooltip(dateDisclaimer) {

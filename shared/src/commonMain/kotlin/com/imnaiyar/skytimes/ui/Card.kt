@@ -2,7 +2,6 @@ package com.imnaiyar.skytimes.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +22,7 @@ fun Card(
     content: @Composable ColumnScope.() -> Unit
 ) {
     OGCard(
-        modifier = modifier.padding(all = 5.dp),
+        modifier = modifier,
         colors = CardDefaults.cardColors(color),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = elevation,

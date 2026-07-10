@@ -1,6 +1,7 @@
 package com.imnaiyar.skytimes.repositories
 
 import com.imnaiyar.skytimes.constants.EventKey
+import com.imnaiyar.skytimes.screens.Screen
 import com.imnaiyar.skytimes.startup.StartupTask
 import com.imnaiyar.skytimes.theme.DefaultThemeColor
 import com.imnaiyar.skytimes.theme.ThemeMode
@@ -20,7 +21,8 @@ data class AppSettings(
     val eventOrder: List<EventKey> = EventKey.entries,
     val themeContrast: Contrast = Contrast.Default,
     val pinnedEvents: List<EventKey> = emptyList(),
-    val themeColor: Int = DefaultThemeColor.toInt()
+    val themeColor: Int = DefaultThemeColor.toInt(),
+    val homeScreen: Screen = Screen.SkyTimes
 )
 
 
@@ -67,6 +69,10 @@ class SettingsRepository(
 
     suspend fun setEventOrder(order: List<EventKey>) {
         update { current -> current.copy(eventOrder = order) }
+    }
+
+    suspend fun setHomeScreen(screen: Screen) {
+        update { current -> current.copy(homeScreen = screen) }
     }
 
     private suspend inline fun update(transform: (AppSettings) -> AppSettings) {
@@ -128,7 +134,11 @@ class SettingsRepository(
                     // this is bcz if new keys are introduced, it will not be included in the list
                     // so just append them at the end here
                     ordered + EventKey.entries.filterNot { it in ordered }
-                }
+                },
+
+            homeScreen = storage.getStringOrNull(SettingsKeys.HomeScreen)
+                ?.let(Screen::valueOf)
+                ?: defaults.homeScreen
         )
     }
 
@@ -163,6 +173,10 @@ class SettingsRepository(
             else
                 storage.putString(SettingsKeys.PinnedEvents, next.pinnedEvents.joinToString("|"))
         }
+
+        if (current.homeScreen != next.homeScreen) {
+            storage.putString(SettingsKeys.HomeScreen, next.homeScreen.name)
+        }
     }
 
     private fun parseThemeMode(value: String): ThemeMode {
@@ -180,5 +194,6 @@ private object SettingsKeys {
     const val PinnedEvents = "pinned_events"
     const val ThemeColor = "theme_color"
     const val ThemeContrast = "theme_contrast"
+    const val HomeScreen = "home_screen"
 }
 

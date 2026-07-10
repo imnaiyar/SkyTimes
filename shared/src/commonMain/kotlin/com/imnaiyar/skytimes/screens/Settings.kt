@@ -3,6 +3,7 @@ package com.imnaiyar.skytimes.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,6 +47,7 @@ fun SettingsScreen(
 ) {
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
+
     val uriHandler = LocalUriHandler.current
 
     val navController = NavController.current
@@ -105,11 +107,41 @@ fun SettingsScreen(
                             )
                         }
                     )
+                    HorizontalDivider()
+                    SettingsItem(
+                        "Default Page",
+                        "Choose the default page to open when the app is launched"
+                    ) {
+                        FlowRow(
+                            modifier = Modifier.padding(5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Screen.entries.forEach { screen ->
+                                FilterChip(
+                                    label = {
+                                        Text(
+                                            screen.title,
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                    },
+                                    selected = settings.homeScreen == screen,
+                                    onClick = { viewModel.setHomeScreen(screen) },
+                                    leadingIcon = {
+                                        Icon(
+                                            painter = painterResource(screen.icon),
+                                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                            contentDescription = null
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        // Appearences
+        // Appearances
         item {
             SettingsSection {
                 SettingsHeader("Appearance")

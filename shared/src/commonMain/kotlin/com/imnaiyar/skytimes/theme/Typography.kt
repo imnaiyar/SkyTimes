@@ -22,7 +22,7 @@ fun appTypography(): Typography {
         Font(Res.font.clash_bold, FontWeight.Bold)
     )
 
-    fun TextStyle.withAppFont(sizeReduction: TextUnit = 1.5.sp) = copy(
+    fun TextStyle.withAppFont(sizeReduction: TextUnit = 2.sp) = copy(
         fontFamily = appFont,
         fontSize = (fontSize.value - sizeReduction.value).sp
     )
@@ -62,6 +62,6 @@ fun appTypography(): Typography {
 
 val Typography.labelTiny: TextStyle
     get() = labelSmall.copy(
-        fontSize = 9.sp,
+        fontSize = (labelSmall.fontSize.value - 1.5).sp,
         lineHeight = 11.sp
     )

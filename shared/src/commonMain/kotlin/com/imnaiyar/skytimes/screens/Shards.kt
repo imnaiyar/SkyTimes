@@ -345,7 +345,7 @@ private fun ShardTimeline(occurrence: ShardOccurrence, now: Instant) {
             val (title, dur) = list.elementAt(index)
 
             Card(
-                modifier = Modifier.widthIn(min = 150.dp).weight(1f),
+                modifier = Modifier.padding(5.dp).widthIn(min = 150.dp).weight(1f),
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
                 shape = RoundedCornerShape(10.dp)
             ) {

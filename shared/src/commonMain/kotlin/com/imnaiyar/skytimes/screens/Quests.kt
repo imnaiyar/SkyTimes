@@ -110,7 +110,6 @@ private fun QuestContent(
             )
         }
 
-
         response.seasonalCandles?.let { seasonalCandles ->
 
             item {

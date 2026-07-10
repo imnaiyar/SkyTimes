@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.imnaiyar.skytimes.NavController
+import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.nav.VaultRoute
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -48,9 +50,14 @@ import skytimes.shared.generated.resources.lightmend_lantern
 fun MainScreen() {
     val screens = remember { Screen.entries }
 
-    val pagerState = rememberPagerState(2) {
+    val settings = LocalSettingsViewModel.current.settings.collectAsState()
+
+    val defaultScreenIndex = screens.indexOf(settings.value.homeScreen)
+
+    val pagerState = rememberPagerState(defaultScreenIndex) {
         screens.size
     }
+
 
     var showFab by remember { mutableStateOf(true) }
 
@@ -60,10 +67,10 @@ fun MainScreen() {
 
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        isBackEnabled = pagerState.currentPage != 0
+        isBackEnabled = pagerState.currentPage != defaultScreenIndex
     ) {
         scope.launch {
-            pagerState.animateScrollToPage(0)
+            pagerState.animateScrollToPage(defaultScreenIndex)
         }
     }
 
@@ -75,7 +82,7 @@ fun MainScreen() {
 
     val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
     val fabPad = PaddingValues(bottom = heightInDp + 16.dp, top = 11.dp)
-    
+
     Scaffold(
         modifier = Modifier.nestedScroll(bottomScroll.nestedScrollConnection),
         bottomBar = {
@@ -157,7 +164,7 @@ fun MainScreen() {
                     .fillMaxSize()
                     .padding(paddingValues = innerPadding)
                     // horizontal padding to align FAB
-                    .padding(horizontal = 11.dp)
+                    .padding(horizontal = 16.dp)
 
                 when (screens[page]) {
                     Screen.SkyTimes -> HomeScreen(

@@ -293,8 +293,7 @@ private fun LazyGridItemScope.EventGridItem(
             ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp),
+                        .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ReorderIcon(reorderMode)
@@ -410,7 +409,7 @@ private fun EventRow(
             }
 
         } else
-            EventNameLabel(eventDetails, isPinned, style = MaterialTheme.typography.titleMedium)
+            EventNameLabel(eventDetails, isPinned, style = MaterialTheme.typography.labelLarge)
 
         AnimatedVisibility(
             visible = !reorderMode,
@@ -425,7 +424,7 @@ private fun EventRow(
                 )
                 AnimatedTimer(
                     time = formatted,
-                    size = MaterialTheme.typography.titleSmall,
+                    size = MaterialTheme.typography.labelLarge,
                     color = eventNameStyle,
                     modifier = Modifier.padding(start = 8.dp),
                     direction = ClockDirection.DOWN,
@@ -514,7 +513,7 @@ private fun EventNameLabel(
     eventDetails: EventDetails,
     isPinned: Boolean = false,
     color: Color = Color.Unspecified,
-    style: TextStyle = MaterialTheme.typography.titleSmall,
+    style: TextStyle = MaterialTheme.typography.labelMedium,
     isActive: Boolean = false,
 ) {
     Row {

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.imnaiyar.skytimes.constants.EventKey
 import com.imnaiyar.skytimes.repositories.AppSettings
 import com.imnaiyar.skytimes.repositories.SettingsRepository
+import com.imnaiyar.skytimes.screens.Screen
 import com.imnaiyar.skytimes.theme.ThemeMode
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -38,6 +39,12 @@ class SettingsViewModel(
         }
     }
 
+
+    fun setHomeScreen(screen: Screen) {
+        viewModelScope.launch {
+            repository.setHomeScreen(screen)
+        }
+    }
 
     fun setPinnedEvents(events: List<EventKey>) {
         viewModelScope.launch {

@@ -21,8 +21,10 @@ import androidx.navigation.compose.rememberNavController
 import com.imnaiyar.skytimes.di.AppContainer
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
+import com.imnaiyar.skytimes.di.LocalTutorialManager
 import com.imnaiyar.skytimes.nav.MainRoute
 import com.imnaiyar.skytimes.nav.mainGraph
+import com.imnaiyar.skytimes.onboarding.TutorialHost
 import com.imnaiyar.skytimes.screens.SplashScreen
 import com.imnaiyar.skytimes.startup.AppState
 import com.imnaiyar.skytimes.theme.AppTheme
@@ -80,13 +82,16 @@ fun App() {
 
                         CompositionLocalProvider(
                             LocalSettingsViewModel provides settingsViewModel,
+                            LocalTutorialManager provides appContainer.tutorialManager,
                             NavController provides navController
                         ) {
-                            NavHost(
-                                navController = navController,
-                                startDestination = MainRoute
-                            ) {
-                                mainGraph()
+                            TutorialHost(manager = appContainer.tutorialManager) {
+                                NavHost(
+                                    navController = navController,
+                                    startDestination = MainRoute
+                                ) {
+                                    mainGraph()
+                                }
                             }
 
                             // Reveal from top to bottom

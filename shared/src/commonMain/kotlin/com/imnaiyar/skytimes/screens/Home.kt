@@ -62,6 +62,8 @@ import com.imnaiyar.skytimes.constants.RoundedCorner
 import com.imnaiyar.skytimes.constants.events
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
+import com.imnaiyar.skytimes.onboarding.AppTutorialStep
+import com.imnaiyar.skytimes.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.theme.labelTiny
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.ClockDirection
@@ -96,7 +98,8 @@ sealed interface IRow {
 fun HomeScreen(
     modifier: Modifier = Modifier,
     setFabVisible: (Boolean) -> Unit,
-    fabPad: PaddingValues
+    fabPad: PaddingValues,
+    tutorialTargetsEnabled: Boolean
 ) {
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
@@ -169,6 +172,7 @@ fun HomeScreen(
             }
         }
     }
+    val firstEventKey = rows.filterIsInstance<IRow.Event>().firstOrNull()?.eventData?.key
 
     Grid(modifier, type = GridType.GRID, state = lazyGridState, contentPadding = fabPad) {
         item(span = { GridItemSpan(maxLineSpan) }) {
@@ -180,11 +184,16 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth().graphicsLayer { alpha = topRowAlpha },
                 horizontalArrangement = Arrangement.End
             ) {
-                IconButton(onClick = { reorderMode = !reorderMode }) {
-                    Icon(
-                        painterResource(if (!reorderMode) Res.drawable.list_arrow else Res.drawable.close),
-                        contentDescription = "Reorder Mode Button"
-                    )
+                TutorialTarget(
+                    id = AppTutorialStep.HomeReorder.targetId,
+                    enabled = tutorialTargetsEnabled
+                ) {
+                    IconButton(onClick = { reorderMode = !reorderMode }) {
+                        Icon(
+                            painterResource(if (!reorderMode) Res.drawable.list_arrow else Res.drawable.close),
+                            contentDescription = "Reorder Mode Button"
+                        )
+                    }
                 }
             }
         }
@@ -222,6 +231,7 @@ fun HomeScreen(
                     },
                     timeUtils = rememberTimeFormatter(),
                     nowState = nowState,
+                    isTutorialTarget = tutorialTargetsEnabled && row.eventData.key == firstEventKey,
                 )
             }
         }
@@ -250,6 +260,7 @@ private fun LazyGridItemScope.EventGridItem(
     onPinToggle: () -> Unit,
     timeUtils: TimeFormatter,
     nowState: State<Instant>,
+    isTutorialTarget: Boolean,
 ) {
     ReorderableItem(
         reorderableLazyGridState,
@@ -272,38 +283,43 @@ private fun LazyGridItemScope.EventGridItem(
         )
 
         Box {
-            Surface(
-                shadowElevation = elevation,
-                modifier = Modifier
-                    .graphicsLayer {
-                        scaleX = rowScale
-                        scaleY = rowScale
-                        alpha = rowAlpha
-                    }
-                    .then(
-                        // long-press context menu is disabled while reordering
-                        if (!reorderMode) {
-                            Modifier.combinedClickable(
-                                onClick = {},
-                                onLongClick = onLongClick
-                            )
-                        } else Modifier
-                    ),
-                shape = RoundedCorner,
+            TutorialTarget(
+                id = AppTutorialStep.HomeEventContextMenu.targetId,
+                enabled = isTutorialTarget
             ) {
-                Row(
+                Surface(
+                    shadowElevation = elevation,
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                        .graphicsLayer {
+                            scaleX = rowScale
+                            scaleY = rowScale
+                            alpha = rowAlpha
+                        }
+                        .then(
+                            // long-press context menu is disabled while reordering
+                            if (!reorderMode) {
+                                Modifier.combinedClickable(
+                                    onClick = {},
+                                    onLongClick = onLongClick
+                                )
+                            } else Modifier
+                        ),
+                    shape = RoundedCorner,
                 ) {
-                    ReorderIcon(reorderMode)
-                    EventRow(
-                        eventData = eventData,
-                        isPinned = isPinned,
-                        timeUtils = timeUtils,
-                        nowState = nowState,
-                        reorderMode = reorderMode,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ReorderIcon(reorderMode)
+                        EventRow(
+                            eventData = eventData,
+                            isPinned = isPinned,
+                            timeUtils = timeUtils,
+                            nowState = nowState,
+                            reorderMode = reorderMode,
+                        )
+                    }
                 }
             }
             ContextMenu(isMenuOpen, isPinned, onDissmiss = onDismissMenu, onPinToggle)

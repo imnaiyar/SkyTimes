@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -26,9 +26,11 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.NavController
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
+import com.imnaiyar.skytimes.di.LocalTutorialManager
 import com.imnaiyar.skytimes.nav.ThemeSettingsRoute
 import com.imnaiyar.skytimes.theme.ThemeMode
 import com.imnaiyar.skytimes.ui.Card
+import com.imnaiyar.skytimes.ui.Grid
 import com.imnaiyar.skytimes.ui.SettingsItem
 import com.imnaiyar.skytimes.ui.Switch
 import org.jetbrains.compose.resources.painterResource
@@ -47,6 +49,7 @@ fun SettingsScreen(
 ) {
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
+    val tutorialManager = LocalTutorialManager.current
 
     val uriHandler = LocalUriHandler.current
 
@@ -63,7 +66,7 @@ fun SettingsScreen(
 
 
 
-    LazyColumn(
+    Grid(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = fabPad
@@ -86,7 +89,6 @@ fun SettingsScreen(
                     HorizontalDivider()
                     SwitchItem(
                         "Use 24 hour clock",
-                        "Enable or disable 24 hour clock format",
                         checked = settings.use24HourClock,
                         onClick = {
                             triggerSwitch(
@@ -98,7 +100,6 @@ fun SettingsScreen(
                     HorizontalDivider()
                     SwitchItem(
                         "Notifications",
-                        "Enable or disable app notifications",
                         checked = settings.notificationsEnabled,
                         onClick = {
                             triggerSwitch(
@@ -108,6 +109,7 @@ fun SettingsScreen(
                         }
                     )
                     HorizontalDivider()
+
                     SettingsItem(
                         "Default Page",
                         "Choose the default page to open when the app is launched"
@@ -144,67 +146,79 @@ fun SettingsScreen(
         // Appearances
         item {
             SettingsSection {
-                SettingsHeader("Appearance")
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    FilterChip(
-                        label = { Text("Light") },
-                        selected = settings.themeMode == ThemeMode.LIGHT,
-                        onClick = { viewModel.updateTheme(ThemeMode.LIGHT) },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(Res.drawable.light_mode),
-                                modifier = Modifier.size(FilterChipDefaults.IconSize),
-                                contentDescription = null
+                SettingsHeader("Customization")
+                SettingsCard {
+                    SettingsItem("Appearance") {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FilterChip(
+                                label = { Text("Light") },
+                                selected = settings.themeMode == ThemeMode.LIGHT,
+                                onClick = { viewModel.updateTheme(ThemeMode.LIGHT) },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.light_mode),
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                            FilterChip(
+                                label = { Text("Dark") },
+                                selected = settings.themeMode == ThemeMode.DARK,
+                                onClick = { viewModel.updateTheme(ThemeMode.DARK) },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.dark_mode),
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                            FilterChip(
+                                label = { Text("System") },
+                                selected = settings.themeMode == ThemeMode.SYSTEM,
+                                onClick = { viewModel.updateTheme(ThemeMode.SYSTEM) },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.contrast_circle),
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                        contentDescription = null
+                                    )
+                                }
                             )
                         }
+                    }
+                    HorizontalDivider()
+                    SettingsItem(
+                        "Theme",
+                        "Configure app's theme",
+                        {
+                            Icon(
+                                painterResource(Res.drawable.chevron_right),
+                                contentDescription = "Chevron"
+                            )
+                        },
+                        onClick = { navController.navigate(ThemeSettingsRoute) }
                     )
-                    FilterChip(
-                        label = { Text("Dark") },
-                        selected = settings.themeMode == ThemeMode.DARK,
-                        onClick = { viewModel.updateTheme(ThemeMode.DARK) },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(Res.drawable.dark_mode),
-                                modifier = Modifier.size(FilterChipDefaults.IconSize),
-                                contentDescription = null
-                            )
-                        }
-                    )
-                    FilterChip(
-                        label = { Text("System") },
-                        selected = settings.themeMode == ThemeMode.SYSTEM,
-                        onClick = { viewModel.updateTheme(ThemeMode.SYSTEM) },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(Res.drawable.contrast_circle),
-                                modifier = Modifier.size(FilterChipDefaults.IconSize),
-                                contentDescription = null
-                            )
-                        }
+                    HorizontalDivider()
+
+                    SettingsItem(
+                        title = "Replay tutorial",
+                        subtitle = "Start the guided tour again from the beginning.",
+                        action = {
+                            TextButton(onClick = tutorialManager::reset) {
+                                Text("Replay")
+                            }
+                        },
+                        onClick = tutorialManager::reset
                     )
                 }
             }
         }
 
-        // Contrast
-        item {
-            SettingsCard {
-                SettingsItem(
-                    "Theme",
-                    "Configure app's theme",
-                    {
-                        Icon(
-                            painterResource(Res.drawable.chevron_right),
-                            contentDescription = "Chevron"
-                        )
-                    },
-                    onClick = { navController.navigate(ThemeSettingsRoute) }
-                )
-            }
-        }
         // Links
         item {
             SettingsSection {

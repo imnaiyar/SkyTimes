@@ -1,5 +1,7 @@
 package com.imnaiyar.skytimes.di
 
+import com.imnaiyar.skytimes.onboarding.FirstLaunchTutorialFlow
+import com.imnaiyar.skytimes.onboarding.TutorialManager
 import com.imnaiyar.skytimes.repositories.ClockRepository
 import com.imnaiyar.skytimes.repositories.QuestRepository
 import com.imnaiyar.skytimes.repositories.SettingsRepository
@@ -31,6 +33,15 @@ class AppContainer(
             settingsRepository
         )
     )
+
+    /** Created after startup has loaded SettingsRepository, when App first accesses it. */
+    val tutorialManager by lazy {
+        TutorialManager(
+            flows = listOf(FirstLaunchTutorialFlow),
+            scope = applicationScope,
+            repository = settingsRepository
+        )
+    }
 
     fun createAppViewModel(): AppViewModel {
         return AppViewModel(appInitializer)

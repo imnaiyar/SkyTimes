@@ -34,6 +34,8 @@ import com.imnaiyar.skytimes.constants.GameTimeZone
 import com.imnaiyar.skytimes.constants.RoundedCorner
 import com.imnaiyar.skytimes.constants.dateDisclaimer
 import com.imnaiyar.skytimes.di.LocalAppContainer
+import com.imnaiyar.skytimes.onboarding.AppTutorialStep
+import com.imnaiyar.skytimes.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.ui.ClockDisplay
 import com.imnaiyar.skytimes.ui.DecoratedText
 import com.imnaiyar.skytimes.ui.Tooltip
@@ -57,9 +59,9 @@ import kotlin.time.Instant
 enum class Screen(
     val title: String,
     val icon: DrawableResource,
-    val actions: @Composable (RowScope.() -> Unit)? = null
+    val actions: @Composable (RowScope.(Boolean) -> Unit)? = null
 ) {
-    SkyTimes("SkyClock", Res.drawable.clock_analogue, actions = {
+    SkyTimes("SkyClock", Res.drawable.clock_analogue, actions = { _ ->
         var timeZone by remember { mutableStateOf(TimeZone.currentSystemDefault()) }
         Column(
             horizontalAlignment = Alignment.End,
@@ -80,7 +82,7 @@ enum class Screen(
             )
         }
     }),
-    Quests("Quests", Res.drawable.quest_icon, {
+    Quests("Quests", Res.drawable.quest_icon, { _ ->
         val date = LocalAppContainer.current.clockRepository.observeDate()
 
         Tooltip(dateDisclaimer) {
@@ -92,7 +94,7 @@ enum class Screen(
             )
         }
     }),
-    Shards("Shards", Res.drawable.shards_icon, {
+    Shards("Shards", Res.drawable.shards_icon, { tutorialTargetsEnabled ->
         val clockRepository = LocalAppContainer.current.clockRepository
         val todayDate = clockRepository.observeDate()
         val shardDate = clockRepository.shardDate.collectAsState()
@@ -115,16 +117,21 @@ enum class Screen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Tooltip(dateDisclaimer, showOnClick = false) {
-                OutlinedButton(onClick = { showPicker = !showPicker }, shape = RoundedCorner) {
-                    Icon(
-                        painterResource(Res.drawable.calendar),
-                        contentDescription = "Calendar Icon"
-                    )
+            TutorialTarget(
+                id = AppTutorialStep.ShardDatePicker.targetId,
+                enabled = tutorialTargetsEnabled
+            ) {
+                Tooltip(dateDisclaimer, showOnClick = false) {
+                    OutlinedButton(onClick = { showPicker = !showPicker }, shape = RoundedCorner) {
+                        Icon(
+                            painterResource(Res.drawable.calendar),
+                            contentDescription = "Calendar Icon"
+                        )
 
-                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
 
-                    Text(if (isToday) "Today" else shardDate.value.format(localDateToIso))
+                        Text(if (isToday) "Today" else shardDate.value.format(localDateToIso))
+                    }
                 }
             }
 

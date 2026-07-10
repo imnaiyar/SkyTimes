@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.imnaiyar.skytimes.NavController
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
+import com.imnaiyar.skytimes.di.LocalTutorialManager
 import com.imnaiyar.skytimes.nav.VaultRoute
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -51,6 +53,8 @@ fun MainScreen() {
     val screens = remember { Screen.entries }
 
     val settings = LocalSettingsViewModel.current.settings.collectAsState()
+    val tutorialManager = LocalTutorialManager.current
+    val tutorialState by tutorialManager.state.collectAsState()
 
     val defaultScreenIndex = screens.indexOf(settings.value.homeScreen)
 
@@ -64,6 +68,16 @@ fun MainScreen() {
     val navController = NavController.current
     val scope = rememberCoroutineScope()
     val hapticFeedback = LocalHapticFeedback.current
+
+    // The tutorial framework stays navigation-agnostic; this app mapping moves
+    // the pager before a target on another page is registered and spotlighted.
+    LaunchedEffect(tutorialState.currentStep) {
+        val step = tutorialState.currentStep ?: return@LaunchedEffect
+        val destination = screens.indexOf(step.screen)
+        if (destination >= 0 && destination != pagerState.currentPage) {
+            pagerState.animateScrollToPage(destination)
+        }
+    }
 
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
@@ -141,6 +155,7 @@ fun MainScreen() {
                 .fillMaxSize(),
             beyondViewportPageCount = screens.size - 1
         ) { page ->
+            val tutorialTargetsEnabled = page == pagerState.settledPage
 
             Scaffold(
                 topBar = {
@@ -156,7 +171,9 @@ fun MainScreen() {
                                 style = MaterialTheme.typography.titleLarge
                             )
                         },
-                        actions = screens[page].actions ?: {}
+                        actions = {
+                            screens[page].actions?.invoke(this, tutorialTargetsEnabled)
+                        }
                     )
                 }
             ) { innerPadding ->
@@ -170,11 +187,18 @@ fun MainScreen() {
                     Screen.SkyTimes -> HomeScreen(
                         modifier,
                         setFabVisible = { value -> showFab = value },
-                        fabPad
+                        fabPad,
+                        tutorialTargetsEnabled
                     )
 
-                    Screen.Quests -> QuestsScreen(modifier, fabPad)
-                    Screen.Shards -> ShardsScreen(modifier, fabPad)
+                    Screen.Quests -> QuestsScreen(modifier, fabPad, tutorialTargetsEnabled)
+                    Screen.Shards -> ShardsScreen(
+                        modifier,
+                        fabPad,
+                        tutorialTargetsEnabled,
+                        tutorialState.currentStep
+                    )
+
                     Screen.Settings -> SettingsScreen(modifier, fabPad)
                 }
             }

@@ -1,6 +1,7 @@
 package com.imnaiyar.skytimes.repositories
 
 import com.imnaiyar.skytimes.constants.EventKey
+import com.imnaiyar.skytimes.onboarding.TutorialProgressRepository
 import com.imnaiyar.skytimes.screens.Screen
 import com.imnaiyar.skytimes.startup.StartupTask
 import com.imnaiyar.skytimes.theme.DefaultThemeColor
@@ -22,13 +23,15 @@ data class AppSettings(
     val themeContrast: Contrast = Contrast.Default,
     val pinnedEvents: List<EventKey> = emptyList(),
     val themeColor: Int = DefaultThemeColor.toInt(),
-    val homeScreen: Screen = Screen.SkyTimes
+    val homeScreen: Screen = Screen.SkyTimes,
+    val completedTutorialStepKeys: Set<String> = emptySet(),
+    val tutorialCompleted: Boolean = false
 )
 
 
 class SettingsRepository(
     private val storage: Settings = Settings()
-) : StartupTask {
+) : StartupTask, TutorialProgressRepository {
     override val name = "Settings"
     override val critical = true
     private val updateMutex = Mutex()
@@ -73,6 +76,19 @@ class SettingsRepository(
 
     suspend fun setHomeScreen(screen: Screen) {
         update { current -> current.copy(homeScreen = screen) }
+    }
+
+    override suspend fun readCompletedStepKeys(): Set<String> =
+        settings.value.completedTutorialStepKeys
+
+    override suspend fun saveCompletedStepKeys(keys: Set<String>) {
+        update { current -> current.copy(completedTutorialStepKeys = keys) }
+    }
+
+    override suspend fun readTutorialCompleted(): Boolean = settings.value.tutorialCompleted
+
+    override suspend fun saveTutorialCompleted(completed: Boolean) {
+        update { current -> current.copy(tutorialCompleted = completed) }
     }
 
     private suspend inline fun update(transform: (AppSettings) -> AppSettings) {
@@ -138,7 +154,16 @@ class SettingsRepository(
 
             homeScreen = storage.getStringOrNull(SettingsKeys.HomeScreen)
                 ?.let(Screen::valueOf)
-                ?: defaults.homeScreen
+                ?: defaults.homeScreen,
+            completedTutorialStepKeys = storage.getStringOrNull(SettingsKeys.TutorialCompletedSteps)
+                ?.takeIf { it.isNotEmpty() }
+                ?.split("|")
+                ?.toSet()
+                ?: emptySet(),
+            tutorialCompleted = storage.getBoolean(
+                SettingsKeys.TutorialCompleted,
+                defaults.tutorialCompleted
+            )
         )
     }
 
@@ -177,6 +202,19 @@ class SettingsRepository(
         if (current.homeScreen != next.homeScreen) {
             storage.putString(SettingsKeys.HomeScreen, next.homeScreen.name)
         }
+        if (current.completedTutorialStepKeys != next.completedTutorialStepKeys) {
+            if (next.completedTutorialStepKeys.isEmpty()) {
+                storage.remove(SettingsKeys.TutorialCompletedSteps)
+            } else {
+                storage.putString(
+                    SettingsKeys.TutorialCompletedSteps,
+                    next.completedTutorialStepKeys.joinToString("|")
+                )
+            }
+        }
+        if (current.tutorialCompleted != next.tutorialCompleted) {
+            storage.putBoolean(SettingsKeys.TutorialCompleted, next.tutorialCompleted)
+        }
     }
 
     private fun parseThemeMode(value: String): ThemeMode {
@@ -195,5 +233,7 @@ private object SettingsKeys {
     const val ThemeColor = "theme_color"
     const val ThemeContrast = "theme_contrast"
     const val HomeScreen = "home_screen"
+    const val TutorialCompletedSteps = "tutorial_completed_steps"
+    const val TutorialCompleted = "tutorial_completed"
 }
 

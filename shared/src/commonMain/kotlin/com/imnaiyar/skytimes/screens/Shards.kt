@@ -65,6 +65,8 @@ import androidx.compose.ui.unit.sp
 import com.imnaiyar.skytimes.constants.GameTimeZone
 import com.imnaiyar.skytimes.constants.SkyHelperCdn
 import com.imnaiyar.skytimes.di.LocalAppContainer
+import com.imnaiyar.skytimes.onboarding.AppTutorialStep
+import com.imnaiyar.skytimes.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.Card
 import com.imnaiyar.skytimes.ui.ClockDirection
@@ -102,11 +104,36 @@ private const val gateShardDesc =
     "The time at which shard crystal appears on the realm door of the realm where shard is to fall"
 
 @Composable
-fun ShardsScreen(modifier: Modifier, fabPad: PaddingValues) {
+fun ShardsScreen(
+    modifier: Modifier,
+    fabPad: PaddingValues,
+    tutorialTargetsEnabled: Boolean,
+    activeTutorialStep: AppTutorialStep?
+) {
     val appCont = LocalAppContainer.current
     val clockRepository = appCont.clockRepository
     val now = clockRepository.now.collectAsState()
     val shardDate = clockRepository.shardDate.collectAsState()
+    // TODO: This probably is not needed for swipe and datepicker action
+    val isShardTutorialActive = activeTutorialStep == AppTutorialStep.ShardCountdown ||
+            activeTutorialStep == AppTutorialStep.ShardDateSwipe
+    var tutorialOriginalShardDate by remember { mutableStateOf<LocalDate?>(null) }
+
+    // Countdown is unavailable on no shard day. Use the next
+    // available date during the tour, then leave the user's original choice intact.
+    LaunchedEffect(isShardTutorialActive) {
+        if (isShardTutorialActive && getShard(shardDate.value) == null) {
+            tutorialOriginalShardDate = shardDate.value
+            val nextShardDate = (1..7)
+                .asSequence()
+                .map { offset -> LocalDate.fromEpochDays(shardDate.value.toEpochDays() + offset) }
+                .firstOrNull { date -> getShard(date) != null }
+            nextShardDate?.let(clockRepository::setShardDate)
+        } else if (!isShardTutorialActive) {
+            tutorialOriginalShardDate?.let(clockRepository::setShardDate)
+            tutorialOriginalShardDate = null
+        }
+    }
 
     val centerPage = Int.MAX_VALUE / 2
     val anchorDate = remember { shardDate.value }
@@ -146,13 +173,21 @@ fun ShardsScreen(modifier: Modifier, fabPad: PaddingValues) {
             date = dateForPage(page),
             now = now.value,
             fabPad = fabPad,
+            tutorialTargetsEnabled = tutorialTargetsEnabled,
+            isSelectedPage = page == pagerState.settledPage
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ShardsPage(date: LocalDate, now: Instant, fabPad: PaddingValues) {
+private fun ShardsPage(
+    date: LocalDate,
+    now: Instant,
+    fabPad: PaddingValues,
+    tutorialTargetsEnabled: Boolean,
+    isSelectedPage: Boolean
+) {
     val shard = getShard(date)
     if (shard == null) {
         NoShardDisplay(Modifier.padding(fabPad), date)
@@ -173,10 +208,25 @@ private fun ShardsPage(date: LocalDate, now: Instant, fabPad: PaddingValues) {
             ShardTitle(shard)
             ShardArea(shard)
             Spacer(Modifier.height(30.dp))
-            ShardCountdown(upcomingOrActive, now, shard) { showSheet = true }
+            TutorialTarget(
+                id = AppTutorialStep.ShardCountdown.targetId,
+                enabled = tutorialTargetsEnabled && isSelectedPage
+            ) {
+                ShardCountdown(upcomingOrActive, now, shard) { showSheet = true }
+            }
             Spacer(Modifier.height(30.dp))
             ShardInfographics(shard)
             Spacer(Modifier.height(30.dp))
+        }
+
+        // The pager itself fills the screen, which makes a poor coach-mark anchor.
+        // A one-pixel center anchor keeps the swipe tutorial's tooltip on screen.
+        TutorialTarget(
+            id = AppTutorialStep.ShardDateSwipe.targetId,
+            modifier = Modifier.size(1.dp),
+            enabled = tutorialTargetsEnabled && isSelectedPage
+        ) {
+            Box(Modifier.size(1.dp))
         }
     }
 

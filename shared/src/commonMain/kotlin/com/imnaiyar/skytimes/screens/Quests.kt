@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.imnaiyar.skytimes.di.LocalAppContainer
+import com.imnaiyar.skytimes.onboarding.AppTutorialStep
+import com.imnaiyar.skytimes.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.repositories.OutdatedQuestException
 import com.imnaiyar.skytimes.ui.Card
 import com.imnaiyar.skytimes.ui.Grid
@@ -53,6 +55,7 @@ import kotlin.time.Instant
 fun QuestsScreen(
     modifier: Modifier,
     fabPad: PaddingValues,
+    tutorialTargetsEnabled: Boolean
 ) {
     val appContainer = LocalAppContainer.current
     val viewModel = viewModel {
@@ -76,11 +79,16 @@ fun QuestsScreen(
                 isRefreshing = current.isRefreshing,
                 onRefresh = viewModel::refresh,
                 indicator = {
-                    PullToRefreshDefaults.LoadingIndicator(
-                        state = p2RState,
-                        isRefreshing = current.isRefreshing,
+                    TutorialTarget(
+                        id = AppTutorialStep.QuestPullToRefresh.targetId,
+                        enabled = tutorialTargetsEnabled,
                         modifier = Modifier.align(Alignment.TopCenter)
-                    )
+                    ) {
+                        PullToRefreshDefaults.LoadingIndicator(
+                            state = p2RState,
+                            isRefreshing = current.isRefreshing
+                        )
+                    }
                 }
             ) {
                 if (current.response.quests.none { isTodayInGame(it.date) }) {

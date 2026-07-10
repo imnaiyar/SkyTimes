@@ -9,17 +9,12 @@ import kotlinx.coroutines.launch
 
 /**
  * Persistence boundary for an app to implement with DataStore, Settings, a server,
- * or any other storage. The boolean is the first-launch gate; step keys retain
- * progress while a multiscreen tutorial is still in progress.
+ * or any other storage. Completion is derived from the stored step keys and the
+ * currently configured definitions, so newly shipped steps remain eligible.
  */
 interface TutorialProgressRepository {
     suspend fun readCompletedStepKeys(): Set<String>
     suspend fun saveCompletedStepKeys(keys: Set<String>)
-
-    /** True means onboarding has been completed or skipped and must not auto-run again. */
-    suspend fun readTutorialCompleted(): Boolean = false
-
-    suspend fun saveTutorialCompleted(completed: Boolean) = Unit
 }
 
 
@@ -67,7 +62,7 @@ class TutorialManager<S : TutorialStep>(
         }
         scope.launch {
             val completed = repository.readCompletedStepKeys()
-            val tutorialCompleted = repository.readTutorialCompleted()
+            val tutorialCompleted = isComplete(completed)
             _state.update { previous ->
                 val next = if (previous.isRunning && !tutorialCompleted) {
                     nextStep(flowId = previous.currentFlowId, completed = completed)
@@ -121,7 +116,7 @@ class TutorialManager<S : TutorialStep>(
         val currentIndex = _state.value.currentStepIndex ?: return
         val completed = _state.value.completedStepKeys + current.persistenceKey
         val next = nextStep(flowId, completed, startIndex = currentIndex + 1)
-        val tutorialCompleted = completed.containsAll(definitionsByKey.keys)
+        val tutorialCompleted = isComplete(completed)
         _state.update {
             it.copy(
                 currentFlowId = next?.flowId,
@@ -132,7 +127,7 @@ class TutorialManager<S : TutorialStep>(
                 isRunning = next != null
             )
         }
-        persist(completed, tutorialCompleted)
+        persist(completed)
     }
 
 
@@ -145,25 +140,24 @@ class TutorialManager<S : TutorialStep>(
         val previousDefinition = flow.steps.getOrNull(currentIndex - 1) ?: return
 
         val completed = _state.value.completedStepKeys - current.persistenceKey
-        val tutorialCompleted = _state.value.isTutorialCompleted
+        val tutorialCompleted = isComplete(completed)
         _state.update {
             it.copy(
                 currentStep = previousDefinition.step,
                 currentStepIndex = currentIndex - 1,
-                completedStepKeys = completed
+                completedStepKeys = completed,
+                isTutorialCompleted = tutorialCompleted
             )
         }
-        persist(completed, tutorialCompleted)
+        persist(completed)
     }
 
-    /**
-     * Ends all tutorial flows and persists the first-launch completion marker.
-     */
+    /** Ends all configured tutorial flows by recording every configured step key. */
     fun skip() {
         finish()
     }
 
-    /** Marks every configured step complete and prevents future automatic starts. */
+    /** Marks every currently configured step complete. */
     fun finish() {
         val completed = _state.value.completedStepKeys + definitionsByKey.keys
         _state.update {
@@ -176,7 +170,7 @@ class TutorialManager<S : TutorialStep>(
                 isRunning = false
             )
         }
-        persist(completed, tutorialCompleted = true)
+        persist(completed)
     }
 
     /** Clears all persisted tutorial progress. Intended for debug/settings reset actions. */
@@ -191,7 +185,7 @@ class TutorialManager<S : TutorialStep>(
                 isRunning = false
             )
         }
-        persist(emptySet(), tutorialCompleted = false)
+        persist(emptySet())
     }
 
     fun definitionFor(step: S): TutorialDefinition<S>? =
@@ -217,11 +211,11 @@ class TutorialManager<S : TutorialStep>(
         val definition: TutorialDefinition<S>
     )
 
-    private fun persist(completed: Set<String>, tutorialCompleted: Boolean) {
-        scope.launch {
-            repository.saveCompletedStepKeys(completed)
-            repository.saveTutorialCompleted(tutorialCompleted)
-        }
+    private fun isComplete(completed: Set<String>): Boolean =
+        completed.containsAll(definitionsByKey.keys)
+
+    private fun persist(completed: Set<String>) {
+        scope.launch { repository.saveCompletedStepKeys(completed) }
     }
 }
 

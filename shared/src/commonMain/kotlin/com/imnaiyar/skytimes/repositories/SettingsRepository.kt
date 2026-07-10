@@ -24,8 +24,7 @@ data class AppSettings(
     val pinnedEvents: List<EventKey> = emptyList(),
     val themeColor: Int = DefaultThemeColor.toInt(),
     val homeScreen: Screen = Screen.SkyTimes,
-    val completedTutorialStepKeys: Set<String> = emptySet(),
-    val tutorialCompleted: Boolean = false
+    val completedTutorialStepKeys: Set<String> = emptySet()
 )
 
 
@@ -85,11 +84,6 @@ class SettingsRepository(
         update { current -> current.copy(completedTutorialStepKeys = keys) }
     }
 
-    override suspend fun readTutorialCompleted(): Boolean = settings.value.tutorialCompleted
-
-    override suspend fun saveTutorialCompleted(completed: Boolean) {
-        update { current -> current.copy(tutorialCompleted = completed) }
-    }
 
     private suspend inline fun update(transform: (AppSettings) -> AppSettings) {
         updateMutex.withLock {
@@ -160,10 +154,6 @@ class SettingsRepository(
                 ?.split("|")
                 ?.toSet()
                 ?: emptySet(),
-            tutorialCompleted = storage.getBoolean(
-                SettingsKeys.TutorialCompleted,
-                defaults.tutorialCompleted
-            )
         )
     }
 
@@ -212,9 +202,6 @@ class SettingsRepository(
                 )
             }
         }
-        if (current.tutorialCompleted != next.tutorialCompleted) {
-            storage.putBoolean(SettingsKeys.TutorialCompleted, next.tutorialCompleted)
-        }
     }
 
     private fun parseThemeMode(value: String): ThemeMode {
@@ -234,6 +221,5 @@ private object SettingsKeys {
     const val ThemeContrast = "theme_contrast"
     const val HomeScreen = "home_screen"
     const val TutorialCompletedSteps = "tutorial_completed_steps"
-    const val TutorialCompleted = "tutorial_completed"
 }
 

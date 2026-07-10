@@ -8,8 +8,9 @@ import kotlinx.coroutines.delay
 
 /**
  * Starts onboarding after the host has had time to compose and settle. It is safe
- * to keep in the app root: persisted completion prevents it from running again on
- * later launches. A target may compose after this delay; TutorialOverlay will wait.
+ * to keep in the app root: completion is derived from configured step keys, so a
+ * newly added step automatically becomes eligible on a later launch. A target may
+ * compose after this delay; TutorialOverlay will wait.
  */
 @Composable
 fun <S : TutorialStep> TutorialLifecycle(

@@ -11,7 +11,7 @@ interface TutorialStep {
     /** The id used by [TutorialTarget] to identify the composable to spotlight. */
     val targetId: Any
 
-    /** A stable key used by [TutorialManager]. Override if targetId can change. */
+    /** A stable key used by [TutorialManager] */
     val persistenceKey: String
         get() = targetId.toString()
 }

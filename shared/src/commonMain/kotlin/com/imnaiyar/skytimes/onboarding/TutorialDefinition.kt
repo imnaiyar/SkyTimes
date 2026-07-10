@@ -11,7 +11,7 @@ interface TutorialStep {
     /** The id used by [TutorialTarget] to identify the composable to spotlight. */
     val targetId: Any
 
-    /** A stable key used by [TutorialProgressPersistence]. Override if targetId can change. */
+    /** A stable key used by [TutorialManager]. Override if targetId can change. */
     val persistenceKey: String
         get() = targetId.toString()
 }
@@ -42,7 +42,7 @@ enum class SwipeDirection {
 
 /**
  * Presentation data for a single [TutorialStep]. Apps own these definitions;
- * this library only lays them out and renders them.
+ * this only lays them out and renders them.
  */
 data class TutorialDefinition<S : TutorialStep>(
     val step: S,

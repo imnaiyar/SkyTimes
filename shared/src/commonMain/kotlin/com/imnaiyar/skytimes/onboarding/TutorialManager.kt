@@ -43,10 +43,6 @@ data class TutorialState<S : TutorialStep>(
         get() = isRunning && (currentStepIndex ?: 0) > 0
 }
 
-/**
- * Own this object in a screen-independent scope (usually a view model or the app
- * root). Call [start] whenever the app decides it is time to show onboarding.
- */
 class TutorialManager<S : TutorialStep>(
     flows: List<TutorialFlow<S>>,
     private val scope: CoroutineScope,
@@ -162,7 +158,6 @@ class TutorialManager<S : TutorialStep>(
 
     /**
      * Ends all tutorial flows and persists the first-launch completion marker.
-     * A skipped tutorial must not be shown again automatically.
      */
     fun skip() {
         finish()

@@ -267,7 +267,7 @@ private fun SwipeAnimation(direction: SwipeDirection) {
         animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
         label = "tutorialSwipeProgress"
     )
-    val color = MaterialTheme.colorScheme.primary
+    val color = MaterialTheme.colorScheme.onPrimary
     Canvas(Modifier.size(48.dp, 36.dp)) {
         val horizontal = direction == SwipeDirection.Left || direction == SwipeDirection.Right
         val start = if (horizontal) Offset(

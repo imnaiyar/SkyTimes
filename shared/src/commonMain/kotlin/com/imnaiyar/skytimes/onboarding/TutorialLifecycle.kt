@@ -22,7 +22,7 @@ fun <S : TutorialStep> TutorialLifecycle(
 
     LaunchedEffect(state.isLoaded, state.isTutorialCompleted) {
         if (state.isLoaded && !state.isTutorialCompleted) {
-            delay(startDelayMillis)
+            delay(timeMillis = startDelayMillis)
             val latest = manager.state.value
             if (!latest.isRunning && !latest.isTutorialCompleted) {
                 if (initialFlowId == null) manager.start() else manager.start(initialFlowId)

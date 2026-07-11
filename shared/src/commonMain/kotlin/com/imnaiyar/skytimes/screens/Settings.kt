@@ -24,10 +24,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.NavController
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.di.LocalTutorialManager
-import com.imnaiyar.skytimes.nav.ThemeSettingsRoute
 import com.imnaiyar.skytimes.theme.ThemeMode
 import com.imnaiyar.skytimes.ui.Card
 import com.imnaiyar.skytimes.ui.Grid
@@ -45,7 +43,8 @@ import skytimes.shared.generated.resources.open_in_browser
 @Composable
 fun SettingsScreen(
     modifier: Modifier,
-    fabPad: PaddingValues
+    fabPad: PaddingValues,
+    onOpenThemeSettings: () -> Unit
 ) {
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
@@ -53,7 +52,6 @@ fun SettingsScreen(
 
     val uriHandler = LocalUriHandler.current
 
-    val navController = NavController.current
     val haptic = LocalHapticFeedback.current
 
     val triggerSwitch = { isChecked: Boolean, action: (value: Boolean) -> Unit ->
@@ -201,7 +199,7 @@ fun SettingsScreen(
                                 contentDescription = "Chevron"
                             )
                         },
-                        onClick = { navController.navigate(ThemeSettingsRoute) }
+                        onClick = onOpenThemeSettings
                     )
                     HorizontalDivider()
 

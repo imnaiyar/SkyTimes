@@ -55,7 +55,7 @@ kotlin {
         commonMain.dependencies {
             // navigation
             implementation(libs.compose.navigationevent)
-            implementation(libs.compose.navigation)
+            implementation(libs.compose.navigation3.ui)
 
             // platform
             implementation(libs.kotlinx.serialization.json)

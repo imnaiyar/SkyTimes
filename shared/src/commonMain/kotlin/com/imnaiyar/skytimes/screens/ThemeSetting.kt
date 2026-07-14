@@ -64,7 +64,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ThemePage() {
+fun ThemePage(onNavigateBack: () -> Unit) {
     val appContainer = LocalAppContainer.current
     val themeController = appContainer.themeController
     val settingsRep = appContainer.settingsRepository
@@ -115,6 +115,7 @@ fun ThemePage() {
 
     BackScaffold(
         title = "Theme",
+        onNavigateBack = onNavigateBack,
         actions = {
             val enabled =
                 settings.themeColor != DefaultThemeColor.toInt() || settings.themeContrast != Contrast.Default

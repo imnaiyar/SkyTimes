@@ -21,15 +21,18 @@ dependencies {
 }
 
 android {
-    namespace = "com.imnaiyar.skytimes"
+    namespace = project.findProperty("app.id").toString()
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.imnaiyar.skytimes"
+        applicationId = project.findProperty("app.id").toString()
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = project.findProperty("app.version.code").toString().toInt()
+        versionName = project.findProperty("app.version.name").toString()
+    }
+    buildFeatures {
+        resValues = true
     }
     packaging {
         resources {
@@ -37,8 +40,14 @@ android {
         }
     }
     buildTypes {
-        getByName("release") {
+        debug {
+            applicationIdSuffix = ".debug"
+            resValue("string", "app_name", "${project.findProperty("app.name")} Debug")
+        }
+        release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
+            resValue("string", "app_name", project.findProperty("app.name").toString())
         }
     }
     compileOptions {

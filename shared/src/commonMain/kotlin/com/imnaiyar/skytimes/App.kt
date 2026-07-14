@@ -10,29 +10,19 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
 import com.imnaiyar.skytimes.di.AppContainer
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.di.LocalTutorialManager
-import com.imnaiyar.skytimes.nav.MainRoute
-import com.imnaiyar.skytimes.nav.mainGraph
+import com.imnaiyar.skytimes.nav.AppNavigation
 import com.imnaiyar.skytimes.onboarding.TutorialHost
 import com.imnaiyar.skytimes.screens.SplashScreen
 import com.imnaiyar.skytimes.startup.AppState
 import com.imnaiyar.skytimes.theme.AppTheme
-
-val NavController =
-    staticCompositionLocalOf<NavHostController> {
-        error("No NavController provided")
-    }
 
 @ExperimentalMaterial3Api
 @Composable
@@ -73,7 +63,6 @@ fun App() {
 
                 val settings by appContainer.settingsRepository.settings.collectAsState()
                 val theme by appContainer.themeController.theme.collectAsState()
-                val navController = rememberNavController()
                 AppTheme(themeMode = settings.themeMode, theme.contrast, theme.color) {
                     Box {
                         val settingsViewModel = viewModel {
@@ -82,16 +71,10 @@ fun App() {
 
                         CompositionLocalProvider(
                             LocalSettingsViewModel provides settingsViewModel,
-                            LocalTutorialManager provides appContainer.tutorialManager,
-                            NavController provides navController
+                            LocalTutorialManager provides appContainer.tutorialManager
                         ) {
                             TutorialHost(manager = appContainer.tutorialManager) {
-                                NavHost(
-                                    navController = navController,
-                                    startDestination = MainRoute
-                                ) {
-                                    mainGraph()
-                                }
+                                AppNavigation()
                             }
 
                             // Reveal from top to bottom

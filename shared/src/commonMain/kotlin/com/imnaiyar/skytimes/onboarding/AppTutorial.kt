@@ -60,12 +60,6 @@ val FirstLaunchTutorialFlow = TutorialFlow(
             title = "Choose a date",
             description = "You can also select a date manually from here.",
             preferredPlacement = TooltipPlacement.Below
-        ),
-        TutorialDefinition(
-            step = AppTutorialStep.ShardDatePicker,
-            title = "Choose a date",
-            description = "You can also select a date manually from here.",
-            preferredPlacement = TooltipPlacement.Below
         )
     )
 )

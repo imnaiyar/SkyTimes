@@ -1,12 +1,16 @@
 package com.imnaiyar.skytimes.nav
 
+import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object MainRoute
+sealed interface AppRoute : NavKey
 
 @Serializable
-data object VaultRoute
+data object MainRoute : AppRoute
 
 @Serializable
-data object ThemeSettingsRoute
+data object VaultRoute : AppRoute
+
+@Serializable
+data object ThemeSettingsRoute : AppRoute

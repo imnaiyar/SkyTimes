@@ -38,10 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.imnaiyar.skytimes.NavController
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.di.LocalTutorialManager
-import com.imnaiyar.skytimes.nav.VaultRoute
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import skytimes.shared.generated.resources.Res
@@ -49,7 +47,10 @@ import skytimes.shared.generated.resources.lightmend_lantern
 
 @ExperimentalMaterial3Api
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onOpenVault: () -> Unit,
+    onOpenThemeSettings: () -> Unit
+) {
     val screens = remember { Screen.entries }
 
     val settings = LocalSettingsViewModel.current.settings.collectAsState()
@@ -65,7 +66,6 @@ fun MainScreen() {
 
     var showFab by remember { mutableStateOf(true) }
 
-    val navController = NavController.current
     val scope = rememberCoroutineScope()
     val hapticFeedback = LocalHapticFeedback.current
 
@@ -132,7 +132,7 @@ fun MainScreen() {
         floatingActionButton = {
             AnimatedVisibility(showFab) {
                 ExtendedFloatingActionButton(
-                    onClick = { navController.navigate(VaultRoute) },
+                    onClick = onOpenVault,
                     modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -199,7 +199,11 @@ fun MainScreen() {
                         tutorialState.currentStep
                     )
 
-                    Screen.Settings -> SettingsScreen(modifier, fabPad)
+                    Screen.Settings -> SettingsScreen(
+                        modifier = modifier,
+                        fabPad = fabPad,
+                        onOpenThemeSettings = onOpenThemeSettings
+                    )
                 }
             }
         }

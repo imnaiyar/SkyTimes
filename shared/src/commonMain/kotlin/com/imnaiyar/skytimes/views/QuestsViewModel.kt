@@ -23,7 +23,12 @@ class QuestsViewModel(
 
     fun refresh() {
         val current = _state.value
-        if (current !is QuestsUiState.Content || current.isRefreshing) return
+        if (current is QuestsUiState.Content && current.isRefreshing) return
+
+        if (current !is QuestsUiState.Content) {
+            retry()
+            return
+        }
 
         viewModelScope.launch {
             _state.update { state ->

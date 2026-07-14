@@ -35,11 +35,14 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.di.LocalTutorialManager
+import com.imnaiyar.skytimes.nav.MainRoute
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import skytimes.shared.generated.resources.Res
@@ -49,7 +52,8 @@ import skytimes.shared.generated.resources.lightmend_lantern
 @Composable
 fun MainScreen(
     onOpenVault: () -> Unit,
-    onOpenThemeSettings: () -> Unit
+    onOpenThemeSettings: () -> Unit,
+    backStack: NavBackStack<NavKey>
 ) {
     val screens = remember { Screen.entries }
 
@@ -81,7 +85,8 @@ fun MainScreen(
 
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        isBackEnabled = pagerState.currentPage != defaultScreenIndex
+        // only enable if main route, and current tab is not preferred tab
+        isBackEnabled = pagerState.currentPage != defaultScreenIndex && backStack.lastOrNull() is MainRoute
     ) {
         scope.launch {
             pagerState.animateScrollToPage(defaultScreenIndex)

@@ -55,7 +55,8 @@ fun AppNavigation() {
             entry<MainRoute> {
                 MainScreen(
                     onOpenVault = { backStack.navigateTo(VaultRoute) },
-                    onOpenThemeSettings = { backStack.navigateTo(ThemeSettingsRoute) }
+                    onOpenThemeSettings = { backStack.navigateTo(ThemeSettingsRoute) },
+                    backStack
                 )
             }
             entry<VaultRoute> {

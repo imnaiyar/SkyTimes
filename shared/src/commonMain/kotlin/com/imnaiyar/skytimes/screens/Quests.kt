@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -24,6 +26,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -64,38 +67,47 @@ fun QuestsScreen(
     val state by viewModel.state.collectAsState()
 
     val p2RState = rememberPullToRefreshState()
-    when (val current = state) {
-        QuestsUiState.Loading -> LoadingSpinner(modifier.padding(fabPad))
-        is QuestsUiState.Error -> QuestError(
-            message = current.message,
-            onRetry = viewModel::retry,
-            modifier = modifier.padding(fabPad)
-        )
+    val isRefreshing = (state as? QuestsUiState.Content)?.isRefreshing ?: false
 
-        is QuestsUiState.Content -> {
-            PullToRefreshBox(
-                state = p2RState,
-                modifier = modifier,
-                isRefreshing = current.isRefreshing,
-                onRefresh = viewModel::refresh,
-                indicator = {
-                    TutorialTarget(
-                        id = AppTutorialStep.QuestPullToRefresh.targetId,
-                        enabled = tutorialTargetsEnabled,
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    ) {
-                        PullToRefreshDefaults.LoadingIndicator(
-                            state = p2RState,
-                            isRefreshing = current.isRefreshing
-                        )
-                    }
-                }
+    PullToRefreshBox(
+        state = p2RState,
+        modifier = modifier,
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        indicator = {
+            TutorialTarget(
+                id = AppTutorialStep.QuestPullToRefresh.targetId,
+                enabled = tutorialTargetsEnabled,
+                modifier = Modifier.align(Alignment.TopCenter)
             ) {
+                PullToRefreshDefaults.LoadingIndicator(
+                    state = p2RState,
+                    isRefreshing = isRefreshing
+                )
+            }
+        }
+    ) {
+        when (val current = state) {
+            QuestsUiState.Loading -> LoadingSpinner(
+                Modifier
+                    .padding(fabPad)
+                    .verticalScroll(rememberScrollState())
+            )
+
+            is QuestsUiState.Error -> QuestError(
+                message = current.message,
+                onRetry = viewModel::retry,
+                modifier = Modifier
+                    .padding(fabPad)
+                    .verticalScroll(rememberScrollState())
+            )
+
+            is QuestsUiState.Content -> {
                 if (current.response.quests.none { isTodayInGame(it.date) }) {
                     QuestError(
                         onRetry = viewModel::refresh,
                         message = OutdatedQuestException().message!!,
-                        modifier = Modifier
+                        modifier = Modifier.verticalScroll(rememberScrollState())
                     )
                 }
                 QuestContent(state = current, fabPad)

@@ -1,6 +1,6 @@
 TEAM_ID=
-APP_ID=com.app.id
-APP_NAME=AppName
+APP_ID=com.imnaiyar.skytimes
+APP_NAME=SkyTimes
 
 BUNDLE_ID_SUFFIX_Debug = .debug
 BUNDLE_ID_SUFFIX_Release =

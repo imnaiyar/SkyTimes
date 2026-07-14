@@ -28,8 +28,8 @@ android {
         applicationId = project.findProperty("app.id").toString()
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = project.findProperty("app.version.code").toString().toInt()
+        versionName = project.findProperty("app.version.name").toString()
     }
     buildFeatures {
         resValues = true

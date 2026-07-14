@@ -2,6 +2,10 @@ package com.imnaiyar.skytimes.di
 
 import com.imnaiyar.skytimes.onboarding.FirstLaunchTutorialFlow
 import com.imnaiyar.skytimes.onboarding.TutorialManager
+import com.imnaiyar.skytimes.reminder.ReminderManager
+import com.imnaiyar.skytimes.reminder.ReminderRepository
+import com.imnaiyar.skytimes.reminder.createPlatformNotificationManager
+import com.imnaiyar.skytimes.reminder.createPlatformReminderScheduler
 import com.imnaiyar.skytimes.repositories.ClockRepository
 import com.imnaiyar.skytimes.repositories.QuestRepository
 import com.imnaiyar.skytimes.repositories.SettingsRepository
@@ -27,10 +31,22 @@ class AppContainer(
     val themeController = ThemeController(settingsRepository, applicationScope)
     val clockRepository = ClockRepository(applicationScope)
 
+    // ── Reminder subsystem ─────────────────────────────────
+    val reminderRepository = ReminderRepository()
+
+    /** Created lazily because it depends on platform-specific factories. */
+    val reminderManager: ReminderManager by lazy {
+        val notificationManager = createPlatformNotificationManager()
+        val scheduler = createPlatformReminderScheduler(
+            reminderRepository, notificationManager,
+        )
+        ReminderManager(reminderRepository, scheduler, notificationManager)
+    }
 
     val appInitializer = AppInitializer(
         listOf(
-            settingsRepository
+            settingsRepository,
+            reminderRepository,
         )
     )
 

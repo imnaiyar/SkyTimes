@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -63,6 +64,18 @@ fun App() {
 
                 val settings by appContainer.settingsRepository.settings.collectAsState()
                 val theme by appContainer.themeController.theme.collectAsState()
+
+                // Initialise the reminder subsystem once startup completes.
+                LaunchedEffect(Unit) {
+                    appContainer.reminderManager.initialize()
+                }
+
+                // React to the master Notifications toggle in Settings.
+                LaunchedEffect(settings.notificationsEnabled) {
+                    appContainer.reminderManager.masterEnabled = settings.notificationsEnabled
+                    appContainer.reminderManager.refresh()
+                }
+
                 AppTheme(themeMode = settings.themeMode, theme.contrast, theme.color) {
                     Box {
                         val settingsViewModel = viewModel {

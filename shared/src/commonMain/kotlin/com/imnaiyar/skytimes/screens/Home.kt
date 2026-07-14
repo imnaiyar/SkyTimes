@@ -36,8 +36,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -45,6 +48,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
@@ -56,6 +60,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.imnaiyar.skytimes.constants.EventData
 import com.imnaiyar.skytimes.constants.EventKey
 import com.imnaiyar.skytimes.constants.RoundedCorner
@@ -64,6 +69,8 @@ import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.onboarding.AppTutorialStep
 import com.imnaiyar.skytimes.onboarding.TutorialTarget
+import com.imnaiyar.skytimes.reminder.Reminder
+import com.imnaiyar.skytimes.reminder.ReminderConstraints
 import com.imnaiyar.skytimes.theme.labelTiny
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.ClockDirection
@@ -76,6 +83,8 @@ import com.imnaiyar.skytimes.utils.Times
 import com.imnaiyar.skytimes.utils.indexOfKey
 import com.imnaiyar.skytimes.utils.rememberTimeFormatter
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
@@ -103,6 +112,46 @@ fun HomeScreen(
 ) {
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
+    val appContainer = LocalAppContainer.current
+    val scope = rememberCoroutineScope()
+
+    // Observe existing reminders for per-event toggle state.
+    val reminders by appContainer.reminderRepository.reminders.collectAsState()
+    val masterNotificationsEnabled = settings.notificationsEnabled
+
+    // State for the reminder offset configuration dialog.
+    var reminderDialogEvent by remember { mutableStateOf<EventData?>(null) }
+
+    // Disable (delete) a reminder for the given event immediately.
+    val disableReminder: (EventData) -> Unit = { eventData ->
+        val existing = reminders.firstOrNull { it.eventKey == eventData.key }
+        if (existing != null) {
+            scope.launch {
+                appContainer.reminderManager.removeReminder(existing.id)
+            }
+        }
+    }
+
+    // Show the offset configuration dialog before enabling a reminder.
+    val showReminderDialog: (EventData) -> Unit = { eventData ->
+        reminderDialogEvent = eventData
+    }
+
+    // Create a reminder with the selected offset from the dialog.
+    val confirmReminder: (EventData, Int) -> Unit = { eventData, offsetMinutes ->
+        scope.launch {
+            val reminder = Reminder(
+                id = reminderIdForEvent(eventData.key),
+                eventKey = eventData.key,
+                enabled = true,
+                offsetMinutes = offsetMinutes,
+                title = "${eventData.name} Reminder",
+                body = "${eventData.name} is starting!",
+            )
+            appContainer.reminderManager.updateReminder(reminder)
+        }
+        reminderDialogEvent = null
+    }
 
 
     val orderedKey = remember { settings.eventOrder.toMutableStateList() }
@@ -229,12 +278,25 @@ fun HomeScreen(
                         }
                         pendingCommit = true
                     },
+                    reminderEnabled = reminders.any { it.eventKey == row.eventData.key && it.enabled },
+                    onDisableReminder = { disableReminder(row.eventData) },
+                    onShowReminderDialog = { showReminderDialog(row.eventData) },
+                    masterNotificationsEnabled = masterNotificationsEnabled,
                     timeUtils = rememberTimeFormatter(),
                     nowState = nowState,
                     isTutorialTarget = tutorialTargetsEnabled && row.eventData.key == firstEventKey,
                 )
             }
         }
+    }
+
+    // Offset configuration dialog shown before enabling a reminder.
+    reminderDialogEvent?.let { event ->
+        ReminderOffsetDialog(
+            eventName = event.name,
+            onConfirm = { offset -> confirmReminder(event, offset) },
+            onDismiss = { reminderDialogEvent = null },
+        )
     }
 }
 
@@ -258,6 +320,10 @@ private fun LazyGridItemScope.EventGridItem(
     onLongClick: () -> Unit,
     onDismissMenu: () -> Unit,
     onPinToggle: () -> Unit,
+    reminderEnabled: Boolean,
+    onDisableReminder: () -> Unit,
+    onShowReminderDialog: () -> Unit,
+    masterNotificationsEnabled: Boolean,
     timeUtils: TimeFormatter,
     nowState: State<Instant>,
     isTutorialTarget: Boolean,
@@ -322,7 +388,16 @@ private fun LazyGridItemScope.EventGridItem(
                     }
                 }
             }
-            ContextMenu(isMenuOpen, isPinned, onDissmiss = onDismissMenu, onPinToggle)
+            ContextMenu(
+                isOpen = isMenuOpen,
+                isPinned = isPinned,
+                reminderEnabled = reminderEnabled,
+                masterNotificationsEnabled = masterNotificationsEnabled,
+                onDissmiss = onDismissMenu,
+                onPinClick = onPinToggle,
+                onDisableReminder = onDisableReminder,
+                onShowReminderDialog = onShowReminderDialog,
+            )
         }
     }
 }
@@ -481,8 +556,12 @@ private fun ReorderableCollectionItemScope.ReorderIcon(
 private fun ContextMenu(
     isOpen: Boolean,
     isPinned: Boolean,
+    reminderEnabled: Boolean,
+    masterNotificationsEnabled: Boolean,
     onDissmiss: () -> Unit,
-    onPinClick: () -> Unit
+    onPinClick: () -> Unit,
+    onDisableReminder: () -> Unit,
+    onShowReminderDialog: () -> Unit,
 ) {
     // have pin slightly tilted to right then animate it straight on pinned
     val pinRotation by animateFloatAsState(
@@ -518,8 +597,24 @@ private fun ContextMenu(
         )
         HorizontalDivider(modifier = Modifier.padding(5.dp))
         DropdownMenuItem(
-            text = { Text("Notification") },
-            onClick = { }
+            text = {
+                Text(
+                    if (!masterNotificationsEnabled) "Notifications disabled"
+                    else if (reminderEnabled) "Mute reminders"
+                    else "Remind me"
+                )
+            },
+            onClick = {
+                if (masterNotificationsEnabled) {
+                    if (reminderEnabled) {
+                        onDisableReminder()
+                    } else {
+                        onShowReminderDialog()
+                    }
+                    onDissmiss()
+                }
+            },
+            enabled = masterNotificationsEnabled,
         )
     }
 }
@@ -549,4 +644,70 @@ private fun EventNameLabel(
         }
     }
 
+}
+
+/**
+ * Consistent reminder ID for an event — one [Reminder] per [EventKey].
+ */
+private fun reminderIdForEvent(eventKey: EventKey): String = "reminder_${eventKey.name}"
+
+/**
+ * Modal dialog that lets the user pick an offset in minutes (0–15)
+ * before enabling a reminder for an event.  A [Slider] provides
+ * the selection UI, and the offset is passed back via [onConfirm].
+ */
+@Composable
+private fun ReminderOffsetDialog(
+    eventName: String,
+    onConfirm: (offsetMinutes: Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var offset by remember { mutableStateOf(0f) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+        ),
+        title = {
+            Text(
+                text = "Remind me — $eventName",
+                style = MaterialTheme.typography.titleLarge,
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "How many minutes before the event?",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = "${offset.roundToInt()} min",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                Slider(
+                    value = offset,
+                    onValueChange = { offset = it },
+                    valueRange = ReminderConstraints.MIN_OFFSET_MINUTES.toFloat()
+                        ..ReminderConstraints.MAX_OFFSET_MINUTES.toFloat(),
+                    steps = ReminderConstraints.MAX_OFFSET_MINUTES
+                        - ReminderConstraints.MIN_OFFSET_MINUTES - 1,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(offset.roundToInt()) }) {
+                Text("Remind me")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+    )
 }

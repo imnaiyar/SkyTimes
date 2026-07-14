@@ -98,6 +98,7 @@ fun SettingsScreen(
                     HorizontalDivider()
                     SwitchItem(
                         "Notifications",
+                        "Master override — disable to silence all event reminders",
                         checked = settings.notificationsEnabled,
                         onClick = {
                             triggerSwitch(

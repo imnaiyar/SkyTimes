@@ -19,6 +19,10 @@ internal class NoOpNotificationManager : NotificationManager {
     override suspend fun cancelAllNotifications() {
         // No-op
     }
+
+    override suspend fun isPermissionGranted(): Boolean = true
+
+    override suspend fun requestPermission(): Boolean = true
 }
 
 actual fun createPlatformNotificationManager(): NotificationManager =

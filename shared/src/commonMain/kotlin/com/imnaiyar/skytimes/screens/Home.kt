@@ -124,17 +124,22 @@ fun HomeScreen(
 
     // Disable (delete) a reminder for the given event immediately.
     val disableReminder: (EventData) -> Unit = { eventData ->
-        val existing = reminders.firstOrNull { it.eventKey == eventData.key }
-        if (existing != null) {
             scope.launch {
-                appContainer.reminderManager.removeReminder(existing.id)
+                appContainer.reminderManager.removeRemindersForEvent(eventData.key)
             }
-        }
     }
 
     // Show the offset configuration dialog before enabling a reminder.
+    // Checks / requests notification permission first if needed.
     val showReminderDialog: (EventData) -> Unit = { eventData ->
-        reminderDialogEvent = eventData
+        scope.launch {
+            val mgr = appContainer.reminderManager
+            if (!mgr.isNotificationPermissionGranted()) {
+                val granted = mgr.requestNotificationPermission()
+                if (!granted) return@launch // user denied – don't show the dialog
+            }
+            reminderDialogEvent = eventData
+        }
     }
 
     // Create a reminder with the selected offset from the dialog.

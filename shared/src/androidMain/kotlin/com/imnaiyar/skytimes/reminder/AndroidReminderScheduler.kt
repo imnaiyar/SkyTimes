@@ -1,45 +1,32 @@
 package com.imnaiyar.skytimes.reminder
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.annotation.RequiresPermission
 import com.imnaiyar.skytimes.constants.EventKey
 import com.imnaiyar.skytimes.constants.events
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Android implementation of [ReminderScheduler] backed by [AlarmManager].
- *
- * ## Design decisions
- *
- * - **Exact alarms** are used on API 31+ when the reminder offset is
- *   short (≤ 15 min), which is always the case for this app.  The
- *   `SCHEDULE_EXACT_ALARM` permission is requested in the manifest.
- * - Each alarm carries the [Reminder.id] and [EventKey] as extras so
- *   the [ReminderBroadcastReceiver] can reconstruct state without
- *   keeping any long-lived process alive.
- * - The scheduler itself is stateless – all reminder configuration is
- *   persisted in [ReminderRepository], and alarms are recreated from
- *   scratch on every [refresh] call.
- * - [refresh] uses a batch approach: cancel all existing alarms, then
- *   schedule one alarm per reminder using [reminderTimes].
  */
 class AndroidReminderScheduler(
     private val context: Context,
     private val repository: ReminderRepository,
-    private val notificationManager: NotificationManager,
 ) : ReminderScheduler {
 
     private val alarmManager: AlarmManager =
         context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    // ── ReminderScheduler ──────────────────────────────────
-
+    // ── ReminderScheduler
+    @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     override suspend fun refresh() = withContext(Dispatchers.IO) {
         val reminders = repository.getAll()
 
@@ -53,6 +40,7 @@ class AndroidReminderScheduler(
             .forEach { scheduleSingleReminder(it) }
     }
 
+    @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     override suspend fun scheduleReminder(reminder: Reminder) = withContext(Dispatchers.IO) {
         if (!reminder.enabled) {
             cancelReminder(reminder.id)
@@ -72,8 +60,9 @@ class AndroidReminderScheduler(
         }
     }
 
-    // ── Internal helpers ───────────────────────────────────
+    // ── Internal helpers
 
+    @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private fun scheduleSingleReminder(reminder: Reminder) {
         val event = events.firstOrNull { it.key == reminder.eventKey } ?: return
         val now = Clock.System.now()
@@ -92,9 +81,6 @@ class AndroidReminderScheduler(
 
     /**
      * Cancels an alarm identified by [reminderId].
-     *
-     * We use [Reminder.id.hashCode] as the [PendingIntent] request code,
-     * so we reconstruct the same PI to cancel it.
      */
     private fun cancelAlarmForReminder(reminderId: String) {
         val placeholder = Reminder(
@@ -106,29 +92,21 @@ class AndroidReminderScheduler(
         alarmManager.cancel(pendingIntent)
     }
 
+    @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     private fun scheduleExactAlarm(triggerAt: Instant, pendingIntent: PendingIntent) {
         val triggerMillis = triggerAt.toEpochMilliseconds()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerMillis,
-                    pendingIntent,
-                )
-            }
-            // Fallback: still set the alarm even without the permission;
-            // Android may defer it but it will eventually fire.
-            else {
-                alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerMillis,
-                    pendingIntent,
-                )
-            }
-        } else {
-            @Suppress("DEPRECATION")
+        if (alarmManager.canScheduleExactAlarms()) {
             alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerMillis,
+                pendingIntent,
+            )
+        }
+        // Fallback: still set the alarm even without the permission;
+        // Android may defer it, but it will eventually fire.
+        else {
+            alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 triggerMillis,
                 pendingIntent,
@@ -136,7 +114,7 @@ class AndroidReminderScheduler(
         }
     }
 
-    // ── Intent / PendingIntent factories ───────────────────
+    // ── Intent / PendingIntent factories
 
     private fun buildAlarmIntent(reminder: Reminder): Intent {
         return Intent(context, ReminderBroadcastReceiver::class.java).apply {

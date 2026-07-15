@@ -19,11 +19,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.di.LocalTutorialManager
 import com.imnaiyar.skytimes.theme.ThemeMode
@@ -31,6 +33,7 @@ import com.imnaiyar.skytimes.ui.Card
 import com.imnaiyar.skytimes.ui.Grid
 import com.imnaiyar.skytimes.ui.SettingsItem
 import com.imnaiyar.skytimes.ui.Switch
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.chevron_right
@@ -48,6 +51,8 @@ fun SettingsScreen(
 ) {
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
+    val appContainer = LocalAppContainer.current
+    val scope = rememberCoroutineScope()
     val tutorialManager = LocalTutorialManager.current
 
     val uriHandler = LocalUriHandler.current
@@ -101,10 +106,25 @@ fun SettingsScreen(
                         "Master override — disable to silence all event reminders",
                         checked = settings.notificationsEnabled,
                         onClick = {
-                            triggerSwitch(
-                                settings.notificationsEnabled,
-                                viewModel::setNotificationsEnabled
-                            )
+                            if (!settings.notificationsEnabled) {
+                                // Turning ON — check / request permission first.
+                                scope.launch {
+                                    val mgr = appContainer.reminderManager
+                                    if (!mgr.isNotificationPermissionGranted()) {
+                                        val granted = mgr.requestNotificationPermission()
+                                        if (!granted) return@launch
+                                    }
+                                    triggerSwitch(
+                                        false,
+                                        viewModel::setNotificationsEnabled,
+                                    )
+                                }
+                            } else {
+                                triggerSwitch(
+                                    settings.notificationsEnabled,
+                                    viewModel::setNotificationsEnabled,
+                                )
+                            }
                         }
                     )
                     HorizontalDivider()

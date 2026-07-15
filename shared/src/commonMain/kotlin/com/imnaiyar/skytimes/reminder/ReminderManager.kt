@@ -6,26 +6,6 @@ import kotlinx.coroutines.launch
 
 /**
  * Shared orchestration layer for reminders.
- *
- * This class is the single entry-point that ViewModels (or the
- * Application / AppDelegate) interact with.  It coordinates:
- *
- * - [ReminderRepository]   → persistence
- * - [ReminderScheduler]    → platform alarm/notification scheduling
- * - [NotificationManager]  → immediate notification display
- *
- * ## Typical usage
- *
- * ```kotlin
- * // At app startup / after settings change:
- * reminderManager.refresh()
- *
- * // When the user toggles a reminder:
- * reminderManager.updateReminder(reminder)
- *
- * // When the user dismisses an event:
- * reminderManager.removeReminder(eventId)
- * ```
  */
 class ReminderManager(
     val repository: ReminderRepository,
@@ -35,31 +15,20 @@ class ReminderManager(
 
     /**
      * Master override controlled by the Settings "Notifications" toggle.
-     *
-     * When `false`, [refresh] and [scheduleReminder] cancel alarms without
-     * deleting persisted [Reminder] data — toggling back to `true` restores
-     * scheduling from persistence.
      */
     var masterEnabled: Boolean = true
 
-    // ── Lifecycle ──────────────────────────────────────────
+    // ── Lifecycle
 
-    /**
-     * Must be called once during app startup (or after DI
-     * initialisation) to load persisted reminders and schedule
-     * platform alarms.
-     */
     suspend fun initialize() {
         repository.initialize()
         scheduler.refresh()
     }
 
-    // ── Reminder CRUD ──────────────────────────────────────
+    // ── Reminder CRUD
 
     /**
-     * Persists the reminder and re-schedules its platform alarm.
-     *
-     * If [reminder.enabled] is `false` the alarm is cancelled.
+     * saves the reminder and re-schedules its platform alarm.
      */
     suspend fun updateReminder(reminder: Reminder) {
         repository.upsert(reminder)
@@ -86,11 +55,7 @@ class ReminderManager(
     suspend fun removeRemindersForEvent(eventKey: EventKey) {
         val reminders = repository.getAll()
         val matching = reminders.filter { it.eventKey == eventKey }
-        for (r in matching) {
-            scheduler.cancelReminder(r.id)
-            notificationManager.cancelNotification(r.id)
-        }
-        repository.deleteByEventKey(eventKey.name)
+        for (r in matching) removeReminder(r.id)
     }
 
     // ── Scheduling ─────────────────────────────────────────
@@ -125,4 +90,18 @@ class ReminderManager(
         notificationManager.cancelAllNotifications()
         repository.deleteAll()
     }
+
+    // ── Permission helpers ──────────────────────────────────
+
+    /**
+     * Delegates to [NotificationManager.isPermissionGranted].
+     */
+    suspend fun isNotificationPermissionGranted(): Boolean =
+        notificationManager.isPermissionGranted()
+
+    /**
+     * Delegates to [NotificationManager.requestPermission].
+     */
+    suspend fun requestNotificationPermission(): Boolean =
+        notificationManager.requestPermission()
 }

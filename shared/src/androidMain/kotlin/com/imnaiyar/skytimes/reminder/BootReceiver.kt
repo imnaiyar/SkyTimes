@@ -34,7 +34,7 @@ class BootReceiver : BroadcastReceiver() {
 
                 val notificationManager = AndroidNotificationManager(context)
                 val scheduler = AndroidReminderScheduler(
-                    context, repository, notificationManager,
+                    context, repository
                 )
                 scheduler.refresh()
             } finally {

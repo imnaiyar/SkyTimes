@@ -4,37 +4,18 @@ import com.imnaiyar.skytimes.constants.events
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import platform.Foundation.NSDate
+import platform.Foundation.NSNumber
+import platform.Foundation.timeIntervalSinceDate
 import platform.Foundation.timeIntervalSinceNow
 import platform.UserNotifications.UNMutableNotificationContent
 import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNTimeIntervalNotificationTrigger
 import platform.UserNotifications.UNUserNotificationCenter
+import kotlin.time.Clock
 
 /**
- * iOS implementation of [ReminderScheduler] using
- * `UNUserNotificationCenter`.
- *
- * ## Rolling notification window
- *
- * iOS does **not** execute app code when a local notification is
- * delivered.  To work around this limitation the scheduler maintains
- * a *rolling window* of future notifications:
- *
- * 1. On [refresh] (called at launch / foreground), it calculates
- *    [WINDOW_SIZE] future occurrence times for every enabled reminder
- *    using the shared [reminderTimes] function.
- * 2. It cancels any existing pending notifications for that reminder
- *    and posts the new batch.
- * 3. If fewer than [WINDOW_SIZE] notifications are pending (e.g. some
- *    have already been delivered), the remaining slots are filled
- *    starting from the latest scheduled time.
- *
- * This guarantees the user always has upcoming notifications
- * pre-scheduled, subject to iOS's 64-pending-notification limit.
- *
- * ## BGAppRefreshTask supplement
+ * iOS implementation of [ReminderScheduler]
  *
  * `BGAppRefreshTask` is requested on each refresh so that iOS may
  * wake the app in the background periodically to replenish the queue.
@@ -43,7 +24,6 @@ import platform.UserNotifications.UNUserNotificationCenter
  */
 class IOSReminderScheduler(
     private val repository: ReminderRepository,
-    private val notificationManager: NotificationManager,
 ) : ReminderScheduler {
 
     private val center: UNUserNotificationCenter =
@@ -91,10 +71,6 @@ class IOSReminderScheduler(
     /**
      * Ensures [WINDOW_SIZE] future notifications are pending for the
      * given reminder.
-     *
-     * 1. Remove all existing pending notifications for the reminder.
-     * 2. Compute [WINDOW_SIZE] future times via [reminderTimes].
-     * 3. Schedule each as a `UNNotificationRequest`.
      */
     private suspend fun replenishReminder(reminder: Reminder, now: kotlinx.datetime.Instant) {
         val event = events.firstOrNull { it.key == reminder.eventKey } ?: return
@@ -113,10 +89,6 @@ class IOSReminderScheduler(
     /**
      * Posts a single future-dated notification for one occurrence.
      *
-     * Each notification uses a unique identifier of the form
-     * `"{reminderId}_{occurrenceIndex}"` so that individual
-     * notifications can be updated or removed without affecting
-     * others in the same reminder's batch.
      */
     private fun scheduleNotification(
         reminder: Reminder,
@@ -128,7 +100,7 @@ class IOSReminderScheduler(
         // Calculate the interval from now.
         val nowDate = NSDate()
         val fireDate = NSDate(
-            timeIntervalSince1970 = fireTime.toEpochMilliseconds() / 1000.0
+            timeIntervalSinceReferenceDate = fireTime.toEpochMilliseconds() / 1000.0
         )
         val interval = fireDate.timeIntervalSinceDate(nowDate)
 
@@ -136,15 +108,15 @@ class IOSReminderScheduler(
         if (interval <= 0.0) return
 
         val content = UNMutableNotificationContent().apply {
-            title = reminder.title.ifEmpty { "Event Reminder" }
-            body = reminder.body.ifEmpty { "Your event is starting soon!" }
-            sound = platform.UserNotifications.UNNotificationSound.defaultSound()
-            badge = 1
-            userInfo = mapOf<Any?, Any?>(
+            setTitle(reminder.title.ifEmpty { "Event Reminder" })
+            setBody(reminder.body.ifEmpty { "Your event is starting soon!" })
+            setSound(platform.UserNotifications.UNNotificationSound.defaultSound())
+            setBadge(NSNumber(1))
+            setUserInfo(mapOf<Any?, Any?>(
                 "reminderId" to reminder.id,
                 "eventKey" to reminder.eventKey.name,
                 "occurrenceIndex" to occurrenceIndex,
-            )
+            ))
         }
 
         val trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(
@@ -160,7 +132,7 @@ class IOSReminderScheduler(
 
         center.addNotificationRequest(request) { error ->
             if (error != null) {
-                // Logging could be added here.
+                println("Error scheduling notification: $error")
             }
         }
     }
@@ -170,12 +142,9 @@ class IOSReminderScheduler(
     /**
      * Removes **all** pending notifications whose identifier starts
      * with `"${reminderId}_"` (the batch prefix used above).
-     *
-     * This is intentionally broader than cancelling a single
-     * notification so that stale occurrences are always cleaned up.
      */
     private fun cancelReminderNotifications(reminderId: String) {
-        center.getPendingNotificationRequests { requests ->
+        center.getPendingNotificationRequestsWithCompletionHandler { requests ->
             val idsToRemove = requests
                 ?.filter { (it as? UNNotificationRequest)?.identifier?.startsWith("${reminderId}_") == true }
                 ?.map { (it as UNNotificationRequest).identifier }
@@ -189,16 +158,11 @@ class IOSReminderScheduler(
 
     private fun requestBackgroundRefresh() {
         // BGAppRefreshTask request – handled by the app delegate.
-        // This is a "hint" to iOS; delivery is not guaranteed.
         IOSBackgroundTaskManager.requestAppRefresh()
     }
 
     companion object {
         /**
-         * How many future occurrences to pre-schedule for each
-         * reminder.  Must not exceed iOS's 64-pending-notification
-         * limit divided by the maximum number of enabled reminders.
-         *
          * With ~14 event types and a 64-notification cap, a window of
          * 4 per reminder is safe.
          */

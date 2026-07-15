@@ -5,7 +5,6 @@ actual fun createPlatformReminderScheduler(
     notificationManager: NotificationManager,
 ): ReminderScheduler {
     return IOSReminderScheduler(
-        repository = repository,
-        notificationManager = notificationManager,
+        repository = repository
     )
 }

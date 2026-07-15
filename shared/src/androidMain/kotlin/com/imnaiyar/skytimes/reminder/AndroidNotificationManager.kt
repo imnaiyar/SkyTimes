@@ -1,6 +1,7 @@
 package com.imnaiyar.skytimes.reminder
 
 import android.Manifest
+import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager as AndroidNotificationManager
 import android.app.PendingIntent
@@ -8,17 +9,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresPermission
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 
 /**
  * Android implementation of [NotificationManager].
- *
- * Responsibilities:
- * - Creates the mandatory notification channel on Android 8+.
- * - Posts a heads-up notification with the reminder's title and body.
- * - Cancels individual or all notifications.
  */
 internal class AndroidNotificationManager(
     private val context: Context,
@@ -33,19 +31,15 @@ internal class AndroidNotificationManager(
 
     // ── NotificationManager ────────────────────────────────
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override suspend fun showNotification(reminder: Reminder) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Permission not granted – silently skip.
+        if (!isPermissionGranted()) {
+            // skip if not granted
             return
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_dialog_info)
             .setContentTitle(reminder.title.ifEmpty { "Event Reminder" })
             .setContentText(reminder.body.ifEmpty { "Your event is starting soon!" })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -64,21 +58,45 @@ internal class AndroidNotificationManager(
         systemManager.cancelAll()
     }
 
+    // ── Permission ─────────────────────────────────────────
+
+    override suspend fun isPermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override suspend fun requestPermission(): Boolean {
+        if (isPermissionGranted()) return true
+
+        val activity = AndroidContextHolder.activity ?: return false
+
+        return kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+            AndroidContextHolder.permissionCallback = { granted ->
+                if (continuation.isActive) continuation.resume(granted) { cause, _, _ -> }
+            }
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                AndroidContextHolder.PERMISSION_REQUEST_CODE,
+            )
+        }
+    }
+
     // ── Helpers ─────────────────────────────────────────────
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                AndroidNotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = CHANNEL_DESCRIPTION
-            }
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                as AndroidNotificationManager
-            manager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            CHANNEL_NAME,
+            AndroidNotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = CHANNEL_DESCRIPTION
         }
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+            as AndroidNotificationManager
+        manager.createNotificationChannel(channel)
     }
 
     /**

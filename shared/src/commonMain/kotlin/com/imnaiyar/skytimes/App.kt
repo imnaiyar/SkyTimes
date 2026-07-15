@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.imnaiyar.skytimes.di.AppContainer
 import com.imnaiyar.skytimes.di.LocalAppContainer
@@ -26,8 +27,7 @@ import com.imnaiyar.skytimes.theme.AppTheme
 
 @ExperimentalMaterial3Api
 @Composable
-fun App() {
-    val appContainer = remember { AppContainer() }
+fun App(appContainer: AppContainer = remember { AppContainer() }) {
     val appViewModel = viewModel { appContainer.createAppViewModel() }
     val appState by appViewModel.state.collectAsState()
     val progress by animateFloatAsState(
@@ -57,6 +57,10 @@ fun App() {
         )
 
         is AppState.Ready -> {
+            LaunchedEffect(appState) {
+                appContainer.reminderScheduler.refresh()
+            }
+
             CompositionLocalProvider(
                 LocalAppContainer provides appContainer
             ) {

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,9 +62,9 @@ import com.imnaiyar.skytimes.constants.EventKey
 import com.imnaiyar.skytimes.constants.RoundedCorner
 import com.imnaiyar.skytimes.constants.events
 import com.imnaiyar.skytimes.di.LocalAppContainer
-import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.onboarding.AppTutorialStep
 import com.imnaiyar.skytimes.onboarding.TutorialTarget
+import com.imnaiyar.skytimes.reminders.ui.rememberReminderFlow
 import com.imnaiyar.skytimes.theme.labelTiny
 import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.ClockDirection
@@ -85,12 +86,13 @@ import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.close
 import skytimes.shared.generated.resources.drag_indicator
 import skytimes.shared.generated.resources.list_arrow
+import skytimes.shared.generated.resources.notifications
 import skytimes.shared.generated.resources.pin
 import kotlin.time.Instant
 
 sealed interface IRow {
     data class Header(val title: String) : IRow
-    data class Event(val eventData: EventData, val isPinned: Boolean) : IRow
+    data class Event(val eventData: EventData, val isPinned: Boolean, val notified: Notified) : IRow
 }
 
 
@@ -101,7 +103,8 @@ fun HomeScreen(
     fabPad: PaddingValues,
     tutorialTargetsEnabled: Boolean
 ) {
-    val viewModel = LocalSettingsViewModel.current
+    val appContainer = LocalAppContainer.current
+    val viewModel = appContainer.createSettingsViewModel()
     val settings by viewModel.settings.collectAsState()
 
 
@@ -109,6 +112,7 @@ fun HomeScreen(
     val pinnedEvents = remember { settings.pinnedEvents.toMutableStateList() }
 
     val byKey = remember { events.associateBy { it.key } }
+    val reminderFlow = rememberReminderFlow(appContainer)
 
     var reorderMode by remember { mutableStateOf(false) }
     var pendingCommit by remember { mutableStateOf(false) }
@@ -161,81 +165,104 @@ fun HomeScreen(
     val rows = remember(orderedKey.toList(), pinnedEvents.toList()) {
         val pinned = orderedKey.filter { it in pinnedEvents }.mapNotNull(byKey::get)
         val others = orderedKey.filterNot { it in pinnedEvents }.mapNotNull(byKey::get)
+        val getNotified = { key: EventKey ->
+            val isu = appContainer.reminderRepository.remindersFor(key)
+            if (isu.isEmpty()) Notified.No
+            else if (isu.any { it.enabled }) {
+                if (settings.notificationsEnabled) Notified.Yes
+                else Notified.YesButGlobalDisabled
+            } else Notified.No
+        }
+
         buildList {
             if (pinned.isNotEmpty()) {
                 add(IRow.Header("Pinned"))
-                pinned.forEach { add(IRow.Event(it, isPinned = true)) }
+                pinned.forEach { add(IRow.Event(it, isPinned = true, getNotified(it.key))) }
             }
             if (others.isNotEmpty()) {
                 add(IRow.Header("Others"))
-                others.forEach { add(IRow.Event(it, isPinned = false)) }
+                others.forEach { add(IRow.Event(it, isPinned = false, getNotified(it.key))) }
             }
         }
     }
     val firstEventKey = rows.filterIsInstance<IRow.Event>().firstOrNull()?.eventData?.key
 
-    Grid(modifier, type = GridType.GRID, state = lazyGridState, contentPadding = fabPad) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            val topRowAlpha by animateFloatAsState(
-                targetValue = if (contextMenuKey != null) 0.35f else 1f,
-                animationSpec = tween(durationMillis = 300)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth().graphicsLayer { alpha = topRowAlpha },
-                horizontalArrangement = Arrangement.End
-            ) {
-                TutorialTarget(
-                    id = AppTutorialStep.HomeReorder.targetId,
-                    enabled = tutorialTargetsEnabled
+    Box(modifier = modifier.fillMaxSize()) {
+        Grid(type = GridType.GRID, state = lazyGridState, contentPadding = fabPad) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                val topRowAlpha by animateFloatAsState(
+                    targetValue = if (contextMenuKey != null) 0.35f else 1f,
+                    animationSpec = tween(durationMillis = 300)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().graphicsLayer { alpha = topRowAlpha },
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    IconButton(onClick = { reorderMode = !reorderMode }) {
-                        Icon(
-                            painterResource(if (!reorderMode) Res.drawable.list_arrow else Res.drawable.close),
-                            contentDescription = "Reorder Mode Button"
-                        )
+                    TutorialTarget(
+                        id = AppTutorialStep.HomeReorder.targetId,
+                        enabled = tutorialTargetsEnabled
+                    ) {
+                        IconButton(onClick = { reorderMode = !reorderMode }) {
+                            Icon(
+                                painterResource(if (!reorderMode) Res.drawable.list_arrow else Res.drawable.close),
+                                contentDescription = "Reorder Mode Button"
+                            )
+                        }
                     }
+                }
+            }
+
+            items(
+                rows,
+                key = { row ->
+                    when (row) {
+                        is IRow.Header -> "header_${row.title}"
+                        is IRow.Event -> row.eventData.key
+                    }
+                },
+                span = { row ->
+                    if (row is IRow.Header) GridItemSpan(maxLineSpan) else GridItemSpan(
+                        1
+                    )
+                }
+            ) { row ->
+                when (row) {
+                    is IRow.Header -> SectionHeader(title = row.title)
+                    is IRow.Event -> EventGridItem(
+                        eventData = row.eventData,
+                        isPinned = row.isPinned,
+                        isNotified = row.notified,
+                        reorderMode = reorderMode,
+                        reorderableLazyGridState = reorderableLazyGridState,
+                        contextMenuKey = contextMenuKey,
+                        onLongClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            contextMenuKey = row.eventData.key.name
+                        },
+                        onDismissMenu = { contextMenuKey = null },
+                        onPinToggle = {
+                            if (row.isPinned) {
+                                pinnedEvents.remove(row.eventData.key)
+                            } else {
+                                pinnedEvents.add(row.eventData.key)
+                            }
+                            pendingCommit = true
+                        },
+                        onReminderToggle = {
+                            reminderFlow.requestReminderEditor(row.eventData)
+                        },
+                        timeUtils = rememberTimeFormatter(),
+                        nowState = nowState,
+                        isTutorialTarget = tutorialTargetsEnabled && row.eventData.key == firstEventKey,
+                    )
                 }
             }
         }
 
-        items(
-            rows,
-            key = { row ->
-                when (row) {
-                    is IRow.Header -> "header_${row.title}"
-                    is IRow.Event -> row.eventData.key
-                }
-            },
-            span = { row -> if (row is IRow.Header) GridItemSpan(maxLineSpan) else GridItemSpan(1) }
-        ) { row ->
-            when (row) {
-                is IRow.Header -> SectionHeader(title = row.title)
-                is IRow.Event -> EventGridItem(
-                    eventData = row.eventData,
-                    isPinned = row.isPinned,
-                    reorderMode = reorderMode,
-                    reorderableLazyGridState = reorderableLazyGridState,
-                    contextMenuKey = contextMenuKey,
-                    onLongClick = {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        contextMenuKey = row.eventData.key.name
-                    },
-                    onDismissMenu = { contextMenuKey = null },
-                    onPinToggle = {
-                        if (row.isPinned) {
-                            pinnedEvents.remove(row.eventData.key)
-                        } else {
-                            pinnedEvents.add(row.eventData.key)
-                        }
-                        pendingCommit = true
-                    },
-                    timeUtils = rememberTimeFormatter(),
-                    nowState = nowState,
-                    isTutorialTarget = tutorialTargetsEnabled && row.eventData.key == firstEventKey,
-                )
-            }
-        }
+        // shows reminder related dialogues like for exact alarm
+        reminderFlow.RenderDialogs()
     }
+
 }
 
 @Composable
@@ -248,16 +275,24 @@ private fun SectionHeader(title: String) {
     )
 }
 
+enum class Notified {
+    Yes,
+    No,
+    YesButGlobalDisabled
+}
+
 @Composable
 private fun LazyGridItemScope.EventGridItem(
     eventData: EventData,
     isPinned: Boolean,
+    isNotified: Notified,
     reorderMode: Boolean,
     reorderableLazyGridState: ReorderableLazyGridState,
     contextMenuKey: String?,
     onLongClick: () -> Unit,
     onDismissMenu: () -> Unit,
     onPinToggle: () -> Unit,
+    onReminderToggle: () -> Unit,
     timeUtils: TimeFormatter,
     nowState: State<Instant>,
     isTutorialTarget: Boolean,
@@ -267,7 +302,6 @@ private fun LazyGridItemScope.EventGridItem(
         key = eventData.key
     ) { isDragging ->
         val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
-
         val isMenuOpen = contextMenuKey == eventData.key.name
         val isDimmed = contextMenuKey != null && !isMenuOpen
 
@@ -281,7 +315,6 @@ private fun LazyGridItemScope.EventGridItem(
             targetValue = if (isDimmed) 0.35f else 1f,
             animationSpec = tween(durationMillis = 300)
         )
-
         Box {
             TutorialTarget(
                 id = AppTutorialStep.HomeEventContextMenu.targetId,
@@ -315,6 +348,7 @@ private fun LazyGridItemScope.EventGridItem(
                         EventRow(
                             eventData = eventData,
                             isPinned = isPinned,
+                            notified = isNotified,
                             timeUtils = timeUtils,
                             nowState = nowState,
                             reorderMode = reorderMode,
@@ -322,7 +356,13 @@ private fun LazyGridItemScope.EventGridItem(
                     }
                 }
             }
-            ContextMenu(isMenuOpen, isPinned, onDissmiss = onDismissMenu, onPinToggle)
+            ContextMenu(
+                isMenuOpen,
+                isPinned,
+                onDissmiss = onDismissMenu,
+                onPinToggle,
+                onReminderToggle
+            )
         }
     }
 }
@@ -333,6 +373,7 @@ private fun EventRow(
     eventData: EventData,
     timeUtils: TimeFormatter,
     nowState: State<Instant>,
+    notified: Notified,
     isPinned: Boolean,
     reorderMode: Boolean
 ) {
@@ -413,7 +454,8 @@ private fun EventRow(
                 EventNameLabel(
                     eventDetails,
                     isPinned,
-                    eventNameStyle,
+                    notified = notified,
+                    color = eventNameStyle,
                     isActive = true
                 )
                 Text(
@@ -425,7 +467,12 @@ private fun EventRow(
             }
 
         } else
-            EventNameLabel(eventDetails, isPinned, style = MaterialTheme.typography.labelLarge)
+            EventNameLabel(
+                eventDetails,
+                isPinned,
+                notified = notified,
+                style = MaterialTheme.typography.labelLarge
+            )
 
         AnimatedVisibility(
             visible = !reorderMode,
@@ -482,7 +529,8 @@ private fun ContextMenu(
     isOpen: Boolean,
     isPinned: Boolean,
     onDissmiss: () -> Unit,
-    onPinClick: () -> Unit
+    onPinClick: () -> Unit,
+    onReminderClick: () -> Unit,
 ) {
     // have pin slightly tilted to right then animate it straight on pinned
     val pinRotation by animateFloatAsState(
@@ -518,8 +566,8 @@ private fun ContextMenu(
         )
         HorizontalDivider(modifier = Modifier.padding(5.dp))
         DropdownMenuItem(
-            text = { Text("Notification") },
-            onClick = { }
+            text = { Text("Reminder") },
+            onClick = onReminderClick
         )
     }
 }
@@ -529,9 +577,12 @@ private fun EventNameLabel(
     eventDetails: EventDetails,
     isPinned: Boolean = false,
     color: Color = Color.Unspecified,
+    notified: Notified,
     style: TextStyle = MaterialTheme.typography.labelMedium,
     isActive: Boolean = false,
 ) {
+    val iconColor = if (isActive) MaterialTheme.colorScheme.onPrimary else
+        MaterialTheme.colorScheme.primary
     Row {
         Text(
             eventDetails.event.name,
@@ -543,8 +594,17 @@ private fun EventNameLabel(
                 painterResource(Res.drawable.pin),
                 contentDescription = null,
                 modifier = Modifier.rotate(30f).size(18.dp),
-                tint = if (isActive) MaterialTheme.colorScheme.onPrimary else
-                    MaterialTheme.colorScheme.primary
+                tint = iconColor
+            )
+        }
+
+        AnimatedVisibility(notified != Notified.No) {
+            Icon(
+                painterResource(Res.drawable.notifications),
+                contentDescription = "Notification Bell",
+                modifier = Modifier.size(12.dp),
+                tint = if (notified == Notified.Yes) iconColor
+                else iconColor.copy(0.5f)
             )
         }
     }

@@ -9,7 +9,7 @@ data class Reminder(
     val id: String,
     val eventId: EventKey,
     val enabled: Boolean = true,
-    val offsetMinutes: Int = 10,
+    val offsetMinutes: Int = 0,
     val title: String = defaultTitle(eventId),
     val body: String = defaultBody(eventId),
     val metadata: Map<String, String> = emptyMap(),

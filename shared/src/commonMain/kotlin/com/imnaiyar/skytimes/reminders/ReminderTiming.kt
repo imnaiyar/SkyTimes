@@ -4,6 +4,7 @@ import com.imnaiyar.skytimes.constants.EventData
 import com.imnaiyar.skytimes.constants.events
 import com.imnaiyar.skytimes.utils.EventTimeUtils
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
 fun reminderTimes(
@@ -36,7 +37,7 @@ fun upcomingOccurrences(
         if (nextOccurrence < cursor) break
 
         results += nextOccurrence
-        cursor = nextOccurrence.plus(1, kotlinx.datetime.DateTimeUnit.MILLISECOND)
+        cursor = nextOccurrence.plus(1.milliseconds)
     }
 
     return results.distinct().sorted()

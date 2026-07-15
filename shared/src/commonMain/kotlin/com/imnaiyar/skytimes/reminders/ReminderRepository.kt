@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class ReminderRepository(
@@ -45,7 +44,8 @@ class ReminderRepository(
         update { emptyList() }
     }
 
-    suspend fun remindersFor(eventId: EventKey): List<Reminder> = reminders.value.filter { it.eventId == eventId }
+    fun remindersFor(eventId: EventKey): List<Reminder> =
+        reminders.value.filter { it.eventId == eventId }
 
     private suspend inline fun update(transform: (List<Reminder>) -> List<Reminder>) {
         updateMutex.withLock {

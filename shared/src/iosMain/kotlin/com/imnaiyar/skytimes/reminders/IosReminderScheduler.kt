@@ -1,5 +1,6 @@
 package com.imnaiyar.skytimes.reminders
 
+import androidx.compose.runtime.Composable
 import com.imnaiyar.skytimes.repositories.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,7 @@ import kotlin.time.Clock
 
 // maximum number of notification requests allowed on iOS
 private const val MAX_PENDING_REQUESTS = 64;
+
 class IosReminderScheduler(
     private val settingsRepository: SettingsRepository,
     private val reminderRepository: ReminderRepository,
@@ -46,8 +48,9 @@ class IosReminderScheduler(
 
         val now = Clock.System.now()
         val desiredTimes = reminderTimes(reminder, now, config.reminderWindowSize)
-        val existing = pendingRequests().filter { it.identifier.startsWith(reminder.identifierPrefix()) }
-            .associateBy { it.identifier }
+        val existing =
+            pendingRequests().filter { it.identifier.startsWith(reminder.identifierPrefix()) }
+                .associateBy { it.identifier }
 
         val desiredIdentifiers = desiredTimes.map { time -> reminder.notificationIdentifier(time) }
 
@@ -97,6 +100,12 @@ class IosReminderScheduler(
         }
     }
 
+    // only useful for android
+    override fun hasExactAlarm(): Boolean = true
+    override fun requestExactAlarm() = Unit
+
+    // TODO: check if permission is denied, in that case no dialogue will be presented
+    // Redirect to app settings for enabling via confirm dialogue
     override suspend fun requestPermission(): Boolean {
         return suspendCancellableCoroutine { continuation ->
             val options = UNAuthorizationOptionAlert or
@@ -137,7 +146,9 @@ class IosReminderScheduler(
 
         val currentRequests = pendingRequests()
         val currentIdentifiers = currentRequests.map { it.identifier }.toSet()
-        val desiredIdentifiers = desiredRequests.map { (reminder, time) -> reminder.notificationIdentifier(time) }.toSet()
+        val desiredIdentifiers =
+            desiredRequests.map { (reminder, time) -> reminder.notificationIdentifier(time) }
+                .toSet()
 
         currentRequests
             .filter { it.identifier !in desiredIdentifiers }
@@ -163,10 +174,11 @@ class IosReminderScheduler(
             setBody(reminder.body.ifBlank { Reminder.defaultBody(reminder.eventId) })
             setSound(UNNotificationSound.defaultSound())
         }
-        val trigger: UNNotificationTrigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(
-            intervalSeconds,
-            false
-        )
+        val trigger: UNNotificationTrigger =
+            UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(
+                intervalSeconds,
+                false
+            )
         val request = UNNotificationRequest.requestWithIdentifier(
             identifier = reminder.notificationIdentifier(time),
             content = content,
@@ -198,6 +210,17 @@ class IosReminderScheduler(
         "$id:${time.toEpochMilliseconds()}"
 }
 
+
+actual fun getReminderSchedular(
+    settingsRepository: SettingsRepository,
+    reminderRepository: ReminderRepository,
+    scope: CoroutineScope
+): ReminderScheduler {
+    return IosReminderScheduler(settingsRepository, reminderRepository, scope)
+}
+
+@Composable
+actual fun rememberNotificationPermissionRequester(): ((Boolean) -> Unit) -> Unit = {}
 
 /**
  * This is delegated to the iOS BGRefresh task when that happens

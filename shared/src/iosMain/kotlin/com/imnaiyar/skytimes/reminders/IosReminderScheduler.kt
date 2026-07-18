@@ -216,7 +216,9 @@ actual fun getReminderSchedular(
     reminderRepository: ReminderRepository,
     scope: CoroutineScope
 ): ReminderScheduler {
-    return IosReminderScheduler(settingsRepository, reminderRepository, scope)
+    val scheduler = IosReminderScheduler(settingsRepository, reminderRepository, scope)
+    IosReminderBridge.install(scheduler)
+    return scheduler
 }
 
 @Composable
@@ -227,6 +229,8 @@ actual fun rememberNotificationPermissionRequester(): ((Boolean) -> Unit) -> Uni
  */
 object IosReminderBridge {
     private val bridgeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** This is initialized in [getReminderSchedular] which is initialized once in [AppContainer] */
     private var scheduler: IosReminderScheduler? = null
 
     fun install(scheduler: IosReminderScheduler) {

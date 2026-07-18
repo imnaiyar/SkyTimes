@@ -174,12 +174,28 @@ class AndroidReminderScheduler(
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun showNotification(reminder: Reminder) {
+        val openIntent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            setPackage(appContext.packageName)
+            putExtra("reminder_id", reminder.id) // TODO: incase i need it in the future
+            putExtra("event_key", reminder.eventId.name) // same
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        val contentPendingIntent = PendingIntent.getActivity(
+            appContext,
+            reminder.id.hashCode(),
+            openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(appContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.app_icon_monochrome)
             .setContentTitle(reminder.title.ifBlank { Reminder.defaultTitle(reminder.eventId) })
             .setContentText(reminder.body.ifBlank { Reminder.defaultBody(reminder.eventId) })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .setContentIntent(contentPendingIntent)
             .build()
 
         NotificationManagerCompat.from(appContext)

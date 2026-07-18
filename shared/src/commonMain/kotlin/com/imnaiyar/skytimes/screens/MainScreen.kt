@@ -89,7 +89,7 @@ fun MainScreen(
         isBackEnabled = pagerState.currentPage != defaultScreenIndex && backStack.lastOrNull() is MainRoute
     ) {
         scope.launch {
-            pagerState.animateScrollToPage(defaultScreenIndex)
+            pagerState.scrollToPage(defaultScreenIndex)
         }
     }
 
@@ -112,7 +112,7 @@ fun MainScreen(
                         onClick = {
                             scope.launch {
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-                                pagerState.animateScrollToPage(index)
+                                pagerState.scrollToPage(index)
                             }
                         },
                         icon = {
@@ -157,8 +157,7 @@ fun MainScreen(
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
-                .fillMaxSize(),
-            beyondViewportPageCount = screens.size - 1
+                .fillMaxSize()
         ) { page ->
             val tutorialTargetsEnabled = page == pagerState.settledPage
 

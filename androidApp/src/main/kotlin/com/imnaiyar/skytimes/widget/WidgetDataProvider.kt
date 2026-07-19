@@ -1,7 +1,9 @@
 package com.imnaiyar.skytimes.widget
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.imnaiyar.skytimes.constants.EventKey
+import com.imnaiyar.skytimes.theme.DefaultThemeColor
 import com.imnaiyar.skytimes.utils.TimeUtils
 import kotlin.time.Instant
 
@@ -160,8 +162,8 @@ object WidgetPreferences {
     /**
      * Inline helper to reduce boilerplate when editing SharedPreferences.
      */
-    private inline fun android.content.SharedPreferences.edit(
-        block: android.content.SharedPreferences.Editor.() -> Unit
+    private inline fun SharedPreferences.edit(
+        block: SharedPreferences.Editor.() -> Unit
     ) {
         edit().apply(block).apply()
     }
@@ -175,11 +177,20 @@ object WidgetSettingsReader {
      */
     private const val KEY_USE_24_HOUR_CLOCK = "use_24_hour_clock"
 
-    fun is24HourClock(context: Context): Boolean {
-        val prefs = context.getSharedPreferences(
+    private const val SEED_COLOR_KEY = "theme_color"
+
+    private fun getPref(context: Context): SharedPreferences {
+        return context.getSharedPreferences(
             "${context.packageName}_preferences",
             Context.MODE_PRIVATE
         )
-        return prefs.getBoolean(KEY_USE_24_HOUR_CLOCK, true)
+    }
+
+    fun is24HourClock(context: Context): Boolean {
+        return getPref(context).getBoolean(KEY_USE_24_HOUR_CLOCK, true)
+    }
+
+    fun getSeedColor(context: Context): Int {
+        return getPref(context).getInt(SEED_COLOR_KEY, DefaultThemeColor.toInt())
     }
 }

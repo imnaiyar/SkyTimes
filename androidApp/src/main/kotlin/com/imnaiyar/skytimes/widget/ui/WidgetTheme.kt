@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceTheme
 import androidx.glance.color.ColorProvider
+import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.TextStyle
 
@@ -29,6 +30,14 @@ object WidgetTheme {
     )
 
     // ── Typography
+    val headerTitleStyle
+        @Composable
+        get() = TextStyle(
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = GlanceTheme.colors.onSurface,
+            fontFamily = FontFamily.Cursive,
+        )
     val eventNameStyle
         @Composable
         get() = TextStyle(

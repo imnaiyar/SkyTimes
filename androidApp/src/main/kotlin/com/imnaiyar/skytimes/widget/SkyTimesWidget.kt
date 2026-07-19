@@ -3,6 +3,7 @@ package com.imnaiyar.skytimes.widget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
@@ -13,7 +14,9 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.provideContent
+import androidx.glance.material3.ColorProviders
 import com.imnaiyar.skytimes.widget.ui.WidgetContent
+import com.materialkolor.rememberDynamicColorScheme
 
 /**
  * SkyTimes home screen widget
@@ -30,11 +33,14 @@ class SkyTimesWidget : GlanceAppWidget() {
         )
     )
 
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
-
+        val seedColor = WidgetSettingsReader.getSeedColor(context)
         provideContent {
-            GlanceTheme {
+            val dark = rememberDynamicColorScheme(seedColor = Color(seedColor), isDark = true)
+            val light = rememberDynamicColorScheme(seedColor = Color(seedColor), isDark = false)
+            GlanceTheme(colors = ColorProviders(light, dark)) {
                 WidgetContent(
                     context = context,
                     appWidgetId = appWidgetId,

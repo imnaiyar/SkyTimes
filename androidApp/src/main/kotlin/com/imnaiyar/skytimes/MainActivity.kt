@@ -5,10 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.imnaiyar.skytimes.reminders.ContextHolder
+import com.imnaiyar.skytimes.widget.SkyTimesWidget
 import com.imnaiyar.skytimes.widget.WidgetUpdateWorker
 
 class MainActivity : ComponentActivity() {
@@ -20,11 +19,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             // initialize context for reminder manager
             ContextHolder.initialize(this)
-
             // Schedule periodic widget updates via WorkManager
             WidgetUpdateWorker.enqueuePeriodicUpdate(this)
-
             App()
+
+            // update all widgets
+            SkyTimesWidget.updateAllWidgets(this@MainActivity)
         }
     }
 }

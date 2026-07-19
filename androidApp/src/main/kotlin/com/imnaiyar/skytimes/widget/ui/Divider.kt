@@ -20,7 +20,12 @@ fun Divider(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(thickness)
-            .background(color)
-    ) {}
+    ) {
+        Box(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .height(thickness)
+                .background(color)
+        ) {}
+    }
 }

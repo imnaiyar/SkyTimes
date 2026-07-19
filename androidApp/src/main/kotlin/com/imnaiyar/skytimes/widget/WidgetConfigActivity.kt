@@ -7,17 +7,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -135,14 +133,18 @@ private fun WidgetConfigScreen(
                     .weight(1f)
                     .fillMaxWidth(),
             ) {
-                items(events, key = { it.key.name }) { event ->
-                    EventToggleRow(
-                        event = event,
-                        isChecked = selectedState[event.key] == true,
-                        onToggle = { checked ->
-                            selectedState[event.key] = checked
-                        },
-                    )
+                item {
+                    FlowRow(itemVerticalAlignment = Alignment.CenterVertically) {
+                        events.forEach { event ->
+                            EventToggleRow(
+                                event = event,
+                                isChecked = selectedState[event.key] == true,
+                                onToggle = { checked ->
+                                    selectedState[event.key] = checked
+                                },
+                            )
+                        }
+                    }
                 }
             }
 
@@ -186,46 +188,42 @@ private fun EventToggleRow(
     isChecked: Boolean,
     onToggle: (Boolean) -> Unit,
 ) {
-    Row(
+    FilterChip(
+        selected = isChecked,
+        onClick = { onToggle(!isChecked) },
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = onToggle,
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Text(
-                text = event.name,
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            // Show recurrence info as subtitle for context
-            val subtitle = buildString {
-                if (event.interval != null) {
-                    append("Every ${event.interval}min")
+            .padding(4.dp),
+        label = {
+            Column {
+                Text(
+                    text = event.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+
+                val subtitle = buildString {
+                    if (event.interval != null) {
+                        append("Every ${event.interval}min")
+                    }
+                    if (event.occursOn != null) {
+                        if (isNotEmpty()) append(" · ")
+                        val days = event.occursOn!!.weekDays?.mapNotNull { dayNum ->
+                            when (dayNum) {
+                                1 -> "Mon"; 2 -> "Tue"; 3 -> "Wed"; 4 -> "Thu"
+                                5 -> "Fri"; 6 -> "Sat"; 7 -> "Sun"
+                                else -> null
+                            }
+                        }?.joinToString(",")
+                        if (!days.isNullOrEmpty()) append(days)
+                        event.occursOn!!.dayOfTheMonth?.let { append("Day $it") }
+                    }
+                    if (isEmpty()) append("—")
                 }
-                if (event.occursOn != null) {
-                    if (isNotEmpty()) append(" · ")
-                    val days = event.occursOn!!.weekDays?.mapNotNull { dayNum ->
-                        when (dayNum) {
-                            1 -> "Mon"; 2 -> "Tue"; 3 -> "Wed"; 4 -> "Thu"
-                            5 -> "Fri"; 6 -> "Sat"; 7 -> "Sun"
-                            else -> null
-                        }
-                    }?.joinToString(",")
-                    if (!days.isNullOrEmpty()) append(days)
-                    event.occursOn!!.dayOfTheMonth?.let { append("Day $it") }
-                }
-                if (isEmpty()) append("—")
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
-    }
+    )
 }

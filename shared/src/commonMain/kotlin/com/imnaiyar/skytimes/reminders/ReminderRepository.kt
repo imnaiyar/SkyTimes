@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 
+// TODO: allow muting a particular event through notification actions, data should be saved, just disable it
 class ReminderRepository(
     private val storage: Settings = Settings(),
     private val json: Json = Json { ignoreUnknownKeys = true; encodeDefaults = true }

@@ -184,8 +184,7 @@ fun MainScreen(
                 val modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues = innerPadding)
-                    // horizontal padding to align FAB
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 10.dp)
 
                 when (screens[page]) {
                     Screen.SkyTimes -> HomeScreen(

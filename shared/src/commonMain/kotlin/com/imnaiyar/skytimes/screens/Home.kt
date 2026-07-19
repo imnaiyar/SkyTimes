@@ -14,7 +14,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -79,6 +78,7 @@ import com.imnaiyar.skytimes.utils.EventDetails
 import com.imnaiyar.skytimes.utils.EventTimeUtils
 import com.imnaiyar.skytimes.utils.TimeFormatter
 import com.imnaiyar.skytimes.utils.Times
+import com.imnaiyar.skytimes.utils.contextClickable
 import com.imnaiyar.skytimes.utils.indexOfKey
 import com.imnaiyar.skytimes.utils.rememberTimeFormatter
 import kotlinx.coroutines.FlowPreview
@@ -122,6 +122,9 @@ private const val COMMIT_DEBOUNCE_MS = 300L
 private val GRID_ITEM_BG_COLOR
     @Composable
     get() = MaterialTheme.colorScheme.surfaceContainer
+
+private val GRID_ITEM_TOP_PADDING = 16.dp
+private val Grid_ITEM_PADDING = 4.dp
 
 /**
  * Owns every piece of interactive state for the Home screen: event order, pinned
@@ -545,7 +548,7 @@ internal fun LazyGridItemScope.EventGridItem(
         )
 
         /** top item will always be a category label, so its corner is handled in [HomeTopBar] */
-        val bottomShape = if (isLast) 16.dp else 0.dp
+        val bottomShape = if (isLast) GRID_ITEM_TOP_PADDING else Grid_ITEM_PADDING
 
         Box {
             TutorialTarget(
@@ -554,7 +557,12 @@ internal fun LazyGridItemScope.EventGridItem(
             ) {
                 Surface(
                     shadowElevation = elevation,
-                    shape = RoundedCornerShape(bottomStart = bottomShape, bottomEnd = bottomShape),
+                    shape = RoundedCornerShape(
+                        bottomStart = bottomShape,
+                        bottomEnd = bottomShape,
+                        topStart = Grid_ITEM_PADDING,
+                        topEnd = Grid_ITEM_PADDING
+                    ),
                     color = GRID_ITEM_BG_COLOR,
                     modifier = Modifier
                         .graphicsLayer {
@@ -568,7 +576,10 @@ internal fun LazyGridItemScope.EventGridItem(
                             if (reorderMode) {
                                 Modifier
                             } else {
-                                Modifier.combinedClickable(onClick = {}, onLongClick = onLongClick)
+                                Modifier.contextClickable(
+                                    onLongPress = onLongClick,
+                                    onRightClick = onLongClick
+                                )
                             },
                         ),
                 ) {
@@ -610,7 +621,8 @@ private fun ReorderableCollectionItemScope.ReorderIcon(visible: Boolean) {
         IconButton(modifier = Modifier.draggableHandle(), onClick = {}) {
             Icon(
                 painter = painterResource(Res.drawable.drag_indicator),
-                contentDescription = "Drag to reorder"
+                contentDescription = "Drag to reorder",
+                modifier = Modifier.size(18.dp)
             )
         }
     }
@@ -710,12 +722,17 @@ private fun HomeTopBar(
         targetValue = if (dimmed) 0.35f else 1f,
         animationSpec = tween(durationMillis = 300),
     )
-    val topShape = if (index == 0) 16.dp else 0.dp
+    val topShape = if (index == 0) GRID_ITEM_TOP_PADDING else Grid_ITEM_PADDING
 
     Row(
         modifier = Modifier.fillMaxWidth().background(
             GRID_ITEM_BG_COLOR,
-            RoundedCornerShape(topStart = topShape, topEnd = topShape)
+            RoundedCornerShape(
+                topStart = topShape,
+                topEnd = topShape,
+                bottomEnd = Grid_ITEM_PADDING,
+                bottomStart = Grid_ITEM_PADDING
+            )
         ).padding(4.dp).graphicsLayer { this.alpha = alpha },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

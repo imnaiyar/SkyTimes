@@ -178,7 +178,12 @@ class AndroidReminderScheduler(
         val notification = NotificationCompat.Builder(appContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.app_icon_monochrome)
             .setContentTitle(reminder.title.ifBlank { Reminder.defaultTitle(reminder.eventId) })
-            .setContentText(reminder.body.ifBlank { Reminder.defaultBody(reminder.eventId) })
+            .setContentText(reminder.body.ifBlank {
+                Reminder.defaultBody(
+                    reminder.eventId,
+                    reminder.offsetMinutes
+                )
+            })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(getLaunchIntent(reminder))

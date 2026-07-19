@@ -15,6 +15,12 @@ dependencies {
     implementation(projects.shared)
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+
+    implementation(libs.compose.material3)
+    implementation(libs.compose.foundation)
+    implementation(libs.androidx.work.runtime)
     implementation("androidx.core:core-splashscreen:1.2.0")
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)

@@ -49,7 +49,6 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.client.okhttp)
-            implementation("androidx.core:core-ktx:1.13.1")
             implementation("androidx.media3:media3-exoplayer:1.8.0")
             implementation("androidx.media3:media3-ui:1.8.0")
         }

@@ -46,39 +46,63 @@ object EventTimeUtils {
         return now.toLocalDateTime(zone).date
     }
 
-    private fun getOccurrenceDay(event: EventData, now: Instant): Instant {
-        var date = todayInZone(now)
+    private fun matchesRule(event: EventData, date: LocalDate): Boolean {
+        val rules = event.occursOn ?: return true
 
-        if (event.occursOn != null) {
-
-            event.occursOn.weekDays?.let { weekdays ->
-                while (date.dayOfWeek.isoDayNumber !in weekdays) {
-                    date = date.plus(1, DateTimeUnit.DAY)
-                }
-            }
-
-            event.occursOn.dayOfTheMonth?.let { day ->
-                while (date.day != day) {
-                    date = date.plus(1, DateTimeUnit.DAY)
-                }
-            }
+        rules.weekDays?.let { weekdays ->
+            if (date.dayOfWeek.isoDayNumber !in weekdays) return false
         }
 
+        rules.dayOfTheMonth?.let { day ->
+            if (date.day != day) return false
+        }
+
+        return true
+    }
+
+    private fun occurrenceOn(date: LocalDate, event: EventData): Instant {
         return date
             .atStartOfDayIn(zone)
             .plus(event.offset.minutes)
     }
 
-    fun getNextOccurrence(event: EventData, now: Instant = Clock.System.now()): Instant {
-        var nextOccurrence = getOccurrenceDay(event, now)
+    private fun getOccurrenceDay(event: EventData, now: Instant): Instant {
+        var date = todayInZone(now)
 
-        val interval = event.interval ?: return nextOccurrence
-
-        while (nextOccurrence < now) {
-            nextOccurrence += interval.minutes
+        while (!matchesRule(event, date)) {
+            date = date.plus(1, DateTimeUnit.DAY)
         }
 
-        return nextOccurrence
+        return occurrenceOn(date, event)
+    }
+
+    private fun getNextRecurringOccurrence(event: EventData, now: Instant): Instant {
+        var date = todayInZone(now)
+
+        while (true) {
+            if (matchesRule(event, date)) {
+                val candidate = occurrenceOn(date, event)
+                if (candidate >= now) return candidate
+            }
+            date = date.plus(1, DateTimeUnit.DAY)
+        }
+    }
+
+    fun getNextOccurrence(event: EventData, now: Instant = Clock.System.now()): Instant {
+        val nextOccurrence = getOccurrenceDay(event, now)
+
+        val interval = event.interval ?: return if (event.occursOn != null) {
+            if (nextOccurrence >= now) nextOccurrence else getNextRecurringOccurrence(event, now)
+        } else {
+            nextOccurrence
+        }
+
+        var current = nextOccurrence
+        while (current < now) {
+            current += interval.minutes
+        }
+
+        return current
     }
 
     fun getAllOccurrences(

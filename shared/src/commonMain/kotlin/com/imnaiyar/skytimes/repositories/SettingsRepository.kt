@@ -17,7 +17,7 @@ import kotlinx.coroutines.sync.withLock
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val use24HourClock: Boolean = true,
-    val notificationsEnabled: Boolean = true,
+    val notificationsEnabled: Boolean = false,
     val clockAnimation: Boolean = true,
     val eventOrder: List<EventKey> = EventKey.entries,
     val themeContrast: Contrast = Contrast.Default,

@@ -121,7 +121,7 @@ class SettingsRepositoryTest {
             AppSettings(
                 themeMode = ThemeMode.DARK,
                 use24HourClock = false,
-                notificationsEnabled = true,
+                notificationsEnabled = false,
                 clockAnimation = true
             ),
             repository.settings.value

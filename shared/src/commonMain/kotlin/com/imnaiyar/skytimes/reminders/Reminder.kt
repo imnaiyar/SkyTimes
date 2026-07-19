@@ -47,8 +47,6 @@ data class Reminder(
     val eventId: EventKey,
     val enabled: Boolean = true,
     val offsetMinutes: Int = 0,
-    val title: String = defaultTitle(eventId),
-    val body: String = defaultBody(eventId, offsetMinutes),
     val metadata: Map<String, String> = emptyMap(),
 ) {
     init {
@@ -60,9 +58,9 @@ data class Reminder(
             eventId.name.lowercase().replace('_', ' ').split(' ')
                 .joinToString(" ") { name -> name.replaceFirstChar { it.titlecase() } }
 
-        fun defaultTitle(eventId: EventKey): String = capitalizeName(eventId) + " reminder"
+        fun title(eventId: EventKey): String = capitalizeName(eventId) + " reminder"
 
-        fun defaultBody(eventId: EventKey, offset: Int): String =
+        fun body(eventId: EventKey, offset: Int): String =
             capitalizeName(eventId) + if (offset > 0) " will start in $offset minutes" else "is active"
     }
 }

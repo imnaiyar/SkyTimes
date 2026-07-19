@@ -174,20 +174,6 @@ class AndroidReminderScheduler(
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun showNotification(reminder: Reminder) {
-        val openIntent = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_LAUNCHER)
-            setPackage(appContext.packageName)
-            putExtra("reminder_id", reminder.id) // TODO: incase i need it in the future
-            putExtra("event_key", reminder.eventId.name) // same
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-
-        val contentPendingIntent = PendingIntent.getActivity(
-            appContext,
-            reminder.id.hashCode(),
-            openIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
 
         val notification = NotificationCompat.Builder(appContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.app_icon_monochrome)
@@ -195,11 +181,26 @@ class AndroidReminderScheduler(
             .setContentText(reminder.body.ifBlank { Reminder.defaultBody(reminder.eventId) })
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
-            .setContentIntent(contentPendingIntent)
+            .setContentIntent(getLaunchIntent(reminder))
             .build()
 
         NotificationManagerCompat.from(appContext)
             .notify(reminder.id.hashCode(), notification)
+    }
+
+    private fun getLaunchIntent(reminder: Reminder): PendingIntent {
+        val openIntent = appContext.packageManager
+            .getLaunchIntentForPackage(appContext.packageName)
+            ?.apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                // TODO: in case I need to use this in future
+                putExtra(EXTRA_REMINDER_ID, reminder.id)
+                putExtra(EXTRA_EVENT_KEY, reminder.eventId.name)
+            }
+
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+
+        return PendingIntent.getActivity(context, reminder.id.hashCode(), openIntent, flags)
     }
 
     private fun loadReminder(reminderId: String): Reminder? {
@@ -210,6 +211,7 @@ class AndroidReminderScheduler(
         const val ACTION_REMINDER_ALARM = "com.imnaiyar.skytimes.reminders.ACTION_REMINDER_ALARM"
         const val EXTRA_REMINDER_JSON = "extra_reminder_json"
         const val EXTRA_REMINDER_ID = "extra_reminder_id"
+        const val EXTRA_EVENT_KEY = "extra_event_key"
         private const val CHANNEL_ID = "event_reminders"
         private const val CHANNEL_NAME = "Event Reminders"
         private const val CHANNEL_DESCRIPTION = "Notifications for upcoming event reminders"

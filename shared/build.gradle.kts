@@ -40,9 +40,6 @@ kotlin {
         androidResources {
             enable = true
         }
-        withHostTest {
-            isIncludeAndroidResources = true
-        }
     }
 
     sourceSets {
@@ -91,10 +88,6 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
-        }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-            implementation(libs.kotlinx.coroutines.test)
         }
         jsMain.dependencies {
             implementation(libs.wrappers.browser)

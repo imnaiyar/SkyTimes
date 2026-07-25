@@ -1,8 +1,10 @@
-package com.imnaiyar.skytimes.widget
+package com.imnaiyar.skytimes.widgets.skytimes
 
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -11,11 +13,13 @@ import androidx.glance.GlanceTheme
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.PreviewSizeMode
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.provideContent
 import androidx.glance.material3.ColorProviders
-import com.imnaiyar.skytimes.widget.ui.WidgetContent
+import com.imnaiyar.skytimes.widgets.WidgetSettingsReader
+import com.imnaiyar.skytimes.widgets.skytimes.ui.WidgetContent
 import com.materialkolor.rememberDynamicColorScheme
 
 /**
@@ -33,22 +37,43 @@ class SkyTimesWidget : GlanceAppWidget() {
         )
     )
 
+    override val previewSizeMode: PreviewSizeMode = SizeMode.Responsive(
+        setOf(
+            SMALL_BOX,
+            BIG_BOX,
+            ROW,
+            LARGE_ROW,
+            COLUMN,
+        )
+    )
+
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
-        val seedColor = WidgetSettingsReader.getSeedColor(context)
         provideContent {
-            val dark = rememberDynamicColorScheme(seedColor = Color(seedColor), isDark = true)
-            val light = rememberDynamicColorScheme(seedColor = Color(seedColor), isDark = false)
-            GlanceTheme(colors = ColorProviders(light, dark)) {
-                WidgetContent(
-                    context = context,
-                    appWidgetId = appWidgetId,
-                )
-            }
+            Content(context, id)
         }
     }
 
+    @Composable
+    private fun Content(context: Context, id: GlanceId? = null) {
+        val appWidgetId =
+            GlanceAppWidgetManager(context).takeIf { id != null }?.getAppWidgetId(id!!) ?: 0
+
+        val seedColor = WidgetSettingsReader.getSeedColor(context)
+        val dark = rememberDynamicColorScheme(seedColor = Color(seedColor), isDark = true)
+        val light = rememberDynamicColorScheme(seedColor = Color(seedColor), isDark = false)
+        GlanceTheme(colors = ColorProviders(light, dark)) {
+            WidgetContent(
+                context = context,
+                appWidgetId = appWidgetId
+            )
+        }
+    }
+
+    override suspend fun providePreview(context: Context, widgetCategory: Int) {
+        
+        provideContent { Content(context) }
+    }
 
     companion object {
 
@@ -59,16 +84,6 @@ class SkyTimesWidget : GlanceAppWidget() {
         private val LARGE_ROW = DpSize(300.dp, 48.dp)
         private val COLUMN = DpSize(48.dp, 180.dp)
 
-        /**
-         * Triggers an immediate update for a specific widget instance.
-         */
-        fun updateWidget(context: Context, appWidgetId: Int) {
-            val intent = Intent(context, WidgetReceiver::class.java).apply {
-                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
-            }
-            context.sendBroadcast(intent)
-        }
 
         /**
          * Triggers an update for ALL widget instances currently placed
@@ -80,7 +95,7 @@ class SkyTimesWidget : GlanceAppWidget() {
                 action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
                 val ids = AppWidgetManager.getInstance(context)
                     .getAppWidgetIds(
-                        android.content.ComponentName(
+                        ComponentName(
                             context,
                             WidgetReceiver::class.java
                         )
@@ -102,7 +117,6 @@ class WidgetRefreshCallback : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
-        val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-        SkyTimesWidget.updateWidget(context, appWidgetId)
+        SkyTimesWidget().update(context, glanceId)
     }
 }

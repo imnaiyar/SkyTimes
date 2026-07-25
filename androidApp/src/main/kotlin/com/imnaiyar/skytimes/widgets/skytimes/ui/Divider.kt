@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.widget.ui
+package com.imnaiyar.skytimes.widgets.skytimes.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp

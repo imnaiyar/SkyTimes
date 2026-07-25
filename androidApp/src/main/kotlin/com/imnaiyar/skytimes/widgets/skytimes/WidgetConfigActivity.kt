@@ -1,21 +1,28 @@
-package com.imnaiyar.skytimes.widget
+package com.imnaiyar.skytimes.widgets.skytimes
 
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.plus
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,9 +33,22 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.lifecycle.lifecycleScope
+import com.imnaiyar.skytimes.R
 import com.imnaiyar.skytimes.constants.EventData
+import com.imnaiyar.skytimes.constants.EventKey
 import com.imnaiyar.skytimes.constants.events
+import com.imnaiyar.skytimes.ui.Callout
+import com.imnaiyar.skytimes.widgets.WidgetPreferences
+import com.imnaiyar.skytimes.widgets.WidgetSettingsReader
+import com.materialkolor.rememberDynamicColorScheme
+import kotlinx.coroutines.launch
 
 /**
  * Widget configuration screen — shown when the user adds the SkyTimes widget.
@@ -38,12 +58,14 @@ class WidgetConfigActivity : ComponentActivity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // install splash so that splash screen theme works correctly
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        // Default result: cancel widget placement if user backs out
+        //  cancel widget placement if user backs out
         setResult(RESULT_CANCELED)
 
-        // Extract the widget ID from the intent extras
+
         appWidgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID,
@@ -54,8 +76,10 @@ class WidgetConfigActivity : ComponentActivity() {
             return
         }
 
+        val seedColor = WidgetSettingsReader.getSeedColor(this)
         setContent {
-            MaterialTheme {
+            val color = rememberDynamicColorScheme(Color(seedColor), isDark = isSystemInDarkTheme())
+            MaterialTheme(colorScheme = color) {
                 WidgetConfigScreen(
                     appWidgetId = appWidgetId,
                     onSave = { selectedEvents ->
@@ -67,14 +91,17 @@ class WidgetConfigActivity : ComponentActivity() {
         }
     }
 
-    private fun saveConfiguration(selectedEvents: Set<com.imnaiyar.skytimes.constants.EventKey>) {
-        // Persist the user's selection for this widget instance
+    private fun saveConfiguration(selectedEvents: Set<EventKey>) {
+        // save to preference
         WidgetPreferences.setSelectedEvents(this, appWidgetId, selectedEvents)
 
         // Trigger an immediate widget update
-        SkyTimesWidget.updateWidget(this, appWidgetId)
+        val glanceId = GlanceAppWidgetManager(this).getGlanceIdBy(appWidgetId)
 
-        // Signal success — the widget will be placed
+        lifecycleScope.launch {
+            SkyTimesWidget().update(this@WidgetConfigActivity, glanceId)
+        }
+
         val resultValue = Intent().apply {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         }
@@ -89,16 +116,16 @@ class WidgetConfigActivity : ComponentActivity() {
 @Composable
 private fun WidgetConfigScreen(
     appWidgetId: Int,
-    onSave: (Set<com.imnaiyar.skytimes.constants.EventKey>) -> Unit,
+    onSave: (Set<EventKey>) -> Unit,
     onCancel: () -> Unit,
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
 
     // Load the current (or default) selection for this widget instance
     val selectedState = remember {
         val saved = WidgetPreferences.getSelectedEvents(context, appWidgetId)
-        mutableStateMapOf<com.imnaiyar.skytimes.constants.EventKey, Boolean>().apply {
-            com.imnaiyar.skytimes.constants.EventKey.entries.forEach { key ->
+        mutableStateMapOf<EventKey, Boolean>().apply {
+            EventKey.entries.forEach { key ->
                 this[key] = key in saved
             }
         }
@@ -117,7 +144,7 @@ private fun WidgetConfigScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding.plus(PaddingValues(10.dp))),
         ) {
             // Description
             Text(
@@ -146,6 +173,14 @@ private fun WidgetConfigScreen(
                         }
                     }
                 }
+
+                item {
+                    Callout(
+                        "Events are ordered based on their occurrence time." +
+                                " Events appearing earlier will be displayed first on the widget.",
+                        modifier = Modifier.padding(4.dp)
+                    )
+                }
             }
 
             // Bottom action buttons
@@ -169,6 +204,10 @@ private fun WidgetConfigScreen(
                             .toSet()
                         onSave(selected)
                     },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
                     modifier = Modifier.weight(1f),
                     enabled = selectedState.any { it.value },
                 ) {
@@ -192,38 +231,25 @@ private fun EventToggleRow(
         selected = isChecked,
         onClick = { onToggle(!isChecked) },
         modifier = Modifier
-            .padding(4.dp),
+            .padding(horizontal = 4.dp),
         label = {
             Column {
                 Text(
                     text = event.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-
-                val subtitle = buildString {
-                    if (event.interval != null) {
-                        append("Every ${event.interval}min")
-                    }
-                    if (event.occursOn != null) {
-                        if (isNotEmpty()) append(" · ")
-                        val days = event.occursOn!!.weekDays?.mapNotNull { dayNum ->
-                            when (dayNum) {
-                                1 -> "Mon"; 2 -> "Tue"; 3 -> "Wed"; 4 -> "Thu"
-                                5 -> "Fri"; 6 -> "Sat"; 7 -> "Sun"
-                                else -> null
-                            }
-                        }?.joinToString(",")
-                        if (!days.isNullOrEmpty()) append(days)
-                        event.occursOn!!.dayOfTheMonth?.let { append("Day $it") }
-                    }
-                    if (isEmpty()) append("—")
-                }
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
-        }
+        },
+        leadingIcon = if (isChecked) {
+            {
+                Icon(
+                    painterResource(R.drawable.check),
+                    contentDescription = "done",
+                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                )
+            }
+        } else {
+            null
+        },
     )
 }

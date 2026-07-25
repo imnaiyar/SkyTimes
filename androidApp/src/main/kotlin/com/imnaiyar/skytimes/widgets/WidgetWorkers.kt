@@ -1,64 +1,22 @@
-package com.imnaiyar.skytimes.widget
+package com.imnaiyar.skytimes.widgets
 
+import android.annotation.SuppressLint
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.os.Build
 import android.util.Log
-import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.updateAll
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.imnaiyar.skytimes.widgets.skytimes.SkyTimesWidget
+import com.imnaiyar.skytimes.widgets.skytimes.WidgetReceiver
 import java.util.concurrent.TimeUnit
-
-/**
- *  Widget receiver for SkyTimes.
- */
-class WidgetReceiver : GlanceAppWidgetReceiver() {
-
-    override val glanceAppWidget = SkyTimesWidget()
-
-    /**
-     * Clean preferences when instance is deleted
-     */
-    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        super.onDeleted(context, appWidgetIds)
-        appWidgetIds.forEach { id ->
-            WidgetPreferences.removeWidget(context, id)
-        }
-
-        // If no widgets remain, cancel periodic updates
-        val remaining = AppWidgetManager.getInstance(context)
-            .getAppWidgetIds(ComponentName(context, WidgetReceiver::class.java))
-        if (remaining.isEmpty()) {
-            WidgetUpdateWorker.cancelPeriodicUpdate(context)
-        }
-    }
-
-
-    override fun onAppWidgetOptionsChanged(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int,
-        newOptions: android.os.Bundle,
-    ) {
-        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-    }
-
-
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray,
-    ) {
-        super.onUpdate(context, appWidgetManager, appWidgetIds)
-
-        // Ensure periodic background updates are scheduled
-        WidgetUpdateWorker.enqueuePeriodicUpdate(context)
-    }
-}
 
 
 /**
@@ -80,12 +38,13 @@ class WidgetUpdateWorker(
             val constraints = Constraints.Builder()
                 .build()
 
-            val request = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(
-                15, TimeUnit.MINUTES,
-            )
-                .setConstraints(constraints)
-                .addTag(TAG)
-                .build()
+            val request =
+                PeriodicWorkRequestBuilder<WidgetUpdateWorker>(
+                    15, TimeUnit.MINUTES,
+                )
+                    .setConstraints(constraints)
+                    .addTag(TAG)
+                    .build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME,
@@ -116,7 +75,7 @@ class WidgetUpdateWorker(
 
             widgetIds.forEach { id ->
                 try {
-                    SkyTimesWidget.updateWidget(applicationContext, id)
+                    SkyTimesWidget().updateAll(applicationContext)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to update widget $id", e)
                 }
@@ -125,6 +84,49 @@ class WidgetUpdateWorker(
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "WorkManager update failed", e)
+            Result.retry()
+        }
+    }
+}
+
+
+class WidgetPreviewGenerator(context: Context, params: WorkerParameters) :
+    CoroutineWorker(context, params) {
+
+    companion object {
+        private const val WORK_NAME = "preview_generator_work"
+        private const val TAG = "WidgetPreviewGenerator"
+        fun enqueue(context: Context) {
+            val constraints = Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .build()
+
+            val request =
+                PeriodicWorkRequestBuilder<WidgetPreviewGenerator>(
+                    1, TimeUnit.DAYS,
+                )
+                    .setConstraints(constraints)
+                    .addTag(TAG)
+                    .build()
+
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                WORK_NAME,
+                ExistingPeriodicWorkPolicy.KEEP,
+                request,
+            )
+        }
+    }
+
+    @SuppressLint("CheckResult")
+    override suspend fun doWork(): Result {
+        val manager = GlanceAppWidgetManager(applicationContext)
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                manager.setWidgetPreviews(WidgetReceiver::class)
+            }
+            Result.success()
+        } catch (e: Exception) {
+            Log.e(TAG, "Preview Generation Failed", e)
             Result.retry()
         }
     }

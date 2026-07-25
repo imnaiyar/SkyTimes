@@ -27,7 +27,7 @@
 
         <!-- Widget Configuration Activity -->
         <activity
-            android:name=".widget.WidgetConfigActivity"
+            android:name=".widgets.skytimes.WidgetConfigActivity"
             android:exported="true"
             android:theme="@style/Theme.App.Splash">
             <intent-filter>
@@ -37,11 +37,11 @@
 
         <!-- App Widget Receiver -->
         <receiver
-            android:name=".widget.WidgetReceiver"
+            android:name=".widgets.skytimes.WidgetReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.imnaiyar.skytimes.widget.ACTION_DATA_CHANGED" />
+                <action android:name="com.imnaiyar.skytimes.widgets.ACTION_DATA_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

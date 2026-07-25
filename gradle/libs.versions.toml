@@ -6,7 +6,7 @@ android-targetSdk = "36"
 androidx-activity = "1.13.0"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.19.0"
-androidx-glance = "1.1.1"
+androidx-glance = "1.2.0-rc01"
 androidx-lifecycle = "2.11.0-beta01"
 androidx-work = "2.10.0"
 composeMultiplatform = "1.11.1"
@@ -25,6 +25,7 @@ windowsizeclass = "1.2.0"
 coil_image = "3.5.0"
 image-zoom = "1.4.0"
 material-kolor = "4.1.1"
+
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }

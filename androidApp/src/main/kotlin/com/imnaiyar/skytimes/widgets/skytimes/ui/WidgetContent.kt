@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.widget.ui
+package com.imnaiyar.skytimes.widgets.skytimes.ui
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -29,12 +29,14 @@ import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.text.Text
 import com.imnaiyar.skytimes.R
-import com.imnaiyar.skytimes.utils.TimeFormatter
-import com.imnaiyar.skytimes.widget.WidgetDataProvider
-import com.imnaiyar.skytimes.widget.WidgetEventRowData
-import com.imnaiyar.skytimes.widget.WidgetPreferences
-import com.imnaiyar.skytimes.widget.WidgetRefreshCallback
-import com.imnaiyar.skytimes.widget.WidgetSettingsReader
+import com.imnaiyar.skytimes.widgets.WidgetDataProvider
+import com.imnaiyar.skytimes.widgets.WidgetEventRowData
+import com.imnaiyar.skytimes.widgets.WidgetPreferences
+import com.imnaiyar.skytimes.widgets.WidgetSettingsReader
+import com.imnaiyar.skytimes.widgets.WidgetTheme
+import com.imnaiyar.skytimes.widgets.skytimes.WidgetRefreshCallback
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.time.Clock
 
 @Composable
@@ -49,12 +51,10 @@ fun WidgetContent(
     WidgetPreferences.recordUpdate(context, appWidgetId, now.toEpochMilliseconds())
 
 
-    val timeUtils = TimeFormatter(WidgetSettingsReader.is24HourClock(context))
-
     val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
 
     if (events.isEmpty()) throw IllegalStateException("Widget has no events")
-    
+
     val launchModifier = if (launchIntent != null) GlanceModifier.clickable(
         onClick = actionStartActivity(
             launchIntent
@@ -66,7 +66,11 @@ fun WidgetContent(
         titleBar = {
             TopBar(
                 onRefreshClick = actionRunCallback<WidgetRefreshCallback>(),
-                timeUtils.format(now)
+                LocalTime.now().format(
+                    DateTimeFormatter.ofPattern(
+                        if (WidgetSettingsReader.is24HourClock(context)) "HH:mm" else "hh:mm a"
+                    )
+                )
             )
         },
         backgroundColor = GlanceTheme.colors.widgetBackground,
@@ -183,3 +187,5 @@ private fun WidgetEventRow(
         )
     }
 }
+
+

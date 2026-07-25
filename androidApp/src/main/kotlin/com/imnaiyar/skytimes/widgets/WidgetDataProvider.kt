@@ -1,10 +1,13 @@
-package com.imnaiyar.skytimes.widget
+package com.imnaiyar.skytimes.widgets
 
 import android.content.Context
 import android.content.SharedPreferences
 import com.imnaiyar.skytimes.constants.EventKey
 import com.imnaiyar.skytimes.theme.DefaultThemeColor
+import com.imnaiyar.skytimes.utils.EventDetails
+import com.imnaiyar.skytimes.utils.EventTimeUtils
 import com.imnaiyar.skytimes.utils.TimeUtils
+import com.imnaiyar.skytimes.utils.Times
 import kotlin.time.Instant
 
 
@@ -28,31 +31,27 @@ object WidgetDataProvider {
         appWidgetId: Int,
         now: Instant,
     ): List<WidgetEventRowData> {
-        // 1. Load user's event selection for this widget instance
+
         val selectedKeys = WidgetPreferences.getSelectedEvents(context, appWidgetId)
 
-        // 2. Get full event details from shared business logic
-        val allDetails = com.imnaiyar.skytimes.utils.EventTimeUtils.allEventDetails(now)
+        val allDetails = EventTimeUtils.allEventDetails(now)
 
-        // 3. Filter to selected events only
         val filtered = allDetails.filter { it.event.key in selectedKeys }
 
-        // 4. Sort: active events first, then by next occurrence ascending
+        // sort active events first, then by next occurrence ascending
         val sorted = filtered.sortedWith(
-            compareByDescending<com.imnaiyar.skytimes.utils.EventDetails> { detail ->
-                detail.status is com.imnaiyar.skytimes.utils.Times.Active
+            compareByDescending<EventDetails> { detail ->
+                detail.status is Times.Active
             }.thenBy { it.nextOccurrence }
         )
 
-        // 5. Map to display data
         val timeUtils = TimeUtils()
         return sorted.map { detail ->
             val remaining = detail.status.remaining
             val remainingMs = remaining.inWholeMilliseconds
-            val isActive = detail.status is com.imnaiyar.skytimes.utils.Times.Active
+            val isActive = detail.status is Times.Active
 
             val countdownText = when {
-                // Active events: show "Active now" or "Ends in X"
                 isActive -> {
                     if (remainingMs <= 0L) {
                         "Active now"
@@ -60,7 +59,7 @@ object WidgetDataProvider {
                         "Ends in ${timeUtils.formatMillis(remainingMs, withSeconds = false)}"
                     }
                 }
-                // Inactive events: show "Starts in X"
+
                 else -> {
                     val millis =
                         detail.nextOccurrence.toEpochMilliseconds() - now.toEpochMilliseconds()
@@ -173,11 +172,12 @@ object WidgetPreferences {
 object WidgetSettingsReader {
 
     /**
-     * This key is used by setting repository, we just need to read it
+     * These keys are used by setting repository, we just need to read it
      */
     private const val KEY_USE_24_HOUR_CLOCK = "use_24_hour_clock"
 
     private const val SEED_COLOR_KEY = "theme_color"
+
 
     private fun getPref(context: Context): SharedPreferences {
         return context.getSharedPreferences(

@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.widget.ui
+package com.imnaiyar.skytimes.widgets
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -81,5 +81,4 @@ object WidgetTheme {
 
     /** Corner radius for the active event background. */
     val activeRowCornerRadius = 6.dp
-    val smallWidthThreshold = 150.dp
 }

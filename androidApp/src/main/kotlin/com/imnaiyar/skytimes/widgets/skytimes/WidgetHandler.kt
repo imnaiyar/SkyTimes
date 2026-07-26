@@ -11,13 +11,14 @@ import com.imnaiyar.skytimes.widgets.WidgetUpdateWorker
 /**
  *  Widget receiver for SkyTimes.
  */
-class WidgetReceiver : GlanceAppWidgetReceiver() {
+class SkytimesWidgetReceiver : GlanceAppWidgetReceiver() {
 
     override val glanceAppWidget = SkyTimesWidget()
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
 
+        // enqueues periodic updates at 15 min interval if it hasn't already been enqueued
         WidgetUpdateWorker.enqueuePeriodicUpdate(context)
     }
 
@@ -29,7 +30,7 @@ class WidgetReceiver : GlanceAppWidgetReceiver() {
 
         // If no widgets remain, cancel periodic updates
         val remaining = AppWidgetManager.getInstance(context)
-            .getAppWidgetIds(ComponentName(context, WidgetReceiver::class.java))
+            .getAppWidgetIds(ComponentName(context, SkytimesWidgetReceiver::class.java))
         if (remaining.isEmpty()) {
             WidgetUpdateWorker.cancelPeriodicUpdate(context)
         }

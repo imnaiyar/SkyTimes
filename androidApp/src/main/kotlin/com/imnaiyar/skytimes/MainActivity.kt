@@ -10,7 +10,6 @@ import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.lifecycleScope
 import com.imnaiyar.skytimes.reminders.ContextHolder
 import com.imnaiyar.skytimes.widgets.WidgetPreviewGenerator
-import com.imnaiyar.skytimes.widgets.WidgetUpdateWorker
 import com.imnaiyar.skytimes.widgets.skytimes.SkyTimesWidget
 import kotlinx.coroutines.launch
 
@@ -31,8 +30,6 @@ class MainActivity : ComponentActivity() {
             SkyTimesWidget().updateAll(this@MainActivity)
         }
 
-        // updates widgets at an 15 min interval
-        WidgetUpdateWorker.enqueuePeriodicUpdate(this)
         // generates widgets preview at a 1 day interval
         WidgetPreviewGenerator.enqueue(this)
 

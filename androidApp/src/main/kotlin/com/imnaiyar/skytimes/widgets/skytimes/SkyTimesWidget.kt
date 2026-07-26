@@ -1,7 +1,5 @@
 package com.imnaiyar.skytimes.widgets.skytimes
 
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
@@ -18,9 +16,11 @@ import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.provideContent
 import androidx.glance.material3.ColorProviders
+import com.imnaiyar.skytimes.widgets.WidgetDataProvider
 import com.imnaiyar.skytimes.widgets.WidgetSettingsReader
 import com.imnaiyar.skytimes.widgets.skytimes.ui.WidgetContent
 import com.materialkolor.rememberDynamicColorScheme
+import kotlin.time.Clock
 
 /**
  * SkyTimes home screen widget
@@ -49,29 +49,35 @@ class SkyTimesWidget : GlanceAppWidget() {
 
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+
         provideContent {
-            Content(context, id)
+            Content(context, launchIntent, id)
         }
     }
 
     @Composable
-    private fun Content(context: Context, id: GlanceId? = null) {
+    private fun Content(context: Context, launchIntent: Intent? = null, id: GlanceId? = null) {
         val appWidgetId =
-            GlanceAppWidgetManager(context).takeIf { id != null }?.getAppWidgetId(id!!) ?: 0
+            GlanceAppWidgetManager(context).takeIf { id != null }?.getAppWidgetId(id!!)
+
+        val events = WidgetDataProvider.getDisplayEvents(context, Clock.System.now(), appWidgetId)
 
         val seedColor = WidgetSettingsReader.getSeedColor(context)
         val dark = rememberDynamicColorScheme(seedColor = Color(seedColor), isDark = true)
         val light = rememberDynamicColorScheme(seedColor = Color(seedColor), isDark = false)
+
         GlanceTheme(colors = ColorProviders(light, dark)) {
             WidgetContent(
                 context = context,
-                appWidgetId = appWidgetId
+                events,
+                launchIntent
             )
         }
     }
 
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
-        
+
         provideContent { Content(context) }
     }
 
@@ -84,26 +90,6 @@ class SkyTimesWidget : GlanceAppWidget() {
         private val LARGE_ROW = DpSize(300.dp, 48.dp)
         private val COLUMN = DpSize(48.dp, 180.dp)
 
-
-        /**
-         * Triggers an update for ALL widget instances currently placed
-         * on the home screen. Used when app-side data changes (e.g., new
-         * event version, settings change) need to refresh all widgets.
-         */
-        fun updateAllWidgets(context: Context) {
-            val intent = Intent(context, WidgetReceiver::class.java).apply {
-                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                val ids = AppWidgetManager.getInstance(context)
-                    .getAppWidgetIds(
-                        ComponentName(
-                            context,
-                            WidgetReceiver::class.java
-                        )
-                    )
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-            }
-            context.sendBroadcast(intent)
-        }
     }
 }
 

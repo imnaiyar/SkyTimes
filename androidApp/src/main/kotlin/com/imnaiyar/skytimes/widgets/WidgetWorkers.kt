@@ -15,7 +15,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.imnaiyar.skytimes.widgets.skytimes.SkyTimesWidget
-import com.imnaiyar.skytimes.widgets.skytimes.WidgetReceiver
+import com.imnaiyar.skytimes.widgets.skytimes.SkytimesWidgetReceiver
 import java.util.concurrent.TimeUnit
 
 
@@ -65,20 +65,19 @@ class WidgetUpdateWorker(
     override suspend fun doWork(): Result {
         return try {
             val appWidgetManager = AppWidgetManager.getInstance(applicationContext)
-            val componentName = ComponentName(applicationContext, WidgetReceiver::class.java)
+            val componentName =
+                ComponentName(applicationContext, SkytimesWidgetReceiver::class.java)
             val widgetIds = appWidgetManager.getAppWidgetIds(componentName)
 
             if (widgetIds.isEmpty()) {
                 Log.d(TAG, "No widgets found — cancelling periodic work")
+                cancelPeriodicUpdate(applicationContext)
                 return Result.success()
             }
-
-            widgetIds.forEach { id ->
-                try {
-                    SkyTimesWidget().updateAll(applicationContext)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to update widget $id", e)
-                }
+            try {
+                SkyTimesWidget().updateAll(applicationContext)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update widget $id", e)
             }
 
             Result.success()
@@ -122,7 +121,7 @@ class WidgetPreviewGenerator(context: Context, params: WorkerParameters) :
         val manager = GlanceAppWidgetManager(applicationContext)
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                manager.setWidgetPreviews(WidgetReceiver::class)
+                manager.setWidgetPreviews(SkytimesWidgetReceiver::class)
             }
             Result.success()
         } catch (e: Exception) {

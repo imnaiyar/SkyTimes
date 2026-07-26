@@ -28,8 +28,8 @@ object WidgetDataProvider {
      */
     fun getDisplayEvents(
         context: Context,
-        appWidgetId: Int,
         now: Instant,
+        appWidgetId: Int? = null,
     ): List<WidgetEventRowData> {
 
         val selectedKeys = WidgetPreferences.getSelectedEvents(context, appWidgetId)
@@ -93,7 +93,9 @@ object WidgetPreferences {
     /**
      * Returns the set of [EventKey]s enabled for display on the given widget instance.
      */
-    fun getSelectedEvents(context: Context, appWidgetId: Int): Set<EventKey> {
+    fun getSelectedEvents(context: Context, appWidgetId: Int? = null): Set<EventKey> {
+        if (appWidgetId == null) return EventKey.entries.toSet()
+
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val raw = prefs.getString(keyFor(KEY_SELECTED_EVENTS, appWidgetId), null)
 
@@ -124,24 +126,6 @@ object WidgetPreferences {
                 putString(keyFor(KEY_SELECTED_EVENTS, appWidgetId), serialized)
             }
         }
-    }
-
-    /**
-     * Records the last time this widget instance was updated for diagnostics
-     */
-    fun recordUpdate(context: Context, appWidgetId: Int, timestampMs: Long) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit {
-            putLong(keyFor(KEY_LAST_UPDATE, appWidgetId), timestampMs)
-        }
-    }
-
-    /**
-     * Returns the last update timestamp for this widget, or 0 if never updated.
-     */
-    fun getLastUpdate(context: Context, appWidgetId: Int): Long {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getLong(keyFor(KEY_LAST_UPDATE, appWidgetId), 0L)
     }
 
     /**

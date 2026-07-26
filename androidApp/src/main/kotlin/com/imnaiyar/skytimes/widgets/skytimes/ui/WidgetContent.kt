@@ -1,6 +1,7 @@
 package com.imnaiyar.skytimes.widgets.skytimes.ui
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceModifier
@@ -29,30 +30,19 @@ import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.text.Text
 import com.imnaiyar.skytimes.R
-import com.imnaiyar.skytimes.widgets.WidgetDataProvider
 import com.imnaiyar.skytimes.widgets.WidgetEventRowData
-import com.imnaiyar.skytimes.widgets.WidgetPreferences
 import com.imnaiyar.skytimes.widgets.WidgetSettingsReader
 import com.imnaiyar.skytimes.widgets.WidgetTheme
 import com.imnaiyar.skytimes.widgets.skytimes.WidgetRefreshCallback
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlin.time.Clock
 
 @Composable
 fun WidgetContent(
     context: Context,
-    appWidgetId: Int,
+    events: List<WidgetEventRowData>,
+    launchIntent: Intent? = null
 ) {
-    val now = Clock.System.now()
-    val events = WidgetDataProvider.getDisplayEvents(context, appWidgetId, now)
-
-    // Record the update timestamp for diagnostics
-    WidgetPreferences.recordUpdate(context, appWidgetId, now.toEpochMilliseconds())
-
-
-    val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-
     if (events.isEmpty()) throw IllegalStateException("Widget has no events")
 
     val launchModifier = if (launchIntent != null) GlanceModifier.clickable(

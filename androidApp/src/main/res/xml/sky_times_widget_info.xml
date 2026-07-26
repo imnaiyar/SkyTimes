@@ -12,4 +12,5 @@
     android:widgetFeatures="reconfigurable"
     android:configure="com.imnaiyar.skytimes.widgets.skytimes.WidgetConfigActivity"
     android:description="@string/skytimes_widget_description"
+    android:previewImage="@drawable/skytimes_widget_preview"
     android:initialLayout="@layout/glance_default_loading_layout" />

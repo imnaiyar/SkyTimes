@@ -37,7 +37,7 @@
 
         <!-- App Widget Receiver -->
         <receiver
-            android:name=".widgets.skytimes.WidgetReceiver"
+            android:name=".widgets.skytimes.SkytimesWidgetReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

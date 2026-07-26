@@ -4,28 +4,42 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.glance.appwidget.updateAll
+import androidx.lifecycle.lifecycleScope
 import com.imnaiyar.skytimes.reminders.ContextHolder
+import com.imnaiyar.skytimes.widgets.WidgetPreviewGenerator
+import com.imnaiyar.skytimes.widgets.skytimes.SkyTimesWidget
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        ContextHolder.initialize(this)
+
         setContent {
-            // initialize context for reminder manager
-            ContextHolder.initialize(this)
-            
             App()
         }
+
+        lifecycleScope.launch {
+            SkyTimesWidget().updateAll(this@MainActivity)
+        }
+
+        // generates widgets preview at a 1 day interval
+        WidgetPreviewGenerator.enqueue(this)
+
     }
 }
 
 
+/*
 @Preview
 @Composable
 fun AppAndroidPreview() {
     App()
-}
+}*/

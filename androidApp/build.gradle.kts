@@ -15,6 +15,13 @@ dependencies {
     implementation(projects.shared)
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.compose.material3)
+    implementation(libs.material.kolor)
+
+    implementation(libs.compose.foundation)
+    implementation(libs.androidx.work.runtime)
     implementation("androidx.core:core-splashscreen:1.2.0")
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
@@ -40,12 +47,16 @@ android {
         }
     }
 
+    val keystorePath = System.getenv("KEYSTORE_FILE_PATH")
+
     signingConfigs {
-        create("release") {
-            storeFile = file(System.getenv("KEYSTORE_FILE_PATH"))
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
-            keyAlias = System.getenv("KEY_ALIAS")
-            keyPassword = System.getenv("KEY_PASSWORD")
+        if (!keystorePath.isNullOrBlank()) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            }
         }
     }
 
@@ -57,7 +68,10 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (keystorePath.isNullOrBlank())
+                signingConfigs.getByName("debug")
+            else
+                signingConfigs.getByName("release")
             resValue("string", "app_name", project.findProperty("app.name").toString())
         }
     }

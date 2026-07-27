@@ -73,6 +73,10 @@ android {
             else
                 signingConfigs.getByName("release")
             resValue("string", "app_name", project.findProperty("app.name").toString())
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {

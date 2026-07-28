@@ -11,8 +11,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
-import com.imnaiyar.skytimes.screens.MainScreen
-import com.imnaiyar.skytimes.screens.ThemePage
+import com.imnaiyar.skytimes.home.MainScreen
+import com.imnaiyar.skytimes.home.ThemePage
 import com.imnaiyar.skytimes.vault_archive.MainArchive
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic

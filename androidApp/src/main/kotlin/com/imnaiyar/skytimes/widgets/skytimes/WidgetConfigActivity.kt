@@ -110,7 +110,7 @@ class WidgetConfigActivity : ComponentActivity() {
     }
 }
 
-// ─── Configuration Screen UI ─────────────────────────────────────
+// ─── Configuration HomeScreens UI ─────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

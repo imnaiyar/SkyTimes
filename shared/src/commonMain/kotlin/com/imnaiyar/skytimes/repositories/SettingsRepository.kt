@@ -1,8 +1,8 @@
 package com.imnaiyar.skytimes.repositories
 
 import com.imnaiyar.skytimes.constants.EventKey
+import com.imnaiyar.skytimes.home.HomeScreens
 import com.imnaiyar.skytimes.onboarding.TutorialProgressRepository
-import com.imnaiyar.skytimes.screens.Screen
 import com.imnaiyar.skytimes.startup.StartupTask
 import com.imnaiyar.skytimes.theme.DefaultThemeColor
 import com.imnaiyar.skytimes.theme.ThemeMode
@@ -23,7 +23,7 @@ data class AppSettings(
     val themeContrast: Contrast = Contrast.Default,
     val pinnedEvents: List<EventKey> = emptyList(),
     val themeColor: Int = DefaultThemeColor.toInt(),
-    val homeScreen: Screen = Screen.SkyTimes,
+    val homeScreen: HomeScreens = HomeScreens.SkyTimes,
     val completedTutorialStepKeys: Set<String> = emptySet()
 )
 
@@ -73,7 +73,7 @@ class SettingsRepository(
         update { current -> current.copy(eventOrder = order) }
     }
 
-    suspend fun setHomeScreen(screen: Screen) {
+    suspend fun setHomeScreen(screen: HomeScreens) {
         update { current -> current.copy(homeScreen = screen) }
     }
 
@@ -147,7 +147,7 @@ class SettingsRepository(
                 },
 
             homeScreen = storage.getStringOrNull(SettingsKeys.HomeScreen)
-                ?.let(Screen::valueOf)
+                ?.let(HomeScreens::valueOf)
                 ?: defaults.homeScreen,
             completedTutorialStepKeys = storage.getStringOrNull(SettingsKeys.TutorialCompletedSteps)
                 ?.takeIf { it.isNotEmpty() }

@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.screens
+package com.imnaiyar.skytimes.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -42,6 +42,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.di.LocalTutorialManager
+import com.imnaiyar.skytimes.home.skytimes.SkytimesScreen
 import com.imnaiyar.skytimes.nav.MainRoute
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -55,7 +56,7 @@ fun MainScreen(
     onOpenThemeSettings: () -> Unit,
     backStack: NavBackStack<NavKey>
 ) {
-    val screens = remember { Screen.entries }
+    val screens = remember { HomeScreens.entries }
 
     val settings = LocalSettingsViewModel.current.settings.collectAsState()
     val tutorialManager = LocalTutorialManager.current
@@ -187,22 +188,22 @@ fun MainScreen(
                     .padding(horizontal = 10.dp)
 
                 when (screens[page]) {
-                    Screen.SkyTimes -> HomeScreen(
+                    HomeScreens.SkyTimes -> SkytimesScreen(
                         modifier,
                         setFabVisible = { value -> showFab = value },
                         fabPad,
                         tutorialTargetsEnabled
                     )
 
-                    Screen.Quests -> QuestsScreen(modifier, fabPad, tutorialTargetsEnabled)
-                    Screen.Shards -> ShardsScreen(
+                    HomeScreens.Quests -> QuestsScreen(modifier, fabPad, tutorialTargetsEnabled)
+                    HomeScreens.Shards -> ShardsScreen(
                         modifier,
                         fabPad,
                         tutorialTargetsEnabled,
                         tutorialState.currentStep
                     )
 
-                    Screen.Settings -> SettingsScreen(
+                    HomeScreens.Settings -> SettingsScreen(
                         modifier = modifier,
                         fabPad = fabPad,
                         onOpenThemeSettings = onOpenThemeSettings

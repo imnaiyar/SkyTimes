@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.screens
+package com.imnaiyar.skytimes.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -122,7 +122,7 @@ fun SettingsScreen(
                                 modifier = Modifier.padding(5.dp),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Screen.entries.forEach { screen ->
+                                HomeScreens.entries.forEach { screen ->
                                     FilterChip(
                                         label = {
                                             Text(

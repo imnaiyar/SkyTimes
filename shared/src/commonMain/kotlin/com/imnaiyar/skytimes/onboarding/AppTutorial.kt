@@ -1,19 +1,19 @@
 package com.imnaiyar.skytimes.onboarding
 
 import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.screens.Screen
+import com.imnaiyar.skytimes.home.HomeScreens
 
 /** App-owned onboarding; the reusable tutorial package contains no screen knowledge. */
 enum class AppTutorialStep(
     override val targetId: String,
-    val screen: Screen
+    val screen: HomeScreens
 ) : TutorialStep {
-    HomeReorder("home_reorder", Screen.SkyTimes),
-    HomeEventContextMenu("home_event_context_menu", Screen.SkyTimes),
-    QuestPullToRefresh("quest_pull_to_refresh", Screen.Quests),
-    ShardCountdown("shard_countdown", Screen.Shards),
-    ShardDateSwipe("shard_date_swipe", Screen.Shards),
-    ShardDatePicker("shard_date_picker", Screen.Shards)
+    HomeReorder("home_reorder", HomeScreens.SkyTimes),
+    HomeEventContextMenu("home_event_context_menu", HomeScreens.SkyTimes),
+    QuestPullToRefresh("quest_pull_to_refresh", HomeScreens.Quests),
+    ShardCountdown("shard_countdown", HomeScreens.Shards),
+    ShardDateSwipe("shard_date_swipe", HomeScreens.Shards),
+    ShardDatePicker("shard_date_picker", HomeScreens.Shards)
 }
 
 const val FirstLaunchTutorialFlowId = "first_launch"

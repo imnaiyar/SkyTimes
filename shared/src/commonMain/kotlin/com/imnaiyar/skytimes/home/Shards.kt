@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.screens
+package com.imnaiyar.skytimes.home
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.VisibilityThreshold
@@ -67,14 +67,14 @@ import com.imnaiyar.skytimes.constants.SkyHelperCdn
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.onboarding.AppTutorialStep
 import com.imnaiyar.skytimes.onboarding.TutorialTarget
-import com.imnaiyar.skytimes.ui.AnimatedTimer
 import com.imnaiyar.skytimes.ui.Card
-import com.imnaiyar.skytimes.ui.ClockDirection
 import com.imnaiyar.skytimes.ui.DecoratedText
-import com.imnaiyar.skytimes.ui.LiveIndicator
 import com.imnaiyar.skytimes.ui.RemoteImage
 import com.imnaiyar.skytimes.ui.SlidingToggle
 import com.imnaiyar.skytimes.ui.Tooltip
+import com.imnaiyar.skytimes.ui.animated.AnimatedTimer
+import com.imnaiyar.skytimes.ui.animated.ClockDirection
+import com.imnaiyar.skytimes.ui.animated.LiveIndicator
 import com.imnaiyar.skytimes.utils.ShardData
 import com.imnaiyar.skytimes.utils.ShardOccurrence
 import com.imnaiyar.skytimes.utils.TimeUtils

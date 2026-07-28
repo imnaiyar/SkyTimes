@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import com.imnaiyar.skytimes.constants.GameTimeZone
+import com.imnaiyar.skytimes.ui.animated.AnimatedTimer
 import com.imnaiyar.skytimes.utils.rememberTimeFormatter
 import kotlinx.coroutines.delay
 import kotlinx.datetime.TimeZone

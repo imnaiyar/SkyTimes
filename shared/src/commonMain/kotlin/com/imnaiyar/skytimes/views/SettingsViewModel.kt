@@ -3,9 +3,9 @@ package com.imnaiyar.skytimes.views
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.imnaiyar.skytimes.constants.EventKey
+import com.imnaiyar.skytimes.home.HomeScreens
 import com.imnaiyar.skytimes.repositories.AppSettings
 import com.imnaiyar.skytimes.repositories.SettingsRepository
-import com.imnaiyar.skytimes.screens.Screen
 import com.imnaiyar.skytimes.theme.ThemeMode
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -40,7 +40,7 @@ class SettingsViewModel(
     }
 
 
-    fun setHomeScreen(screen: Screen) {
+    fun setHomeScreen(screen: HomeScreens) {
         viewModelScope.launch {
             repository.setHomeScreen(screen)
         }

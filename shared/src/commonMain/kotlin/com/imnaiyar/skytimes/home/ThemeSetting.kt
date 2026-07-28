@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.screens
+package com.imnaiyar.skytimes.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas

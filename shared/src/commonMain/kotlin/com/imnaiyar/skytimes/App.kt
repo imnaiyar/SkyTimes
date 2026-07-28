@@ -20,9 +20,9 @@ import com.imnaiyar.skytimes.di.AppContainer
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.di.LocalTutorialManager
+import com.imnaiyar.skytimes.home.SplashScreen
 import com.imnaiyar.skytimes.nav.AppNavigation
 import com.imnaiyar.skytimes.onboarding.TutorialHost
-import com.imnaiyar.skytimes.screens.SplashScreen
 import com.imnaiyar.skytimes.startup.AppState
 import com.imnaiyar.skytimes.theme.AppTheme
 

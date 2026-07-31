@@ -29,11 +29,19 @@ import com.imnaiyar.skytimes.ui.animated.pulse
 import com.imnaiyar.skytimes.utils.EventDetails
 import com.imnaiyar.skytimes.utils.TimeFormatter
 import com.imnaiyar.skytimes.utils.Times
+import com.materialkolor.ktx.harmonize
 import org.jetbrains.compose.resources.painterResource
 import skytimes.shared.generated.resources.Res
 import skytimes.shared.generated.resources.notifications
 import skytimes.shared.generated.resources.pin
 import kotlin.time.Instant
+
+@Composable
+fun success(): Color {
+    val scheme = MaterialTheme.colorScheme
+
+    return Color(0xFF4CAF50).harmonize(scheme.primary)
+}
 
 @Composable
 internal fun EventRow(
@@ -72,7 +80,7 @@ internal fun EventRow(
                 Text(
                     text = "Active (Next at ${timeFormatter.format(eventDetails.nextOccurrence)})",
                     style = MaterialTheme.typography.labelTiny,
-                    color = MaterialTheme.colorScheme.tertiary,
+                    color = success(),
                     modifier = Modifier.pulse(speed = 2000, scale = 1.04f)
                 )
             }

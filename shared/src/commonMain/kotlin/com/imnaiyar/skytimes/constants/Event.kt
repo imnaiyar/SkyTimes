@@ -137,7 +137,6 @@ val events = listOf(
         index = 7,
         offset = 0,
         interval = 15,
-        duration = 14,
         displayAllTimes = true
     ),
     EventData(

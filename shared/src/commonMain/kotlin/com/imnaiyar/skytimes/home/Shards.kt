@@ -463,8 +463,7 @@ private fun ShardTitle(shard: ShardData) {
                     if (shard.isRed) "Red Shard" else "Black Shard"
                 )
             }
-            append("  ")
-            append("(Reward: ")
+            append("  (Reward: ")
             withStyle(MaterialTheme.typography.bodySmall.toSpanStyle()) {
                 append((if (shard.isRed) shard.reward!! else 200.0).toString())
             }

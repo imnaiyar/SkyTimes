@@ -22,7 +22,6 @@ import platform.UserNotifications.UNTimeIntervalNotificationTrigger
 import platform.UserNotifications.UNUserNotificationCenter
 import kotlin.coroutines.resume
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 // maximum number of notification requests allowed on iOS
 private const val MAX_PENDING_REQUESTS = 64;
@@ -46,19 +45,29 @@ class IosReminderScheduler(
 
     override suspend fun scheduleReminder(reminder: Reminder) {
         ensureStateLoaded()
-
         if (!reminder.enabled || !settings.value.notificationsEnabled) {
             cancelReminder(reminder.eventId.name)
             return
         }
 
-        val desired = reminderTimes(
-            reminder,
-            Clock.System.now(),
-            config.reminderWindowSize
-        ).map { reminder to it }
+        val now = Clock.System.now()
+        val desiredTimes = reminderTimes(reminder, now, config.reminderWindowSize)
+        val existing =
+            pendingRequests().filter { it.identifier.startsWith(reminder.identifierPrefix()) }
+                .associateBy { it.identifier }
 
-        schedule(desired, true)
+        val desiredIdentifiers = desiredTimes.map { time -> reminder.notificationIdentifier(time) }
+
+        existing.keys
+            .filterNot(desiredIdentifiers::contains)
+            .takeIf { it.isNotEmpty() }
+            ?.let { notificationCenter.removePendingNotificationRequestsWithIdentifiers(it) }
+
+        val pendingCount = pendingRequests().size
+        val availableSlots = (MAX_PENDING_REQUESTS - pendingCount).coerceAtLeast(0)
+        desiredTimes.take(availableSlots).forEach { time ->
+            scheduleNotification(reminder, time)
+        }
     }
 
     override suspend fun cancelReminder(eventId: String) {
@@ -131,60 +140,30 @@ class IosReminderScheduler(
 
     private suspend fun refreshWindow() {
         val now = Clock.System.now()
-
-        val desired = reminderRepository.reminders.value
+        val desiredRequests = reminderRepository.reminders.value
             .filter(Reminder::enabled)
             .flatMap { reminder ->
                 reminderTimes(reminder, now, config.reminderWindowSize)
-                    .map { reminder to it }
+                    .map { time -> reminder to time }
             }
             .take(MAX_PENDING_REQUESTS)
 
-        schedule(desired)
-    }
-
-    private suspend fun schedule(
-        desiredRequests: List<Pair<Reminder, Instant>>,
-        // if true, pending requests will not be removed
-        ignoreRest: Boolean = false
-    ) {
         val currentRequests = pendingRequests()
         val currentIdentifiers = currentRequests.map { it.identifier }.toSet()
+        val desiredIdentifiers =
+            desiredRequests.map { (reminder, time) -> reminder.notificationIdentifier(time) }
+                .toSet()
 
-        val desiredIdentifiers = desiredRequests
-            .map { (reminder, time) -> reminder.notificationIdentifier(time) }
-            .toSet()
-
-        // this is when called during scheduleReminder
-        // remove scheduled reminders of current given event (which is first in list, the only one)
-        currentRequests
-            .filterNot { it.identifier.startsWith(desiredRequests.first().first.identifierPrefix()) }
-            .takeIf { it.isNotEmpty() && ignoreRest }
-            ?.let {
-                notificationCenter.removePendingNotificationRequestsWithIdentifiers(
-                    it.map { request -> request.identifier }
-                )
-            }
-
-
-        // this is for when called during refresh
-        // remove rest pending request that are not included in refresh
         currentRequests
             .filter { it.identifier !in desiredIdentifiers }
-            .takeIf { it.isNotEmpty() && !ignoreRest }
-            ?.let {
-                notificationCenter.removePendingNotificationRequestsWithIdentifiers(
-                    it.map { request -> request.identifier }
-                )
+            .takeIf { it.isNotEmpty() }
+            ?.let { stale ->
+                notificationCenter.removePendingNotificationRequestsWithIdentifiers(stale.map { it.identifier })
             }
 
-        val remainingSlots =
-            (MAX_PENDING_REQUESTS - pendingRequests().size).coerceAtLeast(0)
-
+        val remainingSlots = (MAX_PENDING_REQUESTS - pendingRequests().size).coerceAtLeast(0)
         desiredRequests
-            .filterNot { (reminder, time) ->
-                reminder.notificationIdentifier(time) in currentIdentifiers
-            }
+            .filterNot { (reminder, time) -> reminder.notificationIdentifier(time) in currentIdentifiers }
             .take(remainingSlots)
             .forEach { (reminder, time) ->
                 scheduleNotification(reminder, time)
@@ -231,7 +210,7 @@ class IosReminderScheduler(
 
     private fun Reminder.identifierPrefix(): String = "$id:"
 
-    private fun Reminder.notificationIdentifier(time: Instant): String =
+    private fun Reminder.notificationIdentifier(time: kotlin.time.Instant): String =
         "$id:${time.toEpochMilliseconds()}"
 }
 

@@ -32,6 +32,11 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                 val reminder = scheduler.resolveReminderFromIntent(intent)
                     ?: return@launch
 
+                if (!settingsRepository.settings.value.notificationsEnabled || !reminder.enabled) {
+                    scheduler.cancelReminder(reminder.eventId.name)
+                    return@launch
+                }
+
                 scheduler.onAlarmTriggered(reminder)
             } finally {
                 pendingResult.finish()
@@ -59,6 +64,11 @@ class ReminderBootReceiver : BroadcastReceiver() {
                     reminderRepository,
                     this
                 )
+                
+                if (!settingsRepository.settings.value.notificationsEnabled) {
+                    scheduler.cancelAll()
+                    return@launch
+                }
                 scheduler.refresh()
             } finally {
                 pendingResult.finish()

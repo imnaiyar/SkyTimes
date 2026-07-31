@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -91,11 +90,4 @@ fun DecoratedText(
             }
         }
     )
-}
-
-
-@Composable
-@Preview
-fun TextPrev() {
-    DecoratedText("This is a text!")
 }

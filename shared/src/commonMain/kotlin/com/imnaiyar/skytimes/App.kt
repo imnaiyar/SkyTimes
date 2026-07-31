@@ -11,7 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -20,9 +19,9 @@ import com.imnaiyar.skytimes.di.AppContainer
 import com.imnaiyar.skytimes.di.LocalAppContainer
 import com.imnaiyar.skytimes.di.LocalSettingsViewModel
 import com.imnaiyar.skytimes.di.LocalTutorialManager
+import com.imnaiyar.skytimes.home.SplashScreen
 import com.imnaiyar.skytimes.nav.AppNavigation
 import com.imnaiyar.skytimes.onboarding.TutorialHost
-import com.imnaiyar.skytimes.screens.SplashScreen
 import com.imnaiyar.skytimes.startup.AppState
 import com.imnaiyar.skytimes.theme.AppTheme
 
@@ -37,7 +36,6 @@ fun App() {
         targetValue = if (appState is AppState.Ready) 1f else 0f,
         animationSpec = tween(600)
     )
-    val scope = rememberCoroutineScope()
 
     when (appState) {
         AppState.Loading ->

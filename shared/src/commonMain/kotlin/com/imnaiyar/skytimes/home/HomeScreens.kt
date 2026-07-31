@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.screens
+package com.imnaiyar.skytimes.home
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -56,7 +56,7 @@ import skytimes.shared.generated.resources.shards_icon
 import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
-enum class Screen(
+enum class HomeScreens(
     val title: String,
     val icon: DrawableResource,
     val actions: @Composable (RowScope.(Boolean) -> Unit)? = null

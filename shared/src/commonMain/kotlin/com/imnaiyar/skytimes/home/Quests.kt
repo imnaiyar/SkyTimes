@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.screens
+package com.imnaiyar.skytimes.home
 
 import VideoPlayer
 import androidx.compose.foundation.clickable
@@ -26,7 +26,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember

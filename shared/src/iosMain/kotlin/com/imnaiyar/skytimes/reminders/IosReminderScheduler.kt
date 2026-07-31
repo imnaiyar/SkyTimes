@@ -155,6 +155,20 @@ class IosReminderScheduler(
             .map { (reminder, time) -> reminder.notificationIdentifier(time) }
             .toSet()
 
+        // this is when called during scheduleReminder
+        // remove scheduled reminders of current given event (which is first in list, the only one)
+        currentRequests
+            .filterNot { it.identifier.startsWith(desiredRequests.first().first.identifierPrefix()) }
+            .takeIf { it.isNotEmpty() && ignoreRest }
+            ?.let {
+                notificationCenter.removePendingNotificationRequestsWithIdentifiers(
+                    it.map { request -> request.identifier }
+                )
+            }
+
+
+        // this is for when called during refresh
+        // remove rest pending request that are not included in refresh
         currentRequests
             .filter { it.identifier !in desiredIdentifiers }
             .takeIf { it.isNotEmpty() && !ignoreRest }
@@ -217,7 +231,7 @@ class IosReminderScheduler(
 
     private fun Reminder.identifierPrefix(): String = "$id:"
 
-    private fun Reminder.notificationIdentifier(time: kotlin.time.Instant): String =
+    private fun Reminder.notificationIdentifier(time: Instant): String =
         "$id:${time.toEpochMilliseconds()}"
 }
 

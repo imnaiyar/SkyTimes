@@ -58,7 +58,7 @@ class IosReminderScheduler(
             config.reminderWindowSize
         ).map { reminder to it }
 
-        schedule(desired)
+        schedule(desired, true)
     }
 
     override suspend fun cancelReminder(eventId: String) {
@@ -144,7 +144,9 @@ class IosReminderScheduler(
     }
 
     private suspend fun schedule(
-        desiredRequests: List<Pair<Reminder, Instant>>
+        desiredRequests: List<Pair<Reminder, Instant>>,
+        // if true, pending requests will not be removed
+        ignoreRest: Boolean = false
     ) {
         val currentRequests = pendingRequests()
         val currentIdentifiers = currentRequests.map { it.identifier }.toSet()
@@ -155,7 +157,7 @@ class IosReminderScheduler(
 
         currentRequests
             .filter { it.identifier !in desiredIdentifiers }
-            .takeIf { it.isNotEmpty() }
+            .takeIf { it.isNotEmpty() && !ignoreRest }
             ?.let {
                 notificationCenter.removePendingNotificationRequestsWithIdentifiers(
                     it.map { request -> request.identifier }

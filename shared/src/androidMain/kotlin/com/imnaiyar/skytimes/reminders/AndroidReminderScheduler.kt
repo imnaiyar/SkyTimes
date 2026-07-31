@@ -51,7 +51,7 @@ class AndroidReminderScheduler(
         ensureStateLoaded()
         cancelAll()
         if (!settings.value.notificationsEnabled) return
-        
+
         reminderRepository.reminders.value
             .filter(Reminder::enabled)
             .forEach { scheduleReminder(it) }
@@ -115,7 +115,7 @@ class AndroidReminderScheduler(
             }
     }
 
-    private suspend fun ensureStateLoaded() {
+    internal suspend fun ensureStateLoaded() {
         settingsRepository.initialize()
         reminderRepository.initialize()
     }

@@ -29,5 +29,11 @@ dependencyResolutionManagement {
 }
 
 include(":androidApp")
-include(":shared")
+include(":core")
 include(":webApp")
+include(":app")
+include(":feature:home")
+include(":feature:quests")
+include(":feature:settings")
+include(":feature:reminders")
+include(":feature:vault")

@@ -34,14 +34,18 @@ class IosReminderScheduler(
     private val config: ReminderConfig = ReminderConfig(),
 ) : ReminderScheduler {
 
+    private val settings = settingsRepository.settings
+
     override suspend fun refresh() {
         ensureStateLoaded()
+
+        if (!settings.value.notificationsEnabled) return
         refreshWindow()
     }
 
     override suspend fun scheduleReminder(reminder: Reminder) {
         ensureStateLoaded()
-        if (!reminder.enabled) {
+        if (!reminder.enabled || !settings.value.notificationsEnabled) {
             cancelReminder(reminder.eventId.name)
             return
         }
@@ -170,8 +174,8 @@ class IosReminderScheduler(
         val now = Clock.System.now()
         val intervalSeconds = ((time - now).inWholeMilliseconds / 1000.0).coerceAtLeast(1.0)
         val content = UNMutableNotificationContent().apply {
-            setTitle(reminder.title.ifBlank { Reminder.defaultTitle(reminder.eventId) })
-            setBody(reminder.body.ifBlank { Reminder.defaultBody(reminder.eventId) })
+            setTitle(Reminder.title(reminder.eventId))
+            setBody(Reminder.body(reminder.eventId, reminder.offsetMinutes))
             setSound(UNNotificationSound.defaultSound())
         }
         val trigger: UNNotificationTrigger =

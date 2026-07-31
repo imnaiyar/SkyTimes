@@ -40,6 +40,9 @@ class AndroidReminderScheduler(
     private val json: Json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 ) : ReminderScheduler {
     private val appContext = context.applicationContext
+
+    private val settings = settingsRepository.settings
+
     private val alarmManager = appContext.getSystemService(AlarmManager::class.java)
 
 
@@ -47,6 +50,8 @@ class AndroidReminderScheduler(
     override suspend fun refresh() {
         ensureStateLoaded()
         cancelAll()
+        if (!settings.value.notificationsEnabled) return
+
         reminderRepository.reminders.value
             .filter(Reminder::enabled)
             .forEach { scheduleReminder(it) }
@@ -56,7 +61,7 @@ class AndroidReminderScheduler(
     override suspend fun scheduleReminder(reminder: Reminder) {
         ensureStateLoaded()
 
-        if (!reminder.enabled) {
+        if (!reminder.enabled || !settings.value.notificationsEnabled) {
             cancelReminder(reminder.eventId.name)
             return
         }
@@ -110,7 +115,7 @@ class AndroidReminderScheduler(
             }
     }
 
-    private suspend fun ensureStateLoaded() {
+    internal suspend fun ensureStateLoaded() {
         settingsRepository.initialize()
         reminderRepository.initialize()
     }

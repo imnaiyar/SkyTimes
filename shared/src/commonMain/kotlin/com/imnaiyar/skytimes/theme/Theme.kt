@@ -96,8 +96,8 @@ class ThemeController(
 
 @Composable
 fun AppTheme(
-    themeMode: ThemeMode,
-    contrast: Contrast,
+    themeMode: ThemeMode = ThemeMode.DARK,
+    contrast: Contrast = Contrast.Default,
     themeColor: Int?,
     content: @Composable () -> Unit
 ) {
@@ -110,12 +110,14 @@ fun AppTheme(
         contrastLevel = contrast.value
     )
 
+
     MaterialTheme(
         colorScheme = color,
         content = content,
         typography = appTypography()
     )
 }
+
 
 enum class ThemeMode {
     LIGHT,

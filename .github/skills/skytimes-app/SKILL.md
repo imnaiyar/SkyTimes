@@ -1,14 +1,14 @@
 ---
-name: gametime-kmp
-description: "Use when: working on the GameTime/SkyTimes Kotlin Multiplatform app — adding screens, navigation routes, platform-specific code (expect/actual), repositories, DI wiring, reminders, onboarding flows, theme settings, or understanding project architecture and conventions. Covers Compose Multiplatform, Navigation 3, multiplatform-settings, kotlinx.datetime/serialization, Ktor, Coil, and Material Kolor."
-argument-hint: "[task] — what you want to build or understand in the GameTime KMP project"
+name: skytimes-kmp
+description: "Use when: working on the SkyTimes Kotlin Multiplatform app — adding screens, navigation routes, platform-specific code (expect/actual), repositories, DI wiring, reminders, onboarding flows, theme settings, or understanding project architecture and conventions. Covers Compose Multiplatform, Navigation 3, multiplatform-settings, kotlinx.datetime/serialization, Ktor, Coil, and Material Kolor."
+argument-hint: "[task] — what you want to build or understand in the SkyTimes KMP project"
 ---
 
-# GameTime / SkyTimes — KMP Project Skill
+# SkyTimes — KMP Project Skill
 
 ## Project Overview
 
-GameTime (package `com.imnaiyar.skytimes`) is a **Kotlin Multiplatform** application with **Compose
+SkyTimes (package `com.imnaiyar.skytimes`) is a **Kotlin Multiplatform** application with **Compose
 Multiplatform** shared UI. It tracks in-game events (Geyser, Grandma, Turtle, etc.) with countdown
 timers, reminders, and quests for the game *Sky: Children of the Light*.
 

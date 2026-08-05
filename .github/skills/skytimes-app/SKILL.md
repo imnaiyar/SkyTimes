@@ -1,5 +1,5 @@
 ---
-name: skytimes-kmp
+name: skytimes-app
 description: "Use when: working on the SkyTimes Kotlin Multiplatform app — adding screens, navigation routes, platform-specific code (expect/actual), repositories, DI wiring, reminders, onboarding flows, theme settings, or understanding project architecture and conventions. Covers Compose Multiplatform, Navigation 3, multiplatform-settings, kotlinx.datetime/serialization, Ktor, Coil, and Material Kolor."
 argument-hint: "[task] — what you want to build or understand in the SkyTimes KMP project"
 ---
@@ -14,52 +14,49 @@ timers, reminders, and quests for the game *Sky: Children of the Light*.
 
 ### Targets
 
-| Target     | Module        | UI Framework                     |
-|------------|---------------|----------------------------------|
-| Android    | `androidApp/` | Jetpack Compose (Android)        |
-| iOS        | `iosApp/`     | SwiftUI wrapper → shared Compose |
-| Web (JS)   | `webApp/`     | Compose for Web (JS target)      |
-| Web (Wasm) | `webApp/`     | Compose for Web (Wasm target)    |
+| Target     | Module          | UI Framework                     |
+|------------|-----------------|----------------------------------|
+| Android    | `androidApp/`   | Jetpack Compose (Android)        |
+| iOS        | `iosApp/`       | SwiftUI wrapper → shared Compose |
+| Web (JS)   | `webApp/`       | Compose for Web (JS target)      |
+| Web (Wasm) | `webApp/`       | Compose for Web (Wasm target)    |
 
-All shared logic lives in `shared/` with source sets: `commonMain`, `androidMain`, `iosMain`,
-`jsMain`, `wasmJsMain`.
+### Module layout
+
+```
+core/       — business logic, common UI, theme, utils (constants, repositories,
+              startup, onboarding, HomeScreens, composeResources, CoreContainer)
+feature/    — feature modules: home, quests, settings, reminders, vault
+app/        — composition root: App(), AppContainer (extends CoreContainer),
+              navigation, iOS framework "Shared"
+androidApp/ — Android entry + Glance widget
+webApp/     — web entry
+```
+
+Dependency direction: `core` ← `feature/*` ← `app` ← `androidApp`/`webApp`/`iosApp`. All KMP modules apply the `skytimes.kmp.library` convention plugin from `build-logic/`.
 
 ---
 
 ## Architecture at a Glance
 
 ```
-commonMain/kotlin/com/imnaiyar/skytimes/
-├── App.kt                  # Root composable + theme/startup wiring
+core/src/commonMain/kotlin/com/imnaiyar/skytimes/
 ├── Platform.kt             # expect declaration
 ├── constants/              # EventData model, EventKey enum, API URLs, timezone
 │   ├── Common.kt
 │   └── Event.kt
-├── di/                     # Manual DI container
-│   ├── AppContainer.kt
-│   └── LocalAppContainer.kt
-├── nav/                    # Navigation 3 routes + NavDisplay
-│   ├── AppNavigation.kt
-│   └── Routes.kt
-├── onboarding/             # Tutorial/onboarding system
+├── di/                     # CoreContainer (core services) + LocalCoreContainer,
+│   │                       #   LocalTutorialManager
+│   └── CoreContainer.kt
+├── home/                   # HomeScreens enum (tab definitions + header actions)
+├── onboarding/             # Tutorial/onboarding system (framework + AppTutorialStep)
 │   ├── TutorialManager.kt
 │   ├── TutorialDefinition.kt
 │   ├── TutorialHost.kt
 │   └── AppTutorial.kt
-├── reminders/              # Cross-platform reminder scheduling
-│   ├── Reminder.kt         # ReminderScheduler interface + expect funs
-│   ├── ReminderRepository.kt
-│   ├── NoOpReminderScheduler.kt
-│   └── ui/                 # Shared reminder flow UI
 ├── repositories/           # Data layer (StateFlow-backed)
 │   ├── SettingsRepository.kt
-│   ├── QuestRepository.kt
 │   └── ClockTickerRepository.kt
-├── screens/                # Full-screen composables
-│   ├── HomeScreens.kt           # Screen enum
-│   ├── Home.kt, MainScreen.kt, Quests.kt
-│   ├── Settings.kt, ThemeSetting.kt
-│   └── SplashScreen.kt, Shards.kt
 ├── startup/                # App initialization
 │   ├── AppInitializer.kt
 │   ├── StartupTask.kt
@@ -72,11 +69,22 @@ commonMain/kotlin/com/imnaiyar/skytimes/
 │   ├── Image.kt, Loading.kt, Switch.kt, Timer.kt, ...
 ├── utils/                  # Utility objects
 │   └── EventTimeUtils.kt   # Event occurrence calculation
-├── vault_archive/          # Vault archive feature
 └── views/                  # ViewModels
-    ├── AppViewModel.kt
-    ├── SettingsViewModel.kt
-    └── QuestsViewModel.kt
+    └── AppViewModel.kt
+
+feature/<name>/src/commonMain/kotlin/com/imnaiyar/skytimes/<name>/
+    home/       — MainScreen (tab host), SplashScreen, skytimes/*, Shards
+    quests/     — QuestsScreen, QuestsViewModel, QuestRepository, VideoPlayer
+    settings/   — SettingsScreen, ThemePage, SettingsViewModel
+    reminders/  — ReminderScheduler expect/actuals, ReminderRepository,
+                  ReminderFlowController + ui/ReminderFlow
+    vault/      — VaultArchive placeholder
+
+app/src/commonMain/kotlin/com/imnaiyar/skytimes/
+├── App.kt                  # Root composable + theme/startup wiring
+├── di/                     # AppContainer (extends CoreContainer) + LocalAppContainer
+├── nav/                    # Navigation 3 routes + AppNavigation
+└── iosMain/                # MainViewController.kt
 ```
 
 ---
@@ -232,7 +240,7 @@ A reusable, screen-agnostic coaching-mark framework:
 
 ### Adding a New Screen
 
-1. **Create the screen composable** in `screens/YourScreen.kt`
+1. **Create the screen composable** in the owning feature module, e.g. `feature/<name>/src/commonMain/kotlin/com/imnaiyar/skytimes/<name>/YourScreen.kt`
 2. **Add route** in `nav/Routes.kt`:
    ```kotlin
    @Serializable
@@ -242,16 +250,16 @@ A reusable, screen-agnostic coaching-mark framework:
     - Add to `SerializersModule` polymorphic block
     - Add `entry<YourRoute>` in `entryProvider`
 4. **Wire navigation trigger** from the parent screen (e.g., add button in `MainScreen.kt`)
-5. **Create ViewModel** (if needed) in `views/YourViewModel.kt` and add factory to `AppContainer`
-6. **Add to `Screen` enum** if it's a top-level tab destination
+5. **Create ViewModel** (if needed) in the feature module (e.g. `feature/quests/.../QuestsViewModel.kt`) and add a factory to `AppContainer`
+6. **Add to `HomeScreens` enum** (in `core/`) if it's a top-level tab destination
 
 ### Adding a New Repository
 
-1. Create `repositories/YourRepository.kt`
+1. Create the repository in `core/.../repositories/` (shared data) or in the owning feature module (feature-specific data, e.g. `QuestRepository` in `feature/quests/`)
 2. Follow the StateFlow + Mutex pattern (see SettingsRepository)
 3. If it needs initialization, implement `StartupTask`
 4. Add it to `AppContainer` and the `AppInitializer` task list (if StartupTask)
-5. Provide through `LocalAppContainer` if composables need direct access
+5. Provide through `LocalCoreContainer`/`LocalAppContainer` if composables need direct access
 
 ### Adding a New Event
 
@@ -278,12 +286,12 @@ A reusable, screen-agnostic coaching-mark framework:
     - `iosMain/kotlin/com/imnaiyar/skytimes/`
     - `jsMain/kotlin/com/imnaiyar/skytimes/`
     - `wasmJsMain/kotlin/com/imnaiyar/skytimes/`
-3. Wire through `AppContainer` or `LocalAppContainer` as appropriate
+3. Wire through `AppContainer`/`CoreContainer` or `LocalAppContainer`/`LocalCoreContainer` as appropriate
 
 ### Adding a Dependency
 
 1. Add version to `gradle/libs.versions.toml` under `[versions]` and `[libraries]`
-2. Add to the appropriate source set in `shared/build.gradle.kts`:
+2. Add to the appropriate source set in the module's `build.gradle.kts` (deps follow their consumers; shared infra goes in `core/`, feature code in `feature/<name>/`, composition root in `app/`):
     - `commonMain.dependencies` — shared code
     - `androidMain.dependencies` — Android only
     - `iosMain.dependencies` — iOS only

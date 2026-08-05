@@ -12,7 +12,9 @@ kotlin {
     }
 }
 dependencies {
-    implementation(projects.shared)
+    implementation(projects.app)
+    implementation(projects.core)
+    implementation(projects.feature.reminders)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.glance.appwidget)

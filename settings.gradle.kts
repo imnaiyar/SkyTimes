@@ -2,6 +2,7 @@ rootProject.name = "SkyTimes"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             mavenContent {
@@ -29,5 +30,11 @@ dependencyResolutionManagement {
 }
 
 include(":androidApp")
-include(":shared")
+include(":app")
+include(":core")
+include(":feature:home")
+include(":feature:quests")
+include(":feature:reminders")
+include(":feature:settings")
+include(":feature:vault")
 include(":webApp")

@@ -1,5 +1,5 @@
 plugins {
-    id("skytimes.kmp.library")
+    alias(conventions.plugins.skytimes.kmp.library)
 }
 
 kotlin {

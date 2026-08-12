@@ -26,6 +26,7 @@ windowsizeclass = "1.2.0"
 coil_image = "3.5.0"
 image-zoom = "1.4.0"
 material-kolor = "4.1.1"
+typesafeConventions = "0.11.1"
 
 
 [libraries]
@@ -74,3 +75,4 @@ androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library",
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+typesafeConventions = { id = "dev.panuszewski.typesafe-conventions", version.ref = "typesafeConventions" }

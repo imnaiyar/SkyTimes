@@ -29,6 +29,6 @@ Tests run per Gradle module (no test sources exist yet):
 
 ### Adding a new feature
 
-1. Create `feature/<name>/build.gradle.kts` applying `id("skytimes.kmp.library")` (see `build-logic/`).
+1. Create `feature/<name>/build.gradle.kts` applying `alias(conventions.plugins.skytimes.kmp.library)` (see `build-logic/`).
 2. Add `include(":feature:<name>")` to `settings.gradle.kts`.
 3. Add the module as a dependency of `:app` (and of other features that need it).

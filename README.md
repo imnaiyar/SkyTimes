@@ -15,8 +15,7 @@ Dependency direction: `core` ← `feature/*` ← `app` ← `androidApp`/`webApp`
 
 - Android app: `./gradlew :androidApp:assembleDebug`
 - Web app:
-  - Wasm target (faster, modern browsers): `./gradlew :webApp:wasmJsBrowserDevelopmentRun`
-  - JS target (slower, supports older browsers): `./gradlew :webApp:jsBrowserDevelopmentRun`
+  - Wasm target (modern browsers): `./gradlew :webApp:wasmJsBrowserDevelopmentRun`
 - iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there (first run `./gradlew syncIosConfig`).
 
 ### Running tests
@@ -24,7 +23,7 @@ Dependency direction: `core` ← `feature/*` ← `app` ← `androidApp`/`webApp`
 Tests run per Gradle module (no test sources exist yet):
 
 - Android host tests: `./gradlew :core:testAndroidHostTest` (or `:app:`, `:feature:*`)
-- Web tests: `./gradlew :core:jsTest` / `:core:wasmJsTest` (or `:app:`, `:feature:*`)
+- Web tests: `./gradlew :core:wasmJsTest` (or `:app:`, `:feature:*`)
 - iOS tests: `./gradlew :core:iosSimulatorArm64Test` (macOS only; requires the iOS simulator)
 
 ### Adding a new feature

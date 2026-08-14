@@ -18,7 +18,6 @@ timers, reminders, and quests for the game *Sky: Children of the Light*.
 |------------|-----------------|----------------------------------|
 | Android    | `androidApp/`   | Jetpack Compose (Android)        |
 | iOS        | `iosApp/`       | SwiftUI wrapper → shared Compose |
-| Web (JS)   | `webApp/`       | Compose for Web (JS target)      |
 | Web (Wasm) | `webApp/`       | Compose for Web (Wasm target)    |
 
 ### Module layout
@@ -284,7 +283,6 @@ A reusable, screen-agnostic coaching-mark framework:
 2. Add `actual` implementations in each platform source set:
     - `androidMain/kotlin/com/imnaiyar/skytimes/`
     - `iosMain/kotlin/com/imnaiyar/skytimes/`
-    - `jsMain/kotlin/com/imnaiyar/skytimes/`
     - `wasmJsMain/kotlin/com/imnaiyar/skytimes/`
 3. Wire through `AppContainer`/`CoreContainer` or `LocalAppContainer`/`LocalCoreContainer` as appropriate
 
@@ -295,7 +293,7 @@ A reusable, screen-agnostic coaching-mark framework:
     - `commonMain.dependencies` — shared code
     - `androidMain.dependencies` — Android only
     - `iosMain.dependencies` — iOS only
-    - `jsMain.dependencies` / `wasmJsMain.dependencies` — web targets
+    - `wasmJsMain.dependencies` — web target
 3. Sync Gradle
 
 ---

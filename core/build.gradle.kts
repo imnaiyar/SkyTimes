@@ -35,9 +35,6 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
         }
-        jsMain.dependencies {
-            implementation(libs.wrappers.browser)
-        }
         wasmJsMain.dependencies {
             implementation(npm("@js-joda/timezone", "2.25.1"))
         }

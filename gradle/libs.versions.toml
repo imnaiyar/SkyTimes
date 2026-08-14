@@ -15,7 +15,6 @@ kotlin = "2.4.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization-json = "1.9.0"
 ktor = "3.2.3"
-kotlin-wrappers = "2026.6.1"
 material3 = "1.11.0-alpha07"
 composeNavigationEvent = "1.1.0"
 kotlinx-datetime = "0.8.0"
@@ -47,7 +46,6 @@ compose-material3 = { module = "org.jetbrains.compose.material3:material3", vers
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
-wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
 compose-navigationevent = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "composeNavigationEvent" }
 compose-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "compose-navigation3" }
 compose-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "compose-navigation3" }

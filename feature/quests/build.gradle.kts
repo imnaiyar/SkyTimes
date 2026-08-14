@@ -27,10 +27,6 @@ kotlin {
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
-        jsMain.dependencies {
-            implementation(libs.ktor.client.js)
-            implementation(libs.wrappers.browser)
-        }
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
         }

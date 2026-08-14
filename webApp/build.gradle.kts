@@ -7,11 +7,6 @@ plugins {
 }
 
 kotlin {
-    js {
-        browser()
-        binaries.executable()
-    }
-
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
@@ -31,7 +26,7 @@ val syncWebTitle by tasks.registering {
     description = "Syncs app configuration like name  with index.html"
 
     val appName = project.findProperty("app.name").toString()
-    val resourcesDir = file("src/webMain/resources")
+    val resourcesDir = file("src/wasmJsMain/resources")
     val indexHtml = resourcesDir.resolve("index.html")
 
     doLast {
@@ -41,10 +36,6 @@ val syncWebTitle by tasks.registering {
             indexHtml.writeText(newContent)
         }
     }
-}
-
-tasks.named("jsProcessResources") {
-    dependsOn(syncWebTitle)
 }
 
 tasks.named("wasmJsProcessResources") {

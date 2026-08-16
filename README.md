@@ -1,16 +1,40 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web.
+This is a Kotlin Multiplatform project targeting Android, iOS and Web (Wasm), modularized into
+a thin composition root, reusable core modules, and isolated feature modules.
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Project structure
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+```
+app/                         # Composition root: App.kt, AppContainer, navigation graph, startup UI
+├── core/
+│   ├── common/               # Generic utilities, Platform abstraction, startup framework
+│   ├── domain/               # Game event models + time calculations (EventData, EventTimeUtils)
+│   ├── data/                 # Shared data infrastructure (ClockRepository)
+│   ├── ui/                   # Shared Compose components, theme/design system, resources
+│   ├── navigation/           # Navigation routes, AppTab, tutorial step contract
+│   └── onboarding/           # Reusable coach-mark/tutorial framework
+├── features/
+│   ├── home/                 # Main screen, SkyTimes event grid, shards tab
+│   ├── quests/               # Quests data, ViewModel and tab UI (+ video player)
+│   ├── settings/
+│   │   ├── api/              # SettingsRepository, SettingsViewModel, ThemeController, tab UI
+│   │   └── implementation/   # Theme settings page
+│   ├── reminders/
+│   │   ├── api/              # Reminder contracts, repositories, reminder flow UI
+│   │   └── implementation/   # Platform schedulers (Android AlarmManager, iOS UserNotifications)
+│   └── vault/                # Vault archive screen
+├── androidApp/               # Android entry point, widget, platform wiring
+├── webApp/                   # Wasm entry point
+├── iosApp/                   # iOS entry point (Xcode project, imports the Shared framework)
+└── build-logic/              # Convention plugin `skytimes.kmp.library` (typesafe-conventions)
+```
+
+## Architecture rules
+
+- `core/*` must never depend on a feature.
+- Features depend on `core/*` and, when necessary, on other features' **api** modules only.
+- `app` is the composition root: it owns `AppContainer`, provides all `CompositionLocal`s and
+  assembles the navigation graph.
+- Feature internals are `internal`; only entries required by the application are public.
 
 ### Running the apps
 
@@ -19,18 +43,9 @@ Use the run configurations provided by the run widget in your IDE's toolbar. You
 - Android app: `./gradlew :androidApp:assembleDebug`
 - Web app:
   - Wasm target (faster, modern browsers): `./gradlew :webApp:wasmJsBrowserDevelopmentRun`
-  - JS target (slower, supports older browsers): `./gradlew :webApp:jsBrowserDevelopmentRun`
 - iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
-
-### Running tests
-
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
-
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- Web tests:
-  - Wasm target: `./gradlew :shared:wasmJsTest`
-  - JS target: `./gradlew :shared:jsTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+  The Xcode build invokes `./gradlew :app:embedAndSignAppleFrameworkForXcode` and imports the
+  `Shared` framework produced by the `:app` module.
 
 ---
 

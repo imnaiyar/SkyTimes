@@ -7,11 +7,6 @@ plugins {
 }
 
 kotlin {
-    js {
-        browser()
-        binaries.executable()
-    }
-
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
@@ -20,7 +15,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.shared)
+            implementation(projects.app)
 
             implementation(libs.compose.ui)
         }
@@ -41,10 +36,6 @@ val syncWebTitle by tasks.registering {
             indexHtml.writeText(newContent)
         }
     }
-}
-
-tasks.named("jsProcessResources") {
-    dependsOn(syncWebTitle)
 }
 
 tasks.named("wasmJsProcessResources") {

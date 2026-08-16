@@ -2,12 +2,12 @@ package com.imnaiyar.skytimes.widgets
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.imnaiyar.skytimes.constants.EventKey
-import com.imnaiyar.skytimes.theme.DefaultThemeColor
-import com.imnaiyar.skytimes.utils.EventDetails
-import com.imnaiyar.skytimes.utils.EventTimeUtils
-import com.imnaiyar.skytimes.utils.TimeUtils
-import com.imnaiyar.skytimes.utils.Times
+import com.imnaiyar.skytimes.core.common.TimeUtils
+import com.imnaiyar.skytimes.core.domain.EventDetails
+import com.imnaiyar.skytimes.core.domain.EventKey
+import com.imnaiyar.skytimes.core.domain.EventTimeUtils
+import com.imnaiyar.skytimes.core.domain.Times
+import com.imnaiyar.skytimes.core.ui.theme.DefaultThemeColor
 import kotlin.time.Instant
 
 

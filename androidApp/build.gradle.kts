@@ -12,7 +12,10 @@ kotlin {
     }
 }
 dependencies {
-    implementation(projects.shared)
+    implementation(projects.app)
+    implementation(projects.core.common)
+    implementation(projects.core.domain)
+    implementation(projects.core.ui)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.glance.appwidget)

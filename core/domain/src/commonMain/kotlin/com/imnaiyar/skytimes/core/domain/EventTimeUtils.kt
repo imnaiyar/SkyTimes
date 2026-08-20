@@ -38,7 +38,7 @@ data class EventDetails(
 
 object EventTimeUtils {
 
-    private val zone = TimeZone.of("America/Los_Angeles")
+    private val zone = TimeZone.of(GameTimeZone.id)
 
     private fun todayInZone(now: Instant): LocalDate {
         return now.toLocalDateTime(zone).date

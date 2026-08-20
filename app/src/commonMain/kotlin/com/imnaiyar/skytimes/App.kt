@@ -31,8 +31,6 @@ import com.imnaiyar.skytimes.feature.reminders.LocalReminderRepository
 import com.imnaiyar.skytimes.feature.reminders.LocalReminderScheduler
 import com.imnaiyar.skytimes.feature.settings.LocalSettingsViewModel
 import com.imnaiyar.skytimes.feature.settings.LocalThemeController
-import com.imnaiyar.skytimes.nav.AppNavigation
-import com.imnaiyar.skytimes.startup.AppState
 
 @ExperimentalMaterial3Api
 @Composable
@@ -78,6 +76,7 @@ fun App() {
             }
 
             val settings by appContainer.settingsRepository.settings.collectAsState()
+
             val theme by appContainer.themeController.theme.collectAsState()
             AppTheme(themeMode = settings.themeMode, theme.contrast, theme.color) {
                 Box {

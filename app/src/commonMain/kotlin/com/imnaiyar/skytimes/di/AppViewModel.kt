@@ -1,10 +1,10 @@
-package com.imnaiyar.skytimes.views
+package com.imnaiyar.skytimes.di
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.imnaiyar.skytimes.AppState
 import com.imnaiyar.skytimes.core.common.AppInitializationException
 import com.imnaiyar.skytimes.core.common.AppInitializer
-import com.imnaiyar.skytimes.startup.AppState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow

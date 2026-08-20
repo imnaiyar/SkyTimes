@@ -26,5 +26,5 @@ class ShardDateState {
 }
 
 val LocalShardDate = staticCompositionLocalOf<ShardDateState> {
-    error("No ShardDateState provided")
+    error("No shard date state provided")
 }

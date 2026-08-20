@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.startup
+package com.imnaiyar.skytimes
 
 import com.imnaiyar.skytimes.core.common.AppStartupWarning
 

@@ -1,19 +1,17 @@
 package com.imnaiyar.skytimes.di
 
-import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
+import com.imnaiyar.skytimes.FirstLaunchTutorialFlow
+import com.imnaiyar.skytimes.core.common.AppInitializer
+import com.imnaiyar.skytimes.core.data.ClockRepository
 import com.imnaiyar.skytimes.core.onboarding.TutorialManager
+import com.imnaiyar.skytimes.feature.quests.QuestRepository
 import com.imnaiyar.skytimes.feature.reminders.ReminderRepository
 import com.imnaiyar.skytimes.feature.reminders.ReminderScheduler
 import com.imnaiyar.skytimes.feature.settings.SettingsNotificationsToggle
 import com.imnaiyar.skytimes.feature.settings.SettingsRepository
 import com.imnaiyar.skytimes.feature.settings.SettingsViewModel
 import com.imnaiyar.skytimes.feature.settings.ThemeController
-import com.imnaiyar.skytimes.onboarding.FirstLaunchTutorialFlow
 import com.imnaiyar.skytimes.reminders.getReminderSchedular
-import com.imnaiyar.skytimes.feature.quests.QuestRepository
-import com.imnaiyar.skytimes.core.common.AppInitializer
-import com.imnaiyar.skytimes.core.data.ClockRepository
-import com.imnaiyar.skytimes.views.AppViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

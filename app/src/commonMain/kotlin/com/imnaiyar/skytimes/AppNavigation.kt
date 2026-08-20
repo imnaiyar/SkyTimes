@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.nav
+package com.imnaiyar.skytimes
 
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -66,6 +66,7 @@ fun AppNavigation() {
             entry<VaultRoute> {
                 MainArchive()
             }
+            
             entry<ThemeSettingsRoute> {
                 ThemePage(onNavigateBack = { backStack.removeLastOrNull() })
             }

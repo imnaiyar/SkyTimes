@@ -1,4 +1,4 @@
-package com.imnaiyar.skytimes.onboarding
+package com.imnaiyar.skytimes
 
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.navigation.AppTutorialStep

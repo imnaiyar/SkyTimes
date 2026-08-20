@@ -49,11 +49,11 @@
         </receiver>
 
         <receiver
-            android:name="com.imnaiyar.skytimes.reminders.ReminderAlarmReceiver"
+            android:name="com.imnaiyar.skytimes.feature.reminders.ReminderAlarmReceiver"
             android:exported="false" />
 
         <receiver
-            android:name="com.imnaiyar.skytimes.reminders.ReminderBootReceiver"
+            android:name="com.imnaiyar.skytimes.feature.reminders.ReminderBootReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

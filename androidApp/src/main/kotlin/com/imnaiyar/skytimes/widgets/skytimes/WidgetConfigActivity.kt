@@ -41,10 +41,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.lifecycleScope
 import com.imnaiyar.skytimes.R
-import com.imnaiyar.skytimes.constants.EventData
-import com.imnaiyar.skytimes.constants.EventKey
-import com.imnaiyar.skytimes.constants.events
-import com.imnaiyar.skytimes.ui.Callout
+import com.imnaiyar.skytimes.core.domain.EventData
+import com.imnaiyar.skytimes.core.domain.EventKey
+import com.imnaiyar.skytimes.core.domain.events
+import com.imnaiyar.skytimes.core.ui.Callout
 import com.imnaiyar.skytimes.widgets.WidgetPreferences
 import com.imnaiyar.skytimes.widgets.WidgetSettingsReader
 import com.materialkolor.rememberDynamicColorScheme

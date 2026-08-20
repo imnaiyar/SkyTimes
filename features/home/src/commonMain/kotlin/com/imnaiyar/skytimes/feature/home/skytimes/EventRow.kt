@@ -21,19 +21,19 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import com.imnaiyar.skytimes.core.common.TimeFormatter
+import com.imnaiyar.skytimes.core.domain.EventDetails
+import com.imnaiyar.skytimes.core.domain.Times
 import com.imnaiyar.skytimes.core.ui.Tooltip
 import com.imnaiyar.skytimes.core.ui.animated.AnimatedTimer
 import com.imnaiyar.skytimes.core.ui.animated.ClockDirection
 import com.imnaiyar.skytimes.core.ui.animated.pulse
 import com.imnaiyar.skytimes.core.ui.theme.labelTiny
-import com.imnaiyar.skytimes.core.common.TimeFormatter
-import com.imnaiyar.skytimes.core.domain.EventDetails
-import com.imnaiyar.skytimes.core.domain.Times
-import com.materialkolor.ktx.harmonize
-import org.jetbrains.compose.resources.painterResource
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.notifications
 import com.imnaiyar.skytimes.feature.home.generated.resources.pin
+import com.materialkolor.ktx.harmonize
+import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Instant
 
 @Composable

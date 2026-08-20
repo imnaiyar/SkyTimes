@@ -61,11 +61,14 @@ open class TimeUtils {
         return _toZone(time, timeZone)
     }
 
-    fun formatMillis(millis: Long, withSeconds: Boolean = true): String {
+    fun formatMillis(
+        millis: Long,
+        withSeconds: Boolean = true,
+    ): String {
         var totalSeconds = millis / 1000
 
-        if (!withSeconds && totalSeconds % 60 != 0L) {
-            totalSeconds += 60 - (totalSeconds % 60)
+        if (!withSeconds) {
+            totalSeconds = (totalSeconds / 60 + 1) * 60  // round to next minute
         }
 
         val days = totalSeconds / 86_400

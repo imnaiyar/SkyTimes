@@ -9,14 +9,15 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.data.LocalClockRepository
-import com.imnaiyar.skytimes.core.ui.rememberTimeFormatter
-import com.imnaiyar.skytimes.feature.reminders.rememberReminderFlow
 import com.imnaiyar.skytimes.core.ui.Grid
 import com.imnaiyar.skytimes.core.ui.GridType
+import com.imnaiyar.skytimes.core.ui.rememberTimeFormatter
+import com.imnaiyar.skytimes.feature.reminders.rememberReminderFlow
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 
 @Composable
@@ -28,7 +29,8 @@ fun SkytimesScreen(
 ) {
     val state = rememberHomeScreenState()
     val reminderFlow = rememberReminderFlow()
-    val nowState = LocalClockRepository.current.observeEveryMinute()
+    val nowState = LocalClockRepository.current.now.collectAsState()
+
     val timeFormatter = rememberTimeFormatter()
 
     val lazyGridState = rememberLazyGridState()

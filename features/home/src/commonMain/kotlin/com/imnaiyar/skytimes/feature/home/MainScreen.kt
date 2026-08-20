@@ -43,14 +43,15 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.navigation.LocalTutorialManager
 import com.imnaiyar.skytimes.core.navigation.MainRoute
+import com.imnaiyar.skytimes.feature.home.generated.resources.Res
+import com.imnaiyar.skytimes.feature.home.generated.resources.lightmend_lantern
+import com.imnaiyar.skytimes.feature.home.shards.ShardScreen
+import com.imnaiyar.skytimes.feature.home.skytimes.SkytimesScreen
 import com.imnaiyar.skytimes.feature.quests.QuestsScreen
 import com.imnaiyar.skytimes.feature.settings.LocalSettingsViewModel
 import com.imnaiyar.skytimes.feature.settings.SettingsScreen
-import com.imnaiyar.skytimes.feature.home.skytimes.SkytimesScreen
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import com.imnaiyar.skytimes.feature.home.generated.resources.Res
-import com.imnaiyar.skytimes.feature.home.generated.resources.lightmend_lantern
 
 @ExperimentalMaterial3Api
 @Composable
@@ -199,7 +200,7 @@ fun MainScreen(
                     )
 
                     AppTab.Quests -> QuestsScreen(modifier, fabPad, tutorialTargetsEnabled)
-                    AppTab.Shards -> ShardsScreen(
+                    AppTab.Shards -> ShardScreen(
                         modifier,
                         fabPad,
                         tutorialTargetsEnabled,

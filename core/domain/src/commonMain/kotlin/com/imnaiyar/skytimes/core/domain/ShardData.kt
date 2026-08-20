@@ -1,6 +1,5 @@
-package com.imnaiyar.skytimes.feature.home.shards
+package com.imnaiyar.skytimes.core.domain
 
-import com.imnaiyar.skytimes.core.domain.GameTimeZone
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.isoDayNumber

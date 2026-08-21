@@ -78,6 +78,9 @@ internal class HomeScreenState(
     var selectedEventKey by mutableStateOf<EventKey?>(null)
         private set
 
+    var eventDetailsToShow by mutableStateOf<EventData?>(null)
+        private set
+
     val rows: State<List<IRow>> = derivedStateOf {
         val pinnedSet = pinnedKeys.toSet()
         val enabled = notificationsEnabled.value
@@ -135,6 +138,14 @@ internal class HomeScreenState(
 
     fun closeContextMenu() {
         selectedEventKey = null
+    }
+
+    fun showEventDetails(eventData: EventData) {
+        eventDetailsToShow = eventData
+    }
+
+    fun dismissEventDetails() {
+        eventDetailsToShow = null
     }
 
     /** Invoked by the reorderable grid while the user drags a row to a new spot. */

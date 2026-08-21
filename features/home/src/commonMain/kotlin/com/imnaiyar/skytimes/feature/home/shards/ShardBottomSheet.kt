@@ -34,13 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.core.domain.GameTimeZone
 import com.imnaiyar.skytimes.core.domain.ShardData
 import com.imnaiyar.skytimes.core.domain.ShardOccurrence
 import com.imnaiyar.skytimes.core.ui.Card
 import com.imnaiyar.skytimes.core.ui.DecoratedText
+import com.imnaiyar.skytimes.core.ui.TimeDisplay
 import com.imnaiyar.skytimes.core.ui.Tooltip
 import com.imnaiyar.skytimes.core.ui.animated.LiveIndicator
 import com.imnaiyar.skytimes.core.ui.generated.resources.Res
@@ -198,24 +197,7 @@ private fun ShardTimeline(occurrence: ShardOccurrence, now: Instant) {
 
                     Spacer(Modifier.height(10.dp))
 
-                    Tooltip(
-                        "${
-                            timeUtils.format(
-                                dur,
-                                GameTimeZone
-                            )
-                        } in Los Angeles (Game's Timezone)"
-                    ) {
-                        DecoratedText(
-                            text = timeUtils.format(dur),
-                            textDecoration =
-                                if (now > dur) TextDecoration.LineThrough
-                                else TextDecoration.None,
-                            color = if (now > dur) LocalContentColor.current.copy(0.5f)
-                            else LocalContentColor.current,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+                    TimeDisplay(dur, now)
                 }
             }
         }

@@ -9,6 +9,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
@@ -58,10 +59,27 @@ object EventTimeUtils {
         return true
     }
 
+    private fun plusMinutes(time: Instant, minutes: Int): Instant {
+        val wasInDST = time.isInDST(zone)
+        val next = time + minutes.minutes
+
+        if (wasInDST != next.isInDST(zone)) {
+            val adjusted = if (next.isInDST(zone)) {
+                next - 1.hours
+            } else {
+                next + 1.hours
+            }
+
+            if ((minutes > 0 && adjusted > time) || (minutes < 0 && adjusted < time)) {
+                return adjusted
+            }
+        }
+
+        return next
+    }
+
     private fun occurrenceOn(date: LocalDate, event: EventData): Instant {
-        return date
-            .atStartOfDayIn(zone)
-            .plus(event.offset.minutes)
+        return plusMinutes(date.atStartOfDayIn(zone), event.offset)
     }
 
     private fun getOccurrenceDay(event: EventData, now: Instant): Instant {
@@ -97,7 +115,7 @@ object EventTimeUtils {
 
         var current = nextOccurrence
         while (current < now) {
-            current += interval.minutes
+            current = plusMinutes(current, interval)
         }
 
         return current
@@ -119,7 +137,7 @@ object EventTimeUtils {
 
         while (current.toLocalDateTime(zone).date == day) {
             occurrences += current
-            current += intervalMinutes.minutes
+            current = plusMinutes(current, intervalMinutes)
         }
 
         return occurrences
@@ -144,7 +162,7 @@ object EventTimeUtils {
                 remaining = remaining
             )
 
-        val start = nextOccurrence - interval.minutes
+        val start = plusMinutes(nextOccurrence, -interval)
         val end = start + duration.minutes
 
         return if (now in start..end) {

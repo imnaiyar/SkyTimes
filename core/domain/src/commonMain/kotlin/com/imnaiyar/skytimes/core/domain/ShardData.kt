@@ -182,10 +182,12 @@ fun getShard(date: LocalDate): ShardData? {
 
     val area = shard.areas[realmIndex]
 
-    val firstInstant = today + shard.offset
+    var firstInstant = today + shard.offset
 
+    if (today.isInDST(GameTimeZone) != firstInstant.isInDST(GameTimeZone)) {
+        firstInstant += (if (firstInstant.isInDST(GameTimeZone)) (-1).hours else 1.hours)
+    }
     val occurrences = List(3) { index ->
-        // TODO: Remember to handle dst change, for now this is fine
         val offset = firstInstant +
                 ((if (isRedShard)
                     redShrdInterval else

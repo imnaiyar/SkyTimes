@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-enum class UnderlineStyle { Solid, Dashed, Dotted }
+enum class UnderlineStyle { Solid, Dashed, Dotted, None }
 
 /**
  * Since dashed underline decoration is not available
@@ -71,6 +71,8 @@ fun DecoratedText(
                     ),
                     phase = 0f
                 )
+
+                UnderlineStyle.None -> return@drawWithContent
             }
 
             for (lineIndex in 0 until layout.lineCount) {

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,7 +45,7 @@ fun ShardsPage(
     val upcomingOrActive =
         shard.occurrences.find { occurrence -> occurrence.shardEnd > now }
     val sheetState =
-        rememberModalBottomSheetState(confirmValueChange = { it != SheetValue.Expanded })
+        rememberModalBottomSheetState()
     var showSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 

@@ -52,6 +52,7 @@ internal fun LazyGridItemScope.EventGridItem(
     timeFormatter: TimeFormatter,
     nowState: State<Instant>,
     onLongClick: () -> Unit,
+    onClick: () -> Unit,
     onDismissMenu: () -> Unit,
     onPinToggle: () -> Unit,
     onReminderClick: () -> Unit,
@@ -112,6 +113,7 @@ internal fun LazyGridItemScope.EventGridItem(
                                 Modifier
                             } else {
                                 Modifier.contextClickable(
+                                    onClick = onClick,
                                     onLongPress = onLongClick,
                                     onRightClick = onLongClick
                                 )

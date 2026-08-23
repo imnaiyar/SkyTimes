@@ -100,7 +100,7 @@ jobs:
           chmod +x gradlew
           xcodebuild archive \
             -project iosApp/iosApp.xcodeproj \
-            -target iosApp \
+            -scheme iosApp \
             -configuration Release \
             -sdk iphoneos \
             -archivePath "$RUNNER_TEMP/SkyTimes.xcarchive" \

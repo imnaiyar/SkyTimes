@@ -4,16 +4,40 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without the leading v (for example, 2.6.0)"
+        required: true
+        type: string
+      platform:
+        description: "Platform to build"
+        required: true
+        default: both
+        type: choice
+        options:
+          - android
+          - ios
+          - both
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  build-android:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'android' || inputs.platform == 'both'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Determine version
+        id: version
+        env:
+          RELEASE_VERSION_INPUT: ${{ inputs.version || github.ref_name }}
+        run: |
+          VERSION="$RELEASE_VERSION_INPUT"
+          echo "value=${VERSION#v}" >> "$GITHUB_OUTPUT"
 
       - name: Setup JDK
         uses: actions/setup-java@v5
@@ -28,7 +52,7 @@ jobs:
         run: |
           chmod +x gradlew
           echo "${{ secrets.KEYSTORE }}" | base64 -d > androidApp/keystore
-          
+
           ./gradlew :androidApp:assembleRelease
         env:
           KEYSTORE_FILE_PATH: keystore
@@ -36,10 +60,102 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Rename APK
+        run: |
+          APK_PATH=$(find androidApp/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)
+          mv "$APK_PATH" "androidApp/build/outputs/apk/release/skytimes-${{ steps.version.outputs.value }}.apk"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: androidApp/build/outputs/apk/release/*.apk
+
+  build-ios:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'ios' || inputs.platform == 'both'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Determine version
+        id: version
+        env:
+          RELEASE_VERSION_INPUT: ${{ inputs.version || github.ref_name }}
+        run: |
+          VERSION="$RELEASE_VERSION_INPUT"
+          echo "value=${VERSION#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Setup gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build IPA
+        run: |
+          chmod +x gradlew
+          xcodebuild archive \
+            -project iosApp/iosApp.xcodeproj \
+            -target iosApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath "$RUNNER_TEMP/SkyTimes.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$RUNNER_TEMP/SkyTimes.xcarchive/Products/Applications/"*.app "$RUNNER_TEMP/ipa/Payload/"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$RUNNER_TEMP/ipa/Payload" \
+            "$RUNNER_TEMP/skytimes-${{ steps.version.outputs.value }}.ipa"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: ${{ runner.temp }}/skytimes-*.ipa
+
+  release:
+    needs: [build-android, build-ios]
+    if: >-
+      always() &&
+      (needs.build-android.result == 'success' || needs.build-android.result == 'skipped') &&
+      (needs.build-ios.result == 'success' || needs.build-ios.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine version
+        id: version
+        env:
+          RELEASE_VERSION_INPUT: ${{ inputs.version || github.ref_name }}
+        run: |
+          VERSION="$RELEASE_VERSION_INPUT"
+          echo "value=${VERSION#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download APK
+        if: needs.build-android.result == 'success'
+        uses: actions/download-artifact@v5
+        with:
+          name: android-apk
+          path: release
+
+      - name: Download IPA
+        if: needs.build-ios.result == 'success'
+        uses: actions/download-artifact@v5
+        with:
+          name: ios-ipa
+          path: release
+
       - name: Create Github Release
         id: create-release
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
+          tag_name: v${{ steps.version.outputs.value }}
+          name: SkyTimes ${{ steps.version.outputs.value }}
           files: |
-            androidApp/build/outputs/apk/release/*.apk
+            release/*.apk
+            release/*.ipa

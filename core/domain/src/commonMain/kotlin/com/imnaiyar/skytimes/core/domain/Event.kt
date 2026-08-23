@@ -65,7 +65,7 @@ val events = listOf(
         displayAllTimes = true,
         infographic = Infographic(
             by = "Clement",
-            image = "https://media.discordapp.net/attachments/867638574571323424/1252998364941914243/Visit_Geyser_Clement.png?ex=66744129&is=6672efa9&hm=8d76d1767aca362d23547b1e3beb2b610f58e4fbec24b12af56fdc745f7074e8&"
+            image = "$SkyHelperCDN/infographics/geyser.location.png"
         )
     ),
     EventData(
@@ -78,7 +78,7 @@ val events = listOf(
         displayAllTimes = true,
         infographic = Infographic(
             by = "Clement",
-            image = "https://media.discordapp.net/attachments/867638574571323424/1252998366288416849/Visit_Grandma_Clement.png?ex=6674412a&is=6672efaa&hm=7228b695ec7008204fede2f3d6b4864a06a7cfa25a14ab4d7572957ee940044c&"
+            image = "$SkyHelperCDN/infographics/grandma.location.png"
         )
     ),
     EventData(
@@ -91,7 +91,7 @@ val events = listOf(
         displayAllTimes = true,
         infographic = Infographic(
             by = "Velvet",
-            image = "https://media.discordapp.net/attachments/867638574571323424/1252998363205472316/Visit_Turtle_Velvet.jpg?ex=66744129&is=6672efa9&hm=8c189ff8501fc88810606b832addbea8a9a81eb7a7a6b17019ff1ced593e1ae8&"
+            image = "$SkyHelperCDN/infographics/turtle.location.png"
         )
     ),
     EventData(

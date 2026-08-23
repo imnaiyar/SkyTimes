@@ -320,6 +320,7 @@ A reusable, screen-agnostic coaching-mark framework:
 - **State observation**: Always use `.collectAsState()` in composables, never collect manually
 - **Vault archive**: Currently a placeholder screen;
   see [references/vault-archive.md](./references/vault-archive.md) for build-out plan
+- Don't add tests for added stuff. This projectory should not contain any tests
 
 ## Reference Docs
 

@@ -27,7 +27,6 @@ import com.imnaiyar.skytimes.core.domain.Times
 import com.imnaiyar.skytimes.core.ui.Tooltip
 import com.imnaiyar.skytimes.core.ui.animated.AnimatedTimer
 import com.imnaiyar.skytimes.core.ui.animated.ClockDirection
-import com.imnaiyar.skytimes.core.ui.animated.pulse
 import com.imnaiyar.skytimes.core.ui.theme.labelTiny
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.notifications
@@ -82,8 +81,7 @@ internal fun EventRow(
                 Text(
                     text = "Active (Next at ${timeFormatter.format(eventDetails.nextOccurrence)})",
                     style = MaterialTheme.typography.labelTiny,
-                    color = success(),
-                    modifier = Modifier.pulse(speed = 2000, scale = 1.04f)
+                    color = success().copy(0.55f),
                 )
             }
         }

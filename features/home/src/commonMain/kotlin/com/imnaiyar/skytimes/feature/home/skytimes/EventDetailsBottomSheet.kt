@@ -3,8 +3,10 @@ package com.imnaiyar.skytimes.feature.home.skytimes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -17,12 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.domain.EventDetails
+import com.imnaiyar.skytimes.core.ui.RemoteImage
 import com.imnaiyar.skytimes.core.ui.TimeDisplay
 import kotlin.time.Instant
 
 @ExperimentalMaterial3Api
 @Composable
-fun EventDetailsBottomSheet(
+internal fun EventDetailsBottomSheet(
     eventDetails: EventDetails,
     sheetState: SheetState,
     now: Instant,
@@ -39,20 +42,34 @@ fun EventDetailsBottomSheet(
                 .padding(bottom = 32.dp, start = 16.dp, end = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = eventDetails.event.name,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(14.dp),
+            ) {
+                Column {
+                    Text(
+                        text = eventDetails.event.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
 
-            Text(
-                text = "All occurrence slots for the event on their occurrence day",
-                style = MaterialTheme.typography.labelSmall,
-                color = LocalContentColor.current.copy(0.8f),
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+                    Text(
+                        text = "All occurrence slots for the event on their occurrence day",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = LocalContentColor.current.copy(0.8f),
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+                if (eventDetails.event.infographic != null) {
+                    RemoteImage(
+                        eventDetails.event.infographic!!.image,
+                        modifier = Modifier.requiredSize(200.dp, 150.dp)
+                    )
+                }
+            }
 
 
             FlowRow(

@@ -21,9 +21,6 @@ on:
           - web
           - all
 
-permissions:
-  contents: write
-
 jobs:
   build-android:
     if: github.event_name != 'workflow_dispatch' || inputs.platform == 'android' || inputs.platform == 'all'
@@ -124,8 +121,11 @@ jobs:
     needs: [build-android, build-ios]
     if: >-
       always() &&
+      (github.event_name != 'workflow_dispatch' || inputs.platform != 'web') &&
       (needs.build-android.result == 'success' || needs.build-android.result == 'skipped') &&
       (needs.build-ios.result == 'success' || needs.build-ios.result == 'skipped')
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Determine version
@@ -167,13 +167,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Setup JDK
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 25
 
-      - name: Setup gradle
+      - name: Build Web
         uses: gradle/actions/setup-gradle@v6
 
       - name: Build web executable

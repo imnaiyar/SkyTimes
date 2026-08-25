@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class EventData(
     val key: EventKey,
     val name: String,
+    val previewUrl: String? = null,
     val index: Int,
     val offset: Int,
     val duration: Int? = null,
@@ -58,6 +59,7 @@ val events = listOf(
     EventData(
         key = EventKey.GEYSER,
         name = "Geyser",
+        previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/b/bd/Wax-prairie-sanctuary-days-of-nature-2021.jpg",
         index = 0,
         offset = 0,
         duration = 15,
@@ -65,12 +67,13 @@ val events = listOf(
         displayAllTimes = true,
         infographic = Infographic(
             by = "Clement",
-            image = "https://media.discordapp.net/attachments/867638574571323424/1252998364941914243/Visit_Geyser_Clement.png?ex=66744129&is=6672efa9&hm=8d76d1767aca362d23547b1e3beb2b610f58e4fbec24b12af56fdc745f7074e8&"
+            image = "$SkyHelperCDN/infographics/geyser.location.png"
         )
     ),
     EventData(
         key = EventKey.GRANDMA,
         name = "Grandma",
+        previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/e/ea/Wax-social-light-grandma-dinner.jpg",
         index = 1,
         offset = 30,
         duration = 15,
@@ -78,12 +81,13 @@ val events = listOf(
         displayAllTimes = true,
         infographic = Infographic(
             by = "Clement",
-            image = "https://media.discordapp.net/attachments/867638574571323424/1252998366288416849/Visit_Grandma_Clement.png?ex=6674412a&is=6672efaa&hm=7228b695ec7008204fede2f3d6b4864a06a7cfa25a14ab4d7572957ee940044c&"
+            image = "$SkyHelperCDN/infographics/grandma.location.png"
         )
     ),
     EventData(
         key = EventKey.TURTLE,
         name = "Turtle",
+        previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/1/1d/Wax-social-light-prairie-sanctuary-turtle.png",
         index = 2,
         offset = 50,
         duration = 10,
@@ -91,7 +95,7 @@ val events = listOf(
         displayAllTimes = true,
         infographic = Infographic(
             by = "Velvet",
-            image = "https://media.discordapp.net/attachments/867638574571323424/1252998363205472316/Visit_Turtle_Velvet.jpg?ex=66744129&is=6672efa9&hm=8c189ff8501fc88810606b832addbea8a9a81eb7a7a6b17019ff1ced593e1ae8&"
+            image = "$SkyHelperCDN/infographics/turtle.location.png"
         )
     ),
     EventData(
@@ -103,6 +107,7 @@ val events = listOf(
     ),
     EventData(
         key = EventKey.EDEN,
+        previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/e/e5/Eden_2.png",
         name = "Eden/Weekly Reset",
         index = 4,
         offset = 0,
@@ -113,15 +118,21 @@ val events = listOf(
     EventData(
         key = EventKey.AURORA,
         name = "Aurora's Concert",
+        previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/e/e8/Aurora-Homecoming-2025-promotion-The_Queen_Is_Returning_to_the_Realms.png",
         index = 5,
         offset = 0,
         duration = 50,
         interval = hours(2),
-        displayAllTimes = true
+        displayAllTimes = true,
+        infographic = Infographic(
+            by = "Clement",
+            image = "$SkyHelperCDN/infographics/aurora.location.png"
+        )
     ),
     EventData(
         key = EventKey.DREAM_SKATER,
         name = "Dream Skater",
+        previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/a/a4/Wax-social-light-valley-village-dreams-skater.png",
         index = 6,
         offset = hours(1),
         duration = 15,
@@ -134,6 +145,7 @@ val events = listOf(
     EventData(
         key = EventKey.PASSAGE_QUESTS,
         name = "Passage Quests",
+        previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/d/dd/Wax-forest-brook-passage-reliance.png",
         index = 7,
         offset = 0,
         interval = 15,

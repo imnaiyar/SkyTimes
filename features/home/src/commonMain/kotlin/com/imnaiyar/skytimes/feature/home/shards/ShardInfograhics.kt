@@ -25,9 +25,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.domain.ShardData
+import com.imnaiyar.skytimes.core.domain.SkyHelperCDN
 import com.imnaiyar.skytimes.core.ui.RemoteImage
 import com.imnaiyar.skytimes.core.ui.SlidingToggle
-import com.imnaiyar.skytimes.feature.home.SkyHelperCdn
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.data
 import com.imnaiyar.skytimes.feature.home.generated.resources.map
@@ -44,7 +44,7 @@ fun ShardInfographics(shard: ShardData) {
     )
 
     val getInfographicsUrl =
-        { type: String -> SkyHelperCdn + "/shards/${type.lowercase()}/${shard.area.key}.png" }
+        { type: String -> SkyHelperCDN + "/shards/${type.lowercase()}/${shard.area.key}.png" }
 
     val getImageDisplay = @Composable { type: String ->
         val url = getInfographicsUrl(type)

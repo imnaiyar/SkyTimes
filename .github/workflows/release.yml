@@ -18,14 +18,12 @@ on:
         options:
           - android
           - ios
-          - both
-
-permissions:
-  contents: write
+          - web
+          - all
 
 jobs:
   build-android:
-    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'android' || inputs.platform == 'both'
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'android' || inputs.platform == 'all'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -72,7 +70,7 @@ jobs:
           path: androidApp/build/outputs/apk/release/*.apk
 
   build-ios:
-    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'ios' || inputs.platform == 'both'
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'ios' || inputs.platform == 'all'
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -123,8 +121,11 @@ jobs:
     needs: [build-android, build-ios]
     if: >-
       always() &&
+      (github.event_name != 'workflow_dispatch' || inputs.platform != 'web') &&
       (needs.build-android.result == 'success' || needs.build-android.result == 'skipped') &&
       (needs.build-ios.result == 'success' || needs.build-ios.result == 'skipped')
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Determine version
@@ -159,3 +160,33 @@ jobs:
           files: |
             release/*.apk
             release/*.ipa
+
+  build-web:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'web' || inputs.platform == 'all'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Build Web
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build web executable
+        run: ./gradlew wasmJsBrowserDistribution
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >
+            pages deploy
+            webApp/build/dist/wasmJs/productionExecutable
+            --project-name=skytimes

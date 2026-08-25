@@ -1,6 +1,7 @@
 package com.imnaiyar.skytimes.feature.home.skytimes
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -43,11 +44,15 @@ internal fun EventDetailsBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
             ) {
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
                         text = eventDetails.event.name,
                         style = MaterialTheme.typography.titleLarge,
@@ -58,19 +63,21 @@ internal fun EventDetailsBottomSheet(
                     Text(
                         text = "All occurrence slots for the event on their occurrence day",
                         style = MaterialTheme.typography.labelSmall,
-                        color = LocalContentColor.current.copy(0.8f),
+                        color = LocalContentColor.current.copy(alpha = 0.8f),
                         fontWeight = FontWeight.Bold,
                     )
                 }
 
-                if (eventDetails.event.infographic != null) {
-                    RemoteImage(
-                        eventDetails.event.infographic!!.image,
-                        modifier = Modifier.requiredSize(200.dp, 150.dp)
-                    )
+                if (eventDetails.event.infographic != null || eventDetails.event.previewUrl != null) {
+                    Box(
+                        modifier = Modifier.requiredSize(120.dp)
+                    ) {
+                        RemoteImage(
+                            eventDetails.event.infographic?.image ?: eventDetails.event.previewUrl!!
+                        )
+                    }
                 }
             }
-
 
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),

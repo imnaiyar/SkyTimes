@@ -61,7 +61,7 @@ jobs:
       - name: Rename APK
         run: |
           APK_PATH=$(find androidApp/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -print -quit)
-          mv "$APK_PATH" "androidApp/build/outputs/apk/release/skytimes-${{ steps.version.outputs.value }}.apk"
+          mv "$APK_PATH" "androidApp/build/outputs/apk/release/skytimes-android-${{ steps.version.outputs.value }}.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -109,13 +109,13 @@ jobs:
           cp -R "$RUNNER_TEMP/SkyTimes.xcarchive/Products/Applications/"*.app "$RUNNER_TEMP/ipa/Payload/"
           ditto -c -k --sequesterRsrc --keepParent \
             "$RUNNER_TEMP/ipa/Payload" \
-            "$RUNNER_TEMP/skytimes-${{ steps.version.outputs.value }}.ipa"
+            "$RUNNER_TEMP/skytimes-ios-${{ steps.version.outputs.value }}.ipa"
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: ${{ runner.temp }}/skytimes-*.ipa
+          path: ${{ runner.temp }}/skytimes-ios-*.ipa
 
   release:
     needs: [build-android, build-ios]

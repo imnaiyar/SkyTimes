@@ -1,13 +1,7 @@
 package com.imnaiyar.skytimes.feature.home.skytimes
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -15,10 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Surface
@@ -39,19 +30,13 @@ import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
 import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.core.ui.contextClickable
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
-import com.imnaiyar.skytimes.feature.home.generated.resources.drag_indicator
 import com.materialkolor.ktx.blend
 import org.jetbrains.compose.resources.painterResource
-import sh.calvin.reorderable.ReorderableCollectionItemScope
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.ReorderableLazyGridState
 import kotlin.time.Instant
 
 @Composable
-internal fun LazyGridItemScope.EventGridItem(
+internal fun EventGridItem(
     row: IRow.Event,
-    reorderMode: Boolean,
-    reorderableLazyGridState: ReorderableLazyGridState,
     isMenuOpen: Boolean,
     isDimmed: Boolean,
     isTutorialTarget: Boolean,
@@ -62,129 +47,93 @@ internal fun LazyGridItemScope.EventGridItem(
     onDismissMenu: () -> Unit,
     onPinToggle: () -> Unit,
     onReminderClick: () -> Unit,
-    isLast: Boolean
 ) {
-    ReorderableItem(reorderableLazyGridState, key = row.eventData.key) { isDragging ->
-        val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
-
-        val now = nowState.value
-        val eventDetails = remember(row.eventData, now) {
-            EventTimeUtils.getEventDetails(row.eventData, now, includeAllOccurrences = false)
-        }
-        // Still treat as inactive while reordering — that's handled by the && below.
-        val isActive = eventDetails.status is Times.Active && !reorderMode
-
-        val rowScale by animateFloatAsState(
-            targetValue = if (isMenuOpen) 1.06f else 1f,
-            animationSpec = tween(durationMillis = 500),
-        )
-        val rowAlpha by animateFloatAsState(
-            targetValue = if (isDimmed) 0.35f else 1f,
-            animationSpec = tween(durationMillis = 300),
-        )
-
-        /** top item will always be a category label, so its corner is handled in [HomeTopBar] */
-        val bottomShape = if (isLast) GRID_ITEM_TOP_PADDING else Grid_ITEM_PADDING
-        val currentShape = RoundedCornerShape(
-            bottomStart = bottomShape,
-            bottomEnd = bottomShape,
-            topStart = Grid_ITEM_PADDING,
-            topEnd = Grid_ITEM_PADDING
-        )
-
-
-        val containerColor = if (isActive) GRID_ITEM_BG_COLOR.copy(alpha = 0.5f)
-        else GRID_ITEM_BG_COLOR
-
-        val activeAccentBorder = if (isActive) {
-            BorderStroke(
-                width = 1.dp,
-                color = success().copy(0.55f)
-            )
-        } else {
-            null
-        }
-
-        Box {
-            TutorialTarget(
-                id = AppTutorialStep.HomeEventContextMenu.targetId,
-                enabled = isTutorialTarget
-            ) {
-                Surface(
-                    shadowElevation = elevation,
-                    shape = currentShape,
-                    color = containerColor,
-                    border = activeAccentBorder,
-                    modifier = Modifier
-                        .graphicsLayer {
-                            scaleX = rowScale
-                            scaleY = rowScale
-                            alpha = rowAlpha
-                        }
-                        .then(
-                            // Long-press context menu is disabled while reordering so it
-                            // doesn't fight with the drag gesture.
-                            if (reorderMode) {
-                                Modifier
-                            } else {
-                                Modifier.contextClickable(
-                                    onClick = onClick,
-                                    onLongPress = onLongClick,
-                                    onRightClick = onLongClick
-                                )
-                            },
-                        ),
-                ) {
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(
-                            4.dp
-                        ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ReorderIcon(visible = reorderMode)
-                        EventRow(
-                            row = row,
-                            eventDetails = eventDetails,
-                            reorderMode = reorderMode,
-                            isActive = isActive,
-                            timeFormatter = timeFormatter,
-                            now = nowState.value
-                        )
-                    }
-
-                    // progress indicator
-                    if (isActive) ProgressIndicator(eventDetails, now)
-
-                }
-            }
-
-            ContextMenu(
-                isOpen = isMenuOpen,
-                isPinned = row.isPinned,
-                onDismiss = onDismissMenu,
-                onPinClick = onPinToggle,
-                onReminderClick = onReminderClick,
-            )
-        }
+    val now = nowState.value
+    val eventDetails = remember(row.eventData, now) {
+        EventTimeUtils.getEventDetails(row.eventData, now, includeAllOccurrences = false)
     }
-}
+    
+    val isActive = eventDetails.status is Times.Active
+
+    val rowScale by animateFloatAsState(
+        targetValue = if (isMenuOpen) 1.06f else 1f,
+        animationSpec = tween(durationMillis = 500),
+    )
+    val rowAlpha by animateFloatAsState(
+        targetValue = if (isDimmed) 0.35f else 1f,
+        animationSpec = tween(durationMillis = 300),
+    )
+
+    val currentShape = RoundedCornerShape(
+        bottomStart = Grid_ITEM_PADDING,
+        bottomEnd = Grid_ITEM_PADDING,
+        topStart = Grid_ITEM_PADDING,
+        topEnd = Grid_ITEM_PADDING
+    )
 
 
-@Composable
-private fun ReorderableCollectionItemScope.ReorderIcon(visible: Boolean) {
-    AnimatedVisibility(
-        visible = visible,
-        enter = expandHorizontally() + fadeIn(),
-        exit = shrinkHorizontally() + fadeOut(),
-    ) {
-        IconButton(modifier = Modifier.draggableHandle(), onClick = {}) {
-            Icon(
-                painter = painterResource(Res.drawable.drag_indicator),
-                contentDescription = "Drag to reorder",
-                modifier = Modifier.size(18.dp)
-            )
+    val containerColor = if (isActive) GRID_ITEM_BG_COLOR.copy(alpha = 0.5f)
+    else GRID_ITEM_BG_COLOR
+
+    val activeAccentBorder = if (isActive) {
+        BorderStroke(
+            width = 1.dp,
+            color = success().copy(0.55f)
+        )
+    } else {
+        null
+    }
+
+    Box {
+        TutorialTarget(
+            id = AppTutorialStep.HomeEventContextMenu.targetId,
+            enabled = isTutorialTarget
+        ) {
+            Surface(
+                shadowElevation = 0.dp,
+                shape = currentShape,
+                color = containerColor,
+                border = activeAccentBorder,
+                modifier = Modifier
+                    .graphicsLayer {
+                        scaleX = rowScale
+                        scaleY = rowScale
+                        alpha = rowAlpha
+                    }.contextClickable(
+                        onClick = onClick,
+                        onLongPress = onLongClick,
+                        onRightClick = onLongClick
+                    ),
+            ) {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(
+                        4.dp
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    EventRow(
+                        row = row,
+                        eventDetails = eventDetails,
+                        isActive = isActive,
+                        timeFormatter = timeFormatter,
+                        now = nowState.value
+                    )
+                }
+
+                // progress indicator
+                if (isActive) ProgressIndicator(eventDetails, now)
+
+            }
         }
+
+        ContextMenu(
+            isOpen = isMenuOpen,
+            isPinned = row.isPinned,
+            onDismiss = onDismissMenu,
+            onPinClick = onPinToggle,
+            onReminderClick = onReminderClick,
+        )
     }
 }
 

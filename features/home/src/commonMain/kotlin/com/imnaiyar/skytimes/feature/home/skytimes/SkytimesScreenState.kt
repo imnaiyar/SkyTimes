@@ -17,7 +17,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.core.common.indexOfKey
+import com.imnaiyar.skytimes.core.domain.EventCategory
 import com.imnaiyar.skytimes.core.domain.EventData
 import com.imnaiyar.skytimes.core.domain.EventKey
 import com.imnaiyar.skytimes.core.domain.events
@@ -29,7 +29,13 @@ import kotlinx.coroutines.flow.drop
 
 
 internal sealed interface IRow {
-    data class Header(val title: String) : IRow
+    data class Section(
+        val key: Any,
+        val title: String,
+        val isPinnedSection: Boolean,
+        val eventRows: List<Event>,
+    ) : IRow
+
     data class Event(val eventData: EventData, val isPinned: Boolean, val notified: Notified) : IRow
 }
 
@@ -41,38 +47,31 @@ internal enum class Notified {
 }
 
 /** All events keyed for O(1) lookup while building rows. */
-private val eventsByKey: Map<EventKey, EventData> = events.associateBy { it.key }
-
 private const val PINNED_HEADER_TITLE = "Pinned"
-private const val OTHERS_HEADER_TITLE = "Others"
 
 /** How long to wait after the last edit before persisting order/pin changes. */
 private const val COMMIT_DEBOUNCE_MS = 300L
 
 internal val GRID_ITEM_BG_COLOR
     @Composable
-    get() = MaterialTheme.colorScheme.surfaceContainer
+    get() = MaterialTheme.colorScheme.background.copy(0.8f)
 
-internal val GRID_ITEM_TOP_PADDING = 16.dp
 internal val Grid_ITEM_PADDING = 4.dp
 
 /**
- * Owns every piece of interactive state for the Home screen: event order, pinned
- * events, reorder mode, and which row's context menu (if any) is open.
+ * Owns every piece of interactive state for the Home screen: category order, pinned
+ * events,  and which row's context menu (if any) is open.
  */
 @Stable
 internal class HomeScreenState(
-    initialOrder: List<EventKey>,
+    initialCategoryOrder: List<EventCategory>,
     initialPinned: List<EventKey>,
     private val notificationsEnabled: State<Boolean>,
     private val notifiedStatusFor: (key: EventKey, notificationsEnabled: Boolean) -> Notified,
     private val hapticFeedback: HapticFeedback,
 ) {
-    val orderedKeys = initialOrder.toMutableStateList()
+    val orderedCategories = initialCategoryOrder.toMutableStateList()
     val pinnedKeys = initialPinned.toMutableStateList()
-
-    var reorderMode by mutableStateOf(false)
-        private set
 
     /** Key of the event whose context menu is currently open, if any. */
     var selectedEventKey by mutableStateOf<EventKey?>(null)
@@ -81,50 +80,55 @@ internal class HomeScreenState(
     var eventDetailsToShow by mutableStateOf<EventData?>(null)
         private set
 
-    val rows: State<List<IRow>> = derivedStateOf {
+    val rows: State<List<IRow.Section>> = derivedStateOf {
         val pinnedSet = pinnedKeys.toSet()
         val enabled = notificationsEnabled.value
 
         buildList {
-            val pinned = orderedKeys.filter { it in pinnedSet }.mapNotNull(eventsByKey::get)
-            val others = orderedKeys.filterNot { it in pinnedSet }.mapNotNull(eventsByKey::get)
+            val pinned = events.filter { it.key in pinnedSet }
+            if (pinned.isNotEmpty()) addSection(
+                PINNED_HEADER_TITLE,
+                "pinned",
+                pinned,
+                true,
+                enabled
+            )
 
-            if (pinned.isNotEmpty()) {
-                add(IRow.Header(PINNED_HEADER_TITLE))
-                pinned.forEach {
-                    add(
-                        IRow.Event(
-                            it,
-                            isPinned = true,
-                            notifiedStatusFor(it.key, enabled)
-                        )
-                    )
-                }
-            }
-            if (others.isNotEmpty()) {
-                add(IRow.Header(OTHERS_HEADER_TITLE))
-                others.forEach {
-                    add(
-                        IRow.Event(
-                            it,
-                            isPinned = false,
-                            notifiedStatusFor(it.key, enabled)
-                        )
-                    )
+            orderedCategories.forEach { category ->
+                val categoryEvents = events.filter { it.category == category }
+                if (categoryEvents.isNotEmpty()) {
+                    addSection(category.name, category, categoryEvents, false, enabled)
                 }
             }
         }
     }
 
-    val firstEventKey: State<EventKey?> = derivedStateOf {
-        rows.value.filterIsInstance<IRow.Event>().firstOrNull()?.eventData?.key
+    private fun MutableList<IRow.Section>.addSection(
+        title: String,
+        key: Any,
+        sectionEvents: List<EventData>,
+        isPinnedSection: Boolean,
+        notificationsEnabled: Boolean,
+    ) {
+        add(
+            IRow.Section(
+                key = key,
+                title = title,
+                isPinnedSection = isPinnedSection,
+                eventRows = sectionEvents.map {
+                    IRow.Event(
+                        it,
+                        isPinned = it.key in pinnedKeys,
+                        notifiedStatusFor(it.key, notificationsEnabled)
+                    )
+                }
+            )
+        )
     }
 
-    fun toggleReorderMode() {
-        reorderMode = !reorderMode
-
-        // if for some rare reason, both context menu and reorder is active, disable context menu
-        if (reorderMode) selectedEventKey = null
+    val firstEventKey: State<EventKey?> = derivedStateOf {
+        rows.value.filterIsInstance<IRow.Section>().firstOrNull()
+            ?.eventRows?.firstOrNull()?.eventData?.key
     }
 
     fun togglePin(key: EventKey) {
@@ -148,23 +152,16 @@ internal class HomeScreenState(
         eventDetailsToShow = null
     }
 
-    /** Invoked by the reorderable grid while the user drags a row to a new spot. */
+    /** Invoked by the reorderable grid while the user drags a category card. */
     fun onMove(fromKey: Any?, toKey: Any?) {
-        val from = fromKey as? EventKey ?: return
-        val to = toKey as? EventKey ?: return
+        val from = fromKey as? EventCategory ?: return
+        val to = toKey as? EventCategory ?: return
         if (from == to) return
 
-        // Dragging a row across the Pinned/Others boundary re-pins it to match.
-        val fromPinned = from in pinnedKeys
-        val toPinned = to in pinnedKeys
-        if (fromPinned != toPinned) {
-            if (toPinned) pinnedKeys.add(from) else pinnedKeys.remove(from)
-        }
-
-        val fromIndex = orderedKeys.indexOfKey(from)
-        val toIndex = orderedKeys.indexOfKey(to)
+        val fromIndex = orderedCategories.indexOf(from)
+        val toIndex = orderedCategories.indexOf(to)
         if (fromIndex != -1 && toIndex != -1) {
-            orderedKeys.add(toIndex, orderedKeys.removeAt(fromIndex))
+            orderedCategories.add(toIndex, orderedCategories.removeAt(fromIndex))
         }
 
         hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
@@ -198,7 +195,7 @@ internal fun rememberHomeScreenState(): HomeScreenState {
     val state = remember(viewModel) {
         val initial = settingsState.value
         HomeScreenState(
-            initialOrder = initial.eventOrder,
+            initialCategoryOrder = initial.categoryOrder,
             initialPinned = initial.pinnedEvents,
             notificationsEnabled = notificationsEnabled,
             notifiedStatusFor = notifiedStatusFor,
@@ -209,11 +206,11 @@ internal fun rememberHomeScreenState(): HomeScreenState {
     // Debounce writes back to the view model so a fast drag or a burst of pin toggles
     // produces one persisted update instead of one write per intermediate step.
     LaunchedEffect(state, viewModel) {
-        snapshotFlow { state.orderedKeys.toList() to state.pinnedKeys.toList() }
+        snapshotFlow { state.orderedCategories.toList() to state.pinnedKeys.toList() }
             .drop(1) // first emission is just the seeded initial state, nothing changed yet
             .debounce(timeoutMillis = COMMIT_DEBOUNCE_MS)
-            .collect { (order, pinned) ->
-                viewModel.setEventOrder(order)
+            .collect { (categoryOrder, pinned) ->
+                viewModel.setCategoryOrder(categoryOrder)
                 viewModel.setPinnedEvents(pinned)
             }
     }

@@ -1,85 +1,102 @@
 package com.imnaiyar.skytimes.feature.home.skytimes
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
 import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
-import org.jetbrains.compose.resources.painterResource
+import com.imnaiyar.skytimes.core.ui.Card
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.close
+import com.imnaiyar.skytimes.feature.home.generated.resources.drag_indicator
 import com.imnaiyar.skytimes.feature.home.generated.resources.list_arrow
+import org.jetbrains.compose.resources.painterResource
+import sh.calvin.reorderable.ReorderableCollectionItemScope
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.ReorderableLazyStaggeredGridState
 
-/**
- * Header for categorized events, for example, "Pinned", "Others", etc
- */
 @Composable
-fun EventCategoryHeader(
-    reorderMode: Boolean,
+internal fun LazyStaggeredGridItemScope.EventCategoryCard(
+    section: IRow.Section,
+    reorderableLazyGridState: ReorderableLazyStaggeredGridState,
     dimmed: Boolean,
     tutorialTargetsEnabled: Boolean,
-    headerTitle: String,
-    index: Int = 0,
-    onToggleReorderMode: () -> Unit,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    eventContent: @Composable (IRow.Event) -> Unit,
 ) {
-    val alpha by animateFloatAsState(
-        targetValue = if (dimmed) 0.35f else 1f,
-        animationSpec = tween(durationMillis = 300),
-    )
-    val topShape = if (index == 0) GRID_ITEM_TOP_PADDING else Grid_ITEM_PADDING
+    val card: @Composable (showDragHandle: Boolean, dragHandle: @Composable () -> Unit) -> Unit =
+        { showDragHandle, dragHandle ->
+            Card(
+                modifier = Modifier.fillMaxWidth()
+                    .graphicsLayer { alpha = if (dimmed) .35f else 1f }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (showDragHandle) dragHandle()
 
-    Row(
-        modifier = Modifier.fillMaxWidth().background(
-            GRID_ITEM_BG_COLOR,
-            RoundedCornerShape(
-                topStart = topShape,
-                topEnd = topShape,
-                bottomEnd = Grid_ITEM_PADDING,
-                bottomStart = Grid_ITEM_PADDING
-            )
-        ).padding(4.dp).graphicsLayer { this.alpha = alpha },
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        SectionHeader(headerTitle)
+                        Text(
+                            text = "${section.title} (${section.eventRows.size})",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
 
-        if (index == 0) {
-            TutorialTarget(
-                id = AppTutorialStep.HomeReorder.targetId,
-                enabled = tutorialTargetsEnabled
-            ) {
-                IconButton(onClick = onToggleReorderMode) {
-                    Icon(
-                        painter = painterResource(if (reorderMode) Res.drawable.close else Res.drawable.list_arrow),
-                        contentDescription = "Reorder Mode Button",
-                    )
+                    IconButton(onClick = { onExpandedChange(!isExpanded) }) {
+                        Icon(
+                            painter = painterResource(Res.drawable.list_arrow),
+                            contentDescription = if (isExpanded) "Collapse ${section.title}" else "Expand ${section.title}",
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = if (isExpanded) 90f else 0f
+                            },
+                        )
+                    }
+                }
+                AnimatedVisibility(visible = isExpanded) {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        for (event in section.eventRows) eventContent(event)
+                    }
                 }
             }
+        }
+
+    if (section.isPinnedSection) {
+        card(false) {}
+    } else {
+        ReorderableItem(reorderableLazyGridState, key = section.key) {
+            card(true) { CategoryDragHandle() }
         }
     }
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 4.dp),
-    )
+private fun ReorderableCollectionItemScope.CategoryDragHandle() {
+    IconButton(modifier = Modifier.draggableHandle(), onClick = {}) {
+        Icon(
+            painterResource(Res.drawable.drag_indicator),
+            "Drag to reorder",
+            Modifier.size(18.dp)
+        )
+    }
 }

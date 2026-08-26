@@ -2,6 +2,7 @@ package com.imnaiyar.skytimes.feature.settings
 
 import com.imnaiyar.skytimes.core.common.StartupTask
 import com.imnaiyar.skytimes.core.domain.EventKey
+import com.imnaiyar.skytimes.core.domain.EventCategory
 import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.onboarding.TutorialProgressRepository
 import com.imnaiyar.skytimes.core.ui.theme.DefaultThemeColor
@@ -19,7 +20,7 @@ data class AppSettings(
     val use24HourClock: Boolean = true,
     val notificationsEnabled: Boolean = false,
     val clockAnimation: Boolean = true,
-    val eventOrder: List<EventKey> = EventKey.entries,
+    val categoryOrder: List<EventCategory> = EventCategory.entries,
     val themeContrast: Contrast = Contrast.Default,
     val pinnedEvents: List<EventKey> = emptyList(),
     val themeColor: Int = DefaultThemeColor.toInt(),
@@ -69,8 +70,8 @@ class SettingsRepository(
         update { current -> current.copy(pinnedEvents = events) }
     }
 
-    suspend fun setEventOrder(order: List<EventKey>) {
-        update { current -> current.copy(eventOrder = order) }
+    suspend fun setCategoryOrder(order: List<EventCategory>) {
+        update { current -> current.copy(categoryOrder = order) }
     }
 
     suspend fun setHomeScreen(screen: AppTab) {
@@ -132,18 +133,14 @@ class SettingsRepository(
                 ?.map(EventKey::valueOf)
                 ?: emptyList(),
 
-            eventOrder = storage.getString(
-                SettingsKeys.EventOrder,
-                defaults.eventOrder.joinToString(
-                    "|"
-                )
+            categoryOrder = storage.getString(
+                SettingsKeys.CategoryOrder,
+                defaults.categoryOrder.joinToString("|") { it.name }
             )
                 .split("|")
-                .map(EventKey::valueOf)
+                .mapNotNull { value -> EventCategory.entries.firstOrNull { it.name == value } }
                 .let { ordered ->
-                    // this is bcz if new keys are introduced, it will not be included in the list
-                    // so just append them at the end here
-                    ordered + EventKey.entries.filterNot { it in ordered }
+                    ordered + EventCategory.entries.filterNot { it in ordered }
                 },
 
             homeScreen = storage.getStringOrNull(SettingsKeys.HomeScreen)
@@ -173,8 +170,8 @@ class SettingsRepository(
         if (current.clockAnimation != next.clockAnimation) {
             storage.putBoolean(SettingsKeys.ClockAnimation, next.clockAnimation)
         }
-        if (current.eventOrder != next.eventOrder) {
-            storage.putString(SettingsKeys.EventOrder, next.eventOrder.joinToString("|"))
+        if (current.categoryOrder != next.categoryOrder) {
+            storage.putString(SettingsKeys.CategoryOrder, next.categoryOrder.joinToString("|") { it.name })
         }
         if (current.themeColor != next.themeColor) {
             storage.putInt(SettingsKeys.ThemeColor, next.themeColor)
@@ -215,11 +212,10 @@ private object SettingsKeys {
     const val Use24HourClock = "use_24_hour_clock"
     const val NotificationsEnabled = "notifications_enabled"
     const val ClockAnimation = "clock_animation"
-    const val EventOrder = "event_order"
+    const val CategoryOrder = "category_order"
     const val PinnedEvents = "pinned_events"
     const val ThemeColor = "theme_color"
     const val ThemeContrast = "theme_contrast"
     const val HomeScreen = "home_screen"
     const val TutorialCompletedSteps = "tutorial_completed_steps"
 }
-

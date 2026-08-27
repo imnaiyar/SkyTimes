@@ -62,8 +62,6 @@ fun SkytimesScreen(
                     section = section,
                     reorderableLazyGridState = reorderableLazyGridState,
                     dimmed = state.selectedEventKey != null,
-                    showReorderToggle = rows.firstOrNull()?.key == section.key,
-                    tutorialTargetsEnabled = tutorialTargetsEnabled,
                     isExpanded = expandedSections[section.key] ?: true,
                     onExpandedChange = { expandedSections[section.key] = it },
                 ) { row ->

@@ -17,11 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
-import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
+import androidx.compose.ui.unit.sp
 import com.imnaiyar.skytimes.core.ui.Card
+import com.imnaiyar.skytimes.core.ui.theme.titleTiny
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
-import com.imnaiyar.skytimes.feature.home.generated.resources.close
 import com.imnaiyar.skytimes.feature.home.generated.resources.drag_indicator
 import com.imnaiyar.skytimes.feature.home.generated.resources.list_arrow
 import org.jetbrains.compose.resources.painterResource
@@ -53,7 +52,7 @@ internal fun LazyStaggeredGridItemScope.EventCategoryCard(
 
                         Text(
                             text = "${section.title} (${section.eventRows.size})",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.titleTiny(1.sp),
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }
@@ -70,9 +69,9 @@ internal fun LazyStaggeredGridItemScope.EventCategoryCard(
                 }
                 AnimatedVisibility(visible = isExpanded) {
                     FlowRow(
-                        modifier = Modifier.fillMaxWidth().padding(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(2.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(1.dp),
+                        verticalArrangement = Arrangement.spacedBy(1.dp),
                     ) {
                         for (event in section.eventRows) eventContent(event)
                     }

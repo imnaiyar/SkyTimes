@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ProgressIndicatorDefaults
@@ -29,9 +28,7 @@ import com.imnaiyar.skytimes.core.domain.Times
 import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
 import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.core.ui.contextClickable
-import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.materialkolor.ktx.blend
-import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Instant
 
 @Composable
@@ -52,7 +49,7 @@ internal fun EventGridItem(
     val eventDetails = remember(row.eventData, now) {
         EventTimeUtils.getEventDetails(row.eventData, now, includeAllOccurrences = false)
     }
-    
+
     val isActive = eventDetails.status is Times.Active
 
     val rowScale by animateFloatAsState(

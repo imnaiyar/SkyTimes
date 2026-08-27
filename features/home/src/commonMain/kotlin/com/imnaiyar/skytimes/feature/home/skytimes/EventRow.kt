@@ -1,11 +1,8 @@
 package com.imnaiyar.skytimes.feature.home.skytimes
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.common.TimeFormatter
 import com.imnaiyar.skytimes.core.domain.EventDetails
@@ -67,13 +65,16 @@ internal fun EventRow(
             .fillMaxWidth()
             .padding(all = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column(horizontalAlignment = Alignment.Start) {
+        Column(
+            modifier = Modifier.weight(1f),
+            horizontalAlignment = Alignment.Start,
+        ) {
             EventNameLabel(
                 eventDetails = eventDetails,
                 isPinned = row.isPinned,
                 notified = row.notified,
+                modifier = Modifier.fillMaxWidth(),
             )
 
             AnimatedVisibility(isActive) {
@@ -81,29 +82,42 @@ internal fun EventRow(
                     text = "Active (Next at ${timeFormatter.format(eventDetails.nextOccurrence)})",
                     style = MaterialTheme.typography.labelTiny,
                     color = success().copy(0.55f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
 
-           
-        Column(horizontalAlignment = Alignment.End) {
-                if (isActive) {
-                    Text(
-                        text = "Ends in",
-                        style = MaterialTheme.typography.labelTiny
-                    )
-                }
-                AnimatedTimer(
-                    time = countdown,
-                    size = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(start = 8.dp),
-                    direction = ClockDirection.DOWN,
-                )
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "At ${timeFormatter.format(nextAt)}",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            horizontalAlignment = Alignment.End,
+        ) {
+            if (isActive) {
                 Text(
-                    text = "At ${timeFormatter.format(nextAt)}",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelSmall,
-             )
+                    text = "Ends in",
+                    style = MaterialTheme.typography.labelTiny,
+                )
+            }
+
+            AnimatedTimer(
+                time = countdown,
+                size = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(start = 8.dp),
+                direction = ClockDirection.DOWN,
+            )
         }
     }
 }
@@ -115,32 +129,57 @@ private fun EventNameLabel(
     eventDetails: EventDetails,
     isPinned: Boolean = false,
     notified: Notified,
+    modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
-    style: TextStyle = MaterialTheme.typography.labelMedium,
+    style: TextStyle = MaterialTheme.typography.labelSmall,
 ) {
     val iconColor = MaterialTheme.colorScheme.primary
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = eventDetails.event.name, style = style, color = color)
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = eventDetails.event.name,
+            style = style,
+            color = color,
+            maxLines = 1,
+            modifier = Modifier
+                .weight(1f)
+                .basicMarquee(),
+        )
 
         AnimatedVisibility(visible = isPinned) {
             Tooltip("This event is pinned to the top") {
                 Icon(
                     painter = painterResource(Res.drawable.pin),
                     contentDescription = "Pinned",
-                    modifier = Modifier.rotate(30f).size(18.dp),
+                    modifier = Modifier
+                        .rotate(30f)
+                        .size(18.dp),
                     tint = iconColor,
                 )
             }
         }
 
         AnimatedVisibility(visible = notified != Notified.No) {
-            Tooltip(text = "Reminders enabled for this event" + if (notified == Notified.YesButGlobalDisabled) " (notifications are globally disabled)" else "") {
+            Tooltip(
+                text = "Reminders enabled for this event" +
+                        if (notified == Notified.YesButGlobalDisabled) {
+                            " (notifications are globally disabled)"
+                        } else {
+                            ""
+                        }
+            ) {
                 Icon(
                     painter = painterResource(Res.drawable.notifications),
                     contentDescription = "Reminder set",
                     modifier = Modifier.size(12.dp),
-                    tint = if (notified == Notified.Yes) iconColor else iconColor.copy(alpha = 0.5f),
+                    tint = if (notified == Notified.Yes) {
+                        iconColor
+                    } else {
+                        iconColor.copy(alpha = 0.5f)
+                    },
                 )
             }
         }

@@ -1,6 +1,5 @@
 package com.imnaiyar.skytimes.feature.home.skytimes
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,13 +7,11 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.data.LocalClockRepository
 import com.imnaiyar.skytimes.core.domain.EventTimeUtils
 import com.imnaiyar.skytimes.core.ui.Grid
@@ -76,7 +73,7 @@ fun SkytimesScreen(
                         onClick = { state.showEventDetails(row.eventData) },
                         onDismissMenu = state::closeContextMenu,
                         onPinToggle = { state.togglePin(row.eventData.key) },
-                        onReminderClick = { reminderFlow.requestReminderEditor(row.eventData) },
+                        onReminderClick = { reminderFlow.requestReminderEditor(row.eventData) }
                     )
                 }
 

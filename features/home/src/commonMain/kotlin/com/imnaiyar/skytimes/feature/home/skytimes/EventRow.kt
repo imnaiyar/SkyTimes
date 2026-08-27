@@ -45,7 +45,6 @@ fun success(): Color {
 @Composable
 internal fun EventRow(
     row: IRow.Event,
-    reorderMode: Boolean,
     eventDetails: EventDetails,
     isActive: Boolean,
     timeFormatter: TimeFormatter,
@@ -86,12 +85,8 @@ internal fun EventRow(
             }
         }
 
-        AnimatedVisibility(
-            visible = !reorderMode,
-            enter = expandHorizontally(expandFrom = Alignment.End) + fadeIn(),
-            exit = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut(),
-        ) {
-            Column(horizontalAlignment = Alignment.End) {
+           
+        Column(horizontalAlignment = Alignment.End) {
                 if (isActive) {
                     Text(
                         text = "Ends in",
@@ -108,8 +103,7 @@ internal fun EventRow(
                     text = "At ${timeFormatter.format(nextAt)}",
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelSmall,
-                )
-            }
+             )
         }
     }
 }

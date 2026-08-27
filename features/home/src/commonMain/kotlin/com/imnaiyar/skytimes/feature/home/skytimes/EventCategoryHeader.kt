@@ -34,7 +34,6 @@ internal fun LazyStaggeredGridItemScope.EventCategoryCard(
     section: IRow.Section,
     reorderableLazyGridState: ReorderableLazyStaggeredGridState,
     dimmed: Boolean,
-    tutorialTargetsEnabled: Boolean,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     eventContent: @Composable (IRow.Event) -> Unit,

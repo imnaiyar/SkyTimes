@@ -7,7 +7,6 @@ enum class AppTutorialStep(
     override val targetId: String,
     val screen: AppTab
 ) : TutorialStep {
-    HomeReorder("home_reorder", AppTab.SkyTimes),
     HomeEventContextMenu("home_event_context_menu", AppTab.SkyTimes),
     QuestPullToRefresh("quest_pull_to_refresh", AppTab.Quests),
     ShardCountdown("shard_countdown", AppTab.Shards),

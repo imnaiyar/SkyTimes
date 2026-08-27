@@ -14,13 +14,6 @@ val FirstLaunchTutorialFlow = TutorialFlow(
     id = FirstLaunchTutorialFlowId,
     steps = listOf(
         TutorialDefinition(
-            step = AppTutorialStep.HomeReorder,
-            title = "Reorder events",
-            description = "Tap this button to enter reorder mode, then drag events into the order you prefer.",
-            preferredPlacement = TooltipPlacement.Below,
-            spotlightPadding = 8.dp
-        ),
-        TutorialDefinition(
             step = AppTutorialStep.HomeEventContextMenu,
             title = "More event actions",
             description = "Long-press an event to open its context menu.",

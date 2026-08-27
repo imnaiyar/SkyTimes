@@ -73,10 +73,6 @@ internal class HomeScreenState(
     val orderedCategories = initialCategoryOrder.toMutableStateList()
     val pinnedKeys = initialPinned.toMutableStateList()
 
-    /** Key of the event whose context menu is currently open, if any. */
-    var selectedEventKey by mutableStateOf<EventKey?>(null)
-        private set
-
     var eventDetailsToShow by mutableStateOf<EventData?>(null)
         private set
 
@@ -133,15 +129,6 @@ internal class HomeScreenState(
 
     fun togglePin(key: EventKey) {
         if (!pinnedKeys.remove(key)) pinnedKeys.add(key)
-    }
-
-    fun openContextMenu(key: EventKey) {
-        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-        selectedEventKey = key
-    }
-
-    fun closeContextMenu() {
-        selectedEventKey = null
     }
 
     fun showEventDetails(eventData: EventData) {

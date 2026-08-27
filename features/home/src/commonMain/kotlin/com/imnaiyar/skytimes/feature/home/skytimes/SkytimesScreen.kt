@@ -58,22 +58,17 @@ fun SkytimesScreen(
                 EventCategoryCard(
                     section = section,
                     reorderableLazyGridState = reorderableLazyGridState,
-                    dimmed = state.selectedEventKey != null,
                     isExpanded = expandedSections[section.key] ?: true,
                     onExpandedChange = { expandedSections[section.key] = it },
                 ) { row ->
                     EventGridItem(
                         row = row,
-                        isMenuOpen = state.selectedEventKey == row.eventData.key,
-                        isDimmed = state.selectedEventKey != null && state.selectedEventKey != row.eventData.key,
                         isTutorialTarget = tutorialTargetsEnabled && row.eventData.key == firstEventKey,
                         timeFormatter = timeFormatter,
                         nowState = nowState,
-                        onLongClick = { state.openContextMenu(row.eventData.key) },
                         onClick = { state.showEventDetails(row.eventData) },
-                        onDismissMenu = state::closeContextMenu,
                         onPinToggle = { state.togglePin(row.eventData.key) },
-                        onReminderClick = { reminderFlow.requestReminderEditor(row.eventData) }
+                        onReminderToggle = { reminderFlow.requestReminderEditor(row.eventData) }
                     )
                 }
 

@@ -1,6 +1,5 @@
 package com.imnaiyar.skytimes
 
-import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
 import com.imnaiyar.skytimes.core.onboarding.SwipeDirection
 import com.imnaiyar.skytimes.core.onboarding.TooltipPlacement
@@ -13,13 +12,6 @@ const val FirstLaunchTutorialFlowId = "first_launch"
 val FirstLaunchTutorialFlow = TutorialFlow(
     id = FirstLaunchTutorialFlowId,
     steps = listOf(
-        TutorialDefinition(
-            step = AppTutorialStep.HomeEventContextMenu,
-            title = "More event actions",
-            description = "Long-press an event to open its context menu.",
-            preferredPlacement = TooltipPlacement.Below,
-            spotlightPadding = 8.dp
-        ),
         TutorialDefinition(
             step = AppTutorialStep.QuestPullToRefresh,
             title = "Refresh quests",

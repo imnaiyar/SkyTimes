@@ -32,7 +32,6 @@ import sh.calvin.reorderable.ReorderableLazyStaggeredGridState
 internal fun LazyStaggeredGridItemScope.EventCategoryCard(
     section: IRow.Section,
     reorderableLazyGridState: ReorderableLazyStaggeredGridState,
-    dimmed: Boolean,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     eventContent: @Composable (IRow.Event) -> Unit,
@@ -41,7 +40,7 @@ internal fun LazyStaggeredGridItemScope.EventCategoryCard(
         { showDragHandle, dragHandle ->
             Card(
                 modifier = Modifier.fillMaxWidth()
-                    .graphicsLayer { alpha = if (dimmed) .35f else 1f }) {
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,

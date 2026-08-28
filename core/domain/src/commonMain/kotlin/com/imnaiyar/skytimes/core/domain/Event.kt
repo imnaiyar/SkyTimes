@@ -6,12 +6,11 @@ import kotlinx.serialization.Serializable
 data class EventData(
     val key: EventKey,
     val name: String,
+    val category: EventCategory,
     val previewUrl: String? = null,
-    val index: Int,
-    val offset: Int,
+    val offset: Int = 0,
     val duration: Int? = null,
     val interval: Int? = null,
-    val displayAllTimes: Boolean = false,
     val occursOn: OccursOn? = null,
     val infographic: Infographic? = null,
 )
@@ -42,15 +41,20 @@ enum class EventKey {
     FAIRY_RING,
     BROOK_RAINBOW,
     WORKSHOP_RESET,
-    DYE_EXCHANGE_SHOP
+    DYE_EXCHANGE_SHOP,
+    TWO_EMBERS_1,
+    TWO_EMBERS_2,
+    TWO_EMBERS_3,
+    TWO_EMBERS_4
 }
 
 // TODO
 enum class EventCategory {
-    Pinned,
     Wax,
     Resets,
-    Activity
+    Activity,
+    Concert,
+    Others
 }
 
 private fun hours(value: Int) = value * 60
@@ -59,12 +63,10 @@ val events = listOf(
     EventData(
         key = EventKey.GEYSER,
         name = "Geyser",
+        category = EventCategory.Wax,
         previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/b/bd/Wax-prairie-sanctuary-days-of-nature-2021.jpg",
-        index = 0,
-        offset = 0,
         duration = 15,
         interval = hours(2),
-        displayAllTimes = true,
         infographic = Infographic(
             by = "Clement",
             image = "$SkyHelperCDN/infographics/geyser.location.png"
@@ -73,12 +75,11 @@ val events = listOf(
     EventData(
         key = EventKey.GRANDMA,
         name = "Grandma",
+        category = EventCategory.Wax,
         previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/e/ea/Wax-social-light-grandma-dinner.jpg",
-        index = 1,
         offset = 30,
         duration = 15,
         interval = hours(2),
-        displayAllTimes = true,
         infographic = Infographic(
             by = "Clement",
             image = "$SkyHelperCDN/infographics/grandma.location.png"
@@ -87,12 +88,11 @@ val events = listOf(
     EventData(
         key = EventKey.TURTLE,
         name = "Turtle",
+        category = EventCategory.Wax,
         previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/1/1d/Wax-social-light-prairie-sanctuary-turtle.png",
-        index = 2,
         offset = 50,
         duration = 10,
         interval = hours(2),
-        displayAllTimes = true,
         infographic = Infographic(
             by = "Velvet",
             image = "$SkyHelperCDN/infographics/turtle.location.png"
@@ -101,16 +101,14 @@ val events = listOf(
     EventData(
         key = EventKey.DAILY_RESET,
         name = "Daily Reset",
-        index = 3,
-        offset = 0,
+        category = EventCategory.Resets,
         interval = hours(24)
     ),
     EventData(
         key = EventKey.EDEN,
         previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/e/e5/Eden_2.png",
+        category = EventCategory.Resets,
         name = "Eden/Weekly Reset",
-        index = 4,
-        offset = 0,
         occursOn = OccursOn(
             weekDays = listOf(7)
         )
@@ -118,12 +116,11 @@ val events = listOf(
     EventData(
         key = EventKey.AURORA,
         name = "Aurora's Concert",
+        category = EventCategory.Concert,
         previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/e/e8/Aurora-Homecoming-2025-promotion-The_Queen_Is_Returning_to_the_Realms.png",
-        index = 5,
         offset = 0,
         duration = 50,
         interval = hours(2),
-        displayAllTimes = true,
         infographic = Infographic(
             by = "Clement",
             image = "$SkyHelperCDN/infographics/aurora.location.png"
@@ -132,77 +129,94 @@ val events = listOf(
     EventData(
         key = EventKey.DREAM_SKATER,
         name = "Dream Skater",
+        category = EventCategory.Wax,
         previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/a/a4/Wax-social-light-valley-village-dreams-skater.png",
-        index = 6,
         offset = hours(1),
         duration = 15,
         interval = hours(2),
-        displayAllTimes = true,
         occursOn = OccursOn(
             weekDays = listOf(5, 6, 7)
         )
     ),
     EventData(
         key = EventKey.PASSAGE_QUESTS,
+        category = EventCategory.Wax,
         name = "Passage Quests",
         previewUrl = "https://static.wikia.nocookie.net/sky-children-of-the-light/images/d/dd/Wax-forest-brook-passage-reliance.png",
-        index = 7,
-        offset = 0,
         interval = 15,
-        displayAllTimes = true
     ),
     EventData(
         key = EventKey.NEST_SUNSET,
+        category = EventCategory.Activity,
         name = "Nest Sunset",
-        index = 8,
         offset = 40,
         interval = hours(1),
-        displayAllTimes = true
     ),
     EventData(
         key = EventKey.FIREWORKS_FESTIVAL,
+        category = EventCategory.Activity,
         name = "Fireworks Festival",
-        index = 9,
-        offset = 0,
         duration = 10,
         interval = hours(4),
-        displayAllTimes = true,
         occursOn = OccursOn(
             dayOfTheMonth = 1
         )
     ),
     EventData(
         key = EventKey.FAIRY_RING,
+        category = EventCategory.Others,
         name = "Fairy Ring",
-        index = 11,
         offset = 50,
         interval = 60,
-        displayAllTimes = true
     ),
     EventData(
         key = EventKey.BROOK_RAINBOW,
+        category = EventCategory.Others,
         name = "Forest Brook Rainbow",
-        index = 12,
         offset = hours(5),
         interval = hours(12),
-        displayAllTimes = true
     ),
     EventData(
         key = EventKey.WORKSHOP_RESET,
+        category = EventCategory.Resets,
         name = "Nesting Workshop Rotation",
-        index = 13,
         occursOn = OccursOn(
             weekDays = listOf(5)
         ),
-        offset = 0
     ),
     EventData(
         key = EventKey.DYE_EXCHANGE_SHOP,
+        category = EventCategory.Resets,
         name = "Dye Exchange Shop",
-        index = 13,
         occursOn = OccursOn(
             weekDays = listOf(5)
         ),
-        offset = 0
-    )
+    ),
+    EventData(
+        key = EventKey.TWO_EMBERS_1,
+        category = EventCategory.Concert,
+        name = "Two Embers: Chapter 1",
+        interval = 20,
+    ),
+    EventData(
+        key = EventKey.TWO_EMBERS_2,
+        category = EventCategory.Concert,
+        name = "Two Embers: Chapter 2",
+        interval = 20,
+        offset = 5
+    ),
+    EventData(
+        key = EventKey.TWO_EMBERS_3,
+        category = EventCategory.Concert,
+        name = "Two Embers: Chapter 3",
+        interval = 20,
+        offset = 10
+    ),
+    EventData(
+        key = EventKey.TWO_EMBERS_4,
+        category = EventCategory.Concert,
+        name = "Two Embers: Chapter 4",
+        interval = 20,
+        offset = 15
+    ),
 )

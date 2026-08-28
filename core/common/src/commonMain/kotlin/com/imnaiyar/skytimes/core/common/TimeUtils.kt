@@ -31,12 +31,26 @@ open class TimeUtils {
         amPmMarker("AM", "PM")
     }
 
+    private val hour12FormatNoSeconds = LocalTime.Format {
+        amPmHour()
+        char(':')
+        minute()
+        char(' ')
+        amPmMarker("AM", "PM")
+    }
+
     private val hour24Format = LocalTime.Format {
         hour()
         char(':')
         minute()
         char(':')
         second()
+    }
+
+    private val hour24FormatNoSeconds = LocalTime.Format {
+        hour()
+        char(':')
+        minute()
     }
 
     /**
@@ -90,14 +104,17 @@ open class TimeUtils {
 
     /**
      * Formats the given LocalTime into a string representation based on the specified clock format.
-     * @param time The LocalTime to be formatted.
-     * @param clockFormat The desired clock format (12-hour or 24-hour). Defaults to 24-hour format.
+     * @param timeValue The TimeValue to be formatted.
+     * @param use24HourClock Whether to use 24-hour clock format.
+     * @param zone The time zone to use.
+     * @param withSeconds Whether to include seconds in the formatted string.
      * @return A string representation of the time in the specified format.
      */
     open fun formatTime(
         timeValue: TimeValue,
         use24HourClock: Boolean,
-        zone: TimeZone = LocalTimeZone
+        zone: TimeZone = LocalTimeZone,
+        withSeconds: Boolean = true
     ): String {
         val time = when (timeValue) {
             is TimeValue.localTime -> timeValue.time
@@ -106,8 +123,8 @@ open class TimeUtils {
         val clockFormat = if (use24HourClock) ClockFormat.HOUR_24 else ClockFormat.HOUR_12
 
         return when (clockFormat) {
-            ClockFormat.HOUR_12 -> hour12Format.format(time)
-            ClockFormat.HOUR_24 -> hour24Format.format(time)
+            ClockFormat.HOUR_12 -> if (withSeconds) hour12Format.format(time) else hour12FormatNoSeconds.format(time)
+            ClockFormat.HOUR_24 -> if (withSeconds) hour24Format.format(time) else hour24FormatNoSeconds.format(time)
         }
     }
 
@@ -118,14 +135,26 @@ class TimeFormatter(
     private val use24HourClock: Boolean,
 ) : TimeUtils() {
 
-    fun formatTime(time: TimeValue, zone: TimeZone = LocalTimeZone): String =
-        super.formatTime(time, use24HourClock, zone)
+    fun formatTime(
+        time: TimeValue,
+        zone: TimeZone = LocalTimeZone,
+        withSeconds: Boolean = true
+    ): String =
+        super.formatTime(time, use24HourClock, zone, withSeconds)
 
-    fun format(instant: Instant, zone: TimeZone = LocalTimeZone): String =
-        formatTime(TimeValue.instant(instant), zone)
+    fun format(
+        instant: Instant,
+        zone: TimeZone = LocalTimeZone,
+        withSeconds: Boolean = true
+    ): String =
+        formatTime(TimeValue.instant(instant), zone, withSeconds)
 
-    fun format(localTime: LocalTime, zone: TimeZone = LocalTimeZone): String =
-        formatTime(TimeValue.localTime(localTime), zone)
+    fun format(
+        localTime: LocalTime,
+        zone: TimeZone = LocalTimeZone,
+        withSeconds: Boolean = true
+    ): String =
+        formatTime(TimeValue.localTime(localTime), zone, withSeconds)
 }
 
 private fun DateTimeFormatBuilder.WithDate.dayMonthYear() {

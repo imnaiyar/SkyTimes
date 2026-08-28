@@ -1,6 +1,5 @@
 package com.imnaiyar.skytimes
 
-import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
 import com.imnaiyar.skytimes.core.onboarding.SwipeDirection
 import com.imnaiyar.skytimes.core.onboarding.TooltipPlacement
@@ -14,18 +13,17 @@ val FirstLaunchTutorialFlow = TutorialFlow(
     id = FirstLaunchTutorialFlowId,
     steps = listOf(
         TutorialDefinition(
-            step = AppTutorialStep.HomeReorder,
-            title = "Reorder events",
-            description = "Tap this button to enter reorder mode, then drag events into the order you prefer.",
+            step = AppTutorialStep.EventCategoryDragHandle,
+            title = "Reorder Categories",
+            description = "Long press and drag the category to reorder it.",
             preferredPlacement = TooltipPlacement.Below,
-            spotlightPadding = 8.dp
+            gestureHint = TutorialGestureHint.Swipe(SwipeDirection.Down, "Drag down to reorder")
         ),
         TutorialDefinition(
-            step = AppTutorialStep.HomeEventContextMenu,
-            title = "More event actions",
-            description = "Long-press an event to open its context menu.",
+            step = AppTutorialStep.EventToggles,
+            title = "Toggles",
+            description = "Click on the pin icon to pin an event to the top and notification icon to configure notifications for an event.",
             preferredPlacement = TooltipPlacement.Below,
-            spotlightPadding = 8.dp
         ),
         TutorialDefinition(
             step = AppTutorialStep.QuestPullToRefresh,

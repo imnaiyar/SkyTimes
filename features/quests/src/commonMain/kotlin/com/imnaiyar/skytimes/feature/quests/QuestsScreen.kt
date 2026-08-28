@@ -30,17 +30,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.imnaiyar.skytimes.core.common.isoDateFormat
+import com.imnaiyar.skytimes.core.domain.isTodayInGame
 import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
 import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.core.ui.Card
 import com.imnaiyar.skytimes.core.ui.Grid
 import com.imnaiyar.skytimes.core.ui.LoadingSpinner
 import com.imnaiyar.skytimes.core.ui.RemoteImage
-import com.imnaiyar.skytimes.core.common.isoDateFormat
-import com.imnaiyar.skytimes.core.domain.isTodayInGame
+import com.imnaiyar.skytimes.core.ui.theme.titleTiny
 import io.ktor.http.Url
 import kotlinx.datetime.format
 import kotlin.time.Instant
@@ -155,17 +158,19 @@ private fun QuestCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                color = if (showTitleFromQuest) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                style = if (showTitleFromQuest) MaterialTheme.typography.bodySmall
+                else MaterialTheme.typography.titleTiny(1.sp),
             )
 
             if (showTitleFromQuest && quest.title != title) {
                 Text(
                     text = quest.title,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.titleTiny(1.sp),
                 )
             }
 

@@ -1,6 +1,5 @@
 package com.imnaiyar.skytimes.feature.home
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +42,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.navigation.LocalTutorialManager
 import com.imnaiyar.skytimes.core.navigation.MainRoute
+import com.imnaiyar.skytimes.core.ui.theme.titleTiny
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.lightmend_lantern
 import com.imnaiyar.skytimes.feature.home.shards.ShardScreen
@@ -72,8 +72,6 @@ fun MainScreen(
         screens.size
     }
 
-
-    var showFab by remember { mutableStateOf(true) }
 
     val scope = rememberCoroutineScope()
     val hapticFeedback = LocalHapticFeedback.current
@@ -128,7 +126,7 @@ fun MainScreen(
                             )
                         },
                         label = {
-                            Text(screen.title)
+                            Text(screen.title, style = MaterialTheme.typography.titleTiny())
                         },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = MaterialTheme.colorScheme.primary,
@@ -140,23 +138,21 @@ fun MainScreen(
             }
         },
         floatingActionButton = {
-            AnimatedVisibility(showFab) {
-                ExtendedFloatingActionButton(
-                    onClick = onOpenVault,
-                    modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    expanded = bottomScroll.state.collapsedFraction < 0.5f,
-                    text = { Text("Vault Archive") },
-                    icon = {
-                        Image(
-                            painterResource(Res.drawable.lightmend_lantern),
-                            contentDescription = "Lightmending Lantern",
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
-                )
-            }
+            ExtendedFloatingActionButton(
+                onClick = onOpenVault,
+                modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                expanded = bottomScroll.state.collapsedFraction < 0.5f,
+                text = { Text("Vault Archive", style = MaterialTheme.typography.titleSmall) },
+                icon = {
+                    Image(
+                        painterResource(Res.drawable.lightmend_lantern),
+                        contentDescription = "Lightmending Lantern",
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+            )
         }
     ) {
         HorizontalPager(
@@ -194,7 +190,6 @@ fun MainScreen(
                 when (screens[page]) {
                     AppTab.SkyTimes -> SkytimesScreen(
                         modifier,
-                        setFabVisible = { value -> showFab = value },
                         fabPad,
                         tutorialTargetsEnabled
                     )

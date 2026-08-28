@@ -3,6 +3,7 @@ package com.imnaiyar.skytimes.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.imnaiyar.skytimes.core.domain.EventKey
+import com.imnaiyar.skytimes.core.domain.EventCategory
 import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.ui.theme.ThemeMode
 import com.materialkolor.Contrast
@@ -57,9 +58,9 @@ class SettingsViewModel(
         }
     }
 
-    fun setEventOrder(order: List<EventKey>) {
+    fun setCategoryOrder(order: List<EventCategory>) {
         viewModelScope.launch {
-            repository.setEventOrder(order)
+            repository.setCategoryOrder(order)
         }
     }
 }

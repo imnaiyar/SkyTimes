@@ -44,7 +44,7 @@ import com.imnaiyar.skytimes.core.ui.Tooltip
 import com.imnaiyar.skytimes.core.ui.animated.LiveIndicator
 import com.imnaiyar.skytimes.core.ui.generated.resources.Res
 import com.imnaiyar.skytimes.core.ui.generated.resources.open_in_browser
-import com.imnaiyar.skytimes.core.ui.rememberTimeFormatter
+import com.imnaiyar.skytimes.core.ui.theme.titleTiny
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Instant
@@ -124,7 +124,7 @@ fun ShardBottomSheet(
                 // music
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Shard Music: ")
+                        Text("Shard Music: ", style = MaterialTheme.typography.titleTiny())
                         Tooltip(
                             "Open this in Spotify",
                             tooltipPosition = TooltipAnchorPosition.Above,
@@ -163,11 +163,9 @@ private fun ShardTimeline(occurrence: ShardOccurrence, now: Instant) {
         "Shard Ends" to occurrence.shardEnd
     ).entries
 
-    val timeUtils = rememberTimeFormatter()
-
     Text(
         "Shard Timelines",
-        style = MaterialTheme.typography.bodyMedium,
+        style = MaterialTheme.typography.titleTiny(),
     )
 
     FlowRow() {

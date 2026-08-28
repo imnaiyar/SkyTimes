@@ -1,30 +1,29 @@
 package com.imnaiyar.skytimes.feature.home.skytimes
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.common.TimeFormatter
 import com.imnaiyar.skytimes.core.domain.EventDetails
 import com.imnaiyar.skytimes.core.domain.Times
-import com.imnaiyar.skytimes.core.ui.Tooltip
+import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
+import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.core.ui.animated.AnimatedTimer
 import com.imnaiyar.skytimes.core.ui.animated.ClockDirection
 import com.imnaiyar.skytimes.core.ui.theme.labelTiny
@@ -45,11 +44,13 @@ fun success(): Color {
 @Composable
 internal fun EventRow(
     row: IRow.Event,
-    reorderMode: Boolean,
     eventDetails: EventDetails,
     isActive: Boolean,
     timeFormatter: TimeFormatter,
+    isTutorialTarget: Boolean,
     now: Instant,
+    onPinToggle: () -> Unit,
+    onReminderToggle: () -> Unit
 ) {
     val remainingMillis = if (isActive) {
         eventDetails.status.remaining.inWholeMilliseconds
@@ -63,92 +64,96 @@ internal fun EventRow(
     }
 
 
-    Row(
+    EventColumnLayout(
         modifier = Modifier
             .fillMaxWidth()
             .padding(all = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(horizontalAlignment = Alignment.Start) {
-            EventNameLabel(
-                eventDetails = eventDetails,
-                isPinned = row.isPinned,
-                notified = row.notified,
-            )
-
-            AnimatedVisibility(isActive) {
+        eventName = {
+            Column(horizontalAlignment = Alignment.Start) {
                 Text(
-                    text = "Active (Next at ${timeFormatter.format(eventDetails.nextOccurrence)})",
-                    style = MaterialTheme.typography.labelTiny,
-                    color = success().copy(0.55f),
+                    text = eventDetails.event.name,
+                    style = MaterialTheme.typography.labelMedium,
                 )
+                AnimatedVisibility(isActive) {
+                    Text(
+                        text = "Active (Next at ${timeFormatter.format(eventDetails.nextOccurrence)})",
+                        style = MaterialTheme.typography.labelTiny,
+                        color = success().copy(0.55f),
+                    )
+                }
             }
-        }
-
-        AnimatedVisibility(
-            visible = !reorderMode,
-            enter = expandHorizontally(expandFrom = Alignment.End) + fadeIn(),
-            exit = shrinkHorizontally(shrinkTowards = Alignment.End) + fadeOut(),
-        ) {
-            Column(horizontalAlignment = Alignment.End) {
+        },
+        nextTime = {
+            Text(
+                text = timeFormatter.format(nextAt, withSeconds = false),
+                style = MaterialTheme.typography.labelMedium,
+            )
+        },
+        remaining = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (isActive) {
                     Text(
                         text = "Ends in",
-                        style = MaterialTheme.typography.labelTiny
+                        style = MaterialTheme.typography.labelTiny,
                     )
                 }
                 AnimatedTimer(
                     time = countdown,
-                    size = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(start = 8.dp),
+                    size = MaterialTheme.typography.labelMedium,
                     direction = ClockDirection.DOWN,
                 )
-                Text(
-                    text = "At ${timeFormatter.format(nextAt)}",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelSmall,
+            }
+        },
+        toggles = {
+            TutorialTarget(AppTutorialStep.EventToggles.targetId, enabled = isTutorialTarget) {
+                EventToggles(
+                    row.isPinned,
+                    row.notified,
+                    onPinToggle,
+                    onReminderToggle,
                 )
             }
-        }
-    }
+        },
+    )
 }
 
 
-/** Event name with an optional pin badge and notification bell. */
+/** Toggles to pin or set an event reminder */
 @Composable
-private fun EventNameLabel(
-    eventDetails: EventDetails,
+private fun EventToggles(
     isPinned: Boolean = false,
     notified: Notified,
-    color: Color = Color.Unspecified,
-    style: TextStyle = MaterialTheme.typography.labelMedium,
+    onPinToggle: () -> Unit,
+    onReminderToggle: () -> Unit,
 ) {
     val iconColor = MaterialTheme.colorScheme.primary
+    val pinRotation by animateFloatAsState(
+        targetValue = if (isPinned) 30f else 0f,
+        label = "PinRotation",
+    )
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = eventDetails.event.name, style = style, color = color)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.pin),
+            contentDescription = null,
+            tint = if (isPinned) iconColor else iconColor.copy(0.5f),
+            modifier = Modifier.clickable(onClick = onPinToggle)
+                .rotate(pinRotation),
+        )
 
-        AnimatedVisibility(visible = isPinned) {
-            Tooltip("This event is pinned to the top") {
-                Icon(
-                    painter = painterResource(Res.drawable.pin),
-                    contentDescription = "Pinned",
-                    modifier = Modifier.rotate(30f).size(18.dp),
-                    tint = iconColor,
-                )
-            }
-        }
 
-        AnimatedVisibility(visible = notified != Notified.No) {
-            Tooltip(text = "Reminders enabled for this event" + if (notified == Notified.YesButGlobalDisabled) " (notifications are globally disabled)" else "") {
-                Icon(
-                    painter = painterResource(Res.drawable.notifications),
-                    contentDescription = "Reminder set",
-                    modifier = Modifier.size(12.dp),
-                    tint = if (notified == Notified.Yes) iconColor else iconColor.copy(alpha = 0.5f),
-                )
-            }
-        }
+        Icon(
+            painter = painterResource(Res.drawable.notifications),
+            contentDescription = "Reminder set",
+            modifier = Modifier.requiredSize(15.dp).clickable(onClick = onReminderToggle),
+            tint = if (notified == Notified.Yes) {
+                iconColor
+            } else {
+                iconColor.copy(alpha = 0.5f)
+            },
+        )
     }
 }

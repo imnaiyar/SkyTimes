@@ -38,10 +38,10 @@ fun appTypography(): Typography {
         titleSmall = default.titleSmall.withAppFont(),
         titleLargeEmphasized = default.titleLargeEmphasized.withAppFont(),
         titleSmallEmphasized = default.titleSmallEmphasized.withAppFont(),
-        titleMediumEmphasized = default.labelTiny.withAppFont(),
-        headlineLargeEmphasized = default.headlineLarge.withAppFont(),
-        headlineMediumEmphasized = default.headlineMedium.withAppFont(),
-        headlineSmallEmphasized = default.headlineSmall.withAppFont(),
+        titleMediumEmphasized = default.titleMediumEmphasized.withAppFont(),
+        headlineLargeEmphasized = default.headlineLargeEmphasized.withAppFont(),
+        headlineMediumEmphasized = default.headlineMediumEmphasized.withAppFont(),
+        headlineSmallEmphasized = default.headlineSmallEmphasized.withAppFont(),
     )
 }
 

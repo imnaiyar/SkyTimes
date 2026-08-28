@@ -122,8 +122,13 @@ internal class HomeScreenState(
         )
     }
 
+    val firstEventCategory: State<Any?> = derivedStateOf {
+        rows.value.firstOrNull { !it.isPinnedSection }
+            ?.key
+    }
+
     val firstEventKey: State<EventKey?> = derivedStateOf {
-        rows.value.filterIsInstance<IRow.Section>().firstOrNull()
+        rows.value.firstOrNull()
             ?.eventRows?.firstOrNull()?.eventData?.key
     }
 

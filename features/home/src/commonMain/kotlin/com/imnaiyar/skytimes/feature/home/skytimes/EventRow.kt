@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.common.TimeFormatter
 import com.imnaiyar.skytimes.core.domain.EventDetails
 import com.imnaiyar.skytimes.core.domain.Times
+import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
+import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.core.ui.animated.AnimatedTimer
 import com.imnaiyar.skytimes.core.ui.animated.ClockDirection
 import com.imnaiyar.skytimes.core.ui.theme.labelTiny
@@ -45,6 +47,7 @@ internal fun EventRow(
     eventDetails: EventDetails,
     isActive: Boolean,
     timeFormatter: TimeFormatter,
+    isTutorialTarget: Boolean,
     now: Instant,
     onPinToggle: () -> Unit,
     onReminderToggle: () -> Unit
@@ -67,17 +70,17 @@ internal fun EventRow(
             .padding(all = 5.dp),
         eventName = {
             Column(horizontalAlignment = Alignment.Start) {
-            Text(
-                text = eventDetails.event.name,
-                style = MaterialTheme.typography.labelMedium,
-            )
-            AnimatedVisibility(isActive) {
                 Text(
-                    text = "Active (Next at ${timeFormatter.format(eventDetails.nextOccurrence)})",
-                    style = MaterialTheme.typography.labelTiny,
-                    color = success().copy(0.55f),
+                    text = eventDetails.event.name,
+                    style = MaterialTheme.typography.labelMedium,
                 )
-            }
+                AnimatedVisibility(isActive) {
+                    Text(
+                        text = "Active (Next at ${timeFormatter.format(eventDetails.nextOccurrence)})",
+                        style = MaterialTheme.typography.labelTiny,
+                        color = success().copy(0.55f),
+                    )
+                }
             }
         },
         nextTime = {
@@ -102,12 +105,14 @@ internal fun EventRow(
             }
         },
         toggles = {
-            EventToggles(
-                row.isPinned,
-                row.notified,
-                onPinToggle,
-                onReminderToggle,
-            )
+            TutorialTarget(AppTutorialStep.EventToggles.targetId, enabled = isTutorialTarget) {
+                EventToggles(
+                    row.isPinned,
+                    row.notified,
+                    onPinToggle,
+                    onReminderToggle,
+                )
+            }
         },
     )
 }

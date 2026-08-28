@@ -30,9 +30,9 @@ import kotlin.time.Instant
 @Composable
 internal fun EventGridItem(
     row: IRow.Event,
-    isTutorialTarget: Boolean,
     timeFormatter: TimeFormatter,
     nowState: State<Instant>,
+    isTutorialTarget: Boolean,
     onClick: () -> Unit,
     onPinToggle: () -> Unit,
     onReminderToggle: () -> Unit,
@@ -84,6 +84,7 @@ internal fun EventGridItem(
                     eventDetails = eventDetails,
                     isActive = isActive,
                     timeFormatter = timeFormatter,
+                    isTutorialTarget = isTutorialTarget,
                     now = nowState.value,
                     onPinToggle,
                     onReminderToggle

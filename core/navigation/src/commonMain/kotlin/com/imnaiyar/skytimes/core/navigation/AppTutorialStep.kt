@@ -7,6 +7,8 @@ enum class AppTutorialStep(
     override val targetId: String,
     val screen: AppTab
 ) : TutorialStep {
+    EventCategoryDragHandle("event_category_drag_handle", AppTab.SkyTimes),
+    EventToggles("event_toggles", AppTab.SkyTimes),
     QuestPullToRefresh("quest_pull_to_refresh", AppTab.Quests),
     ShardCountdown("shard_countdown", AppTab.Shards),
     ShardDateSwipe("shard_date_swipe", AppTab.Shards),

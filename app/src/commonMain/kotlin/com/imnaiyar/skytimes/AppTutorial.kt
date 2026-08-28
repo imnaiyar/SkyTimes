@@ -13,6 +13,19 @@ val FirstLaunchTutorialFlow = TutorialFlow(
     id = FirstLaunchTutorialFlowId,
     steps = listOf(
         TutorialDefinition(
+            step = AppTutorialStep.EventCategoryDragHandle,
+            title = "Reorder Categories",
+            description = "Long press and drag the category to reorder it.",
+            preferredPlacement = TooltipPlacement.Below,
+            gestureHint = TutorialGestureHint.Swipe(SwipeDirection.Down, "Drag down to reorder")
+        ),
+        TutorialDefinition(
+            step = AppTutorialStep.EventToggles,
+            title = "Toggles",
+            description = "Click on the pin icon to pin an event to the top and notification icon to configure notifications for an event.",
+            preferredPlacement = TooltipPlacement.Below,
+        ),
+        TutorialDefinition(
             step = AppTutorialStep.QuestPullToRefresh,
             title = "Refresh quests",
             description = "Pull down from the top of this page to refresh the latest quest data.",

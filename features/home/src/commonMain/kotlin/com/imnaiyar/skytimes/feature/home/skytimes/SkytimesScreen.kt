@@ -38,6 +38,7 @@ fun SkytimesScreen(
     val timeFormatter = rememberTimeFormatter()
 
     val lazyGridState = rememberLazyStaggeredGridState()
+
     val reorderableLazyGridState =
         rememberReorderableLazyStaggeredGridState(lazyGridState) { from, to ->
             state.onMove(from.key, to.key)
@@ -47,6 +48,7 @@ fun SkytimesScreen(
     val expandedSections = remember { mutableStateMapOf<Any, Boolean>() }
 
     val rows by state.rows
+    val firstEventCategory by state.firstEventCategory
     val firstEventKey by state.firstEventKey
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -70,13 +72,14 @@ fun SkytimesScreen(
                     section = section,
                     reorderableLazyGridState = reorderableLazyGridState,
                     isExpanded = expandedSections[section.key] ?: true,
+                    isTutorialTarget = tutorialTargetsEnabled && section.key == firstEventCategory,
                     onExpandedChange = { expandedSections[section.key] = it },
                 ) { row ->
                     EventGridItem(
                         row = row,
-                        isTutorialTarget = tutorialTargetsEnabled && row.eventData.key == firstEventKey,
                         timeFormatter = timeFormatter,
                         nowState = nowState,
+                        isTutorialTarget = tutorialTargetsEnabled && row.eventData.key == firstEventKey,
                         onClick = { state.showEventDetails(row.eventData) },
                         onPinToggle = { state.togglePin(row.eventData.key) },
                         onReminderToggle = { reminderFlow.requestReminderEditor(row.eventData) }

@@ -23,12 +23,15 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
+import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.core.ui.Card
 import com.imnaiyar.skytimes.core.ui.generated.resources.chevron_right
 import com.imnaiyar.skytimes.core.ui.theme.titleTiny
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.drag_indicator
 import org.jetbrains.compose.resources.painterResource
+import sh.calvin.reorderable.DragGestureDetector
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyStaggeredGridState
@@ -40,12 +43,16 @@ internal fun LazyStaggeredGridItemScope.EventCategoryCard(
     reorderableLazyGridState: ReorderableLazyStaggeredGridState,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
+    isTutorialTarget: Boolean,
     eventContent: @Composable (IRow.Event) -> Unit,
 ) {
     val rotate by animateFloatAsState(
         targetValue = if (isExpanded) 90f else 0f,
         label = "CategoryRotation",
     )
+
+    val rows = if (section.isPinnedSection) section.eventRows
+    else section.eventRows.filter { !it.isPinned };
 
     val card: @Composable (showDragHandle: Boolean, startPad: Dp?, dragHandle: @Composable () -> Unit) -> Unit =
         { showDragHandle, startPad, dragHandle ->
@@ -64,7 +71,7 @@ internal fun LazyStaggeredGridItemScope.EventCategoryCard(
                         if (showDragHandle) dragHandle()
 
                         Text(
-                            text = "${section.title} (${section.eventRows.size})",
+                            text = "${section.title} (${rows.size})",
                             style = MaterialTheme.typography.titleTiny(1.sp),
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -83,7 +90,7 @@ internal fun LazyStaggeredGridItemScope.EventCategoryCard(
                         horizontalArrangement = Arrangement.spacedBy(1.dp),
                         verticalArrangement = Arrangement.spacedBy(1.dp),
                     ) {
-                        for (event in section.eventRows) eventContent(event)
+                        for (event in rows) eventContent(event)
                     }
                 }
             }
@@ -93,18 +100,22 @@ internal fun LazyStaggeredGridItemScope.EventCategoryCard(
         card(false, 15.dp) {}
     } else {
         ReorderableItem(reorderableLazyGridState, key = section.key) {
-            card(true, null) { CategoryDragHandle() }
+            card(true, null) { CategoryDragHandle(isTutorialTarget) }
         }
     }
 }
 
 @Composable
-private fun ReorderableCollectionItemScope.CategoryDragHandle() {
-    IconButton(modifier = Modifier.draggableHandle(), onClick = {}) {
-        Icon(
-            painterResource(Res.drawable.drag_indicator),
-            "Drag to reorder",
-            Modifier.size(18.dp)
-        )
+private fun ReorderableCollectionItemScope.CategoryDragHandle(isTarget: Boolean) {
+    TutorialTarget(AppTutorialStep.EventCategoryDragHandle.targetId, enabled = isTarget) {
+        IconButton(
+            modifier = Modifier.draggableHandle(dragGestureDetector = DragGestureDetector.LongPress),
+            onClick = {}) {
+            Icon(
+                painterResource(Res.drawable.drag_indicator),
+                "Drag to reorder",
+                Modifier.size(18.dp)
+            )
+        }
     }
 }

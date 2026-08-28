@@ -43,6 +43,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.navigation.LocalTutorialManager
 import com.imnaiyar.skytimes.core.navigation.MainRoute
+import com.imnaiyar.skytimes.core.ui.theme.titleTiny
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.lightmend_lantern
 import com.imnaiyar.skytimes.feature.home.shards.ShardScreen
@@ -128,7 +129,7 @@ fun MainScreen(
                             )
                         },
                         label = {
-                            Text(screen.title)
+                            Text(screen.title, style = MaterialTheme.typography.titleTiny())
                         },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = MaterialTheme.colorScheme.primary,
@@ -147,7 +148,7 @@ fun MainScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     expanded = bottomScroll.state.collapsedFraction < 0.5f,
-                    text = { Text("Vault Archive") },
+                    text = { Text("Vault Archive", style = MaterialTheme.typography.titleSmall) },
                     icon = {
                         Image(
                             painterResource(Res.drawable.lightmend_lantern),

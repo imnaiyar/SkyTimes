@@ -28,7 +28,6 @@ import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 @Composable
 fun SkytimesScreen(
     modifier: Modifier = Modifier,
-    setFabVisible: (Boolean) -> Unit,
     fabPad: PaddingValues,
     tutorialTargetsEnabled: Boolean,
 ) {

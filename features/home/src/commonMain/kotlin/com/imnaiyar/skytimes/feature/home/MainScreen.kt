@@ -1,6 +1,5 @@
 package com.imnaiyar.skytimes.feature.home
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -74,8 +73,6 @@ fun MainScreen(
     }
 
 
-    var showFab by remember { mutableStateOf(true) }
-
     val scope = rememberCoroutineScope()
     val hapticFeedback = LocalHapticFeedback.current
 
@@ -141,23 +138,21 @@ fun MainScreen(
             }
         },
         floatingActionButton = {
-            AnimatedVisibility(showFab) {
-                ExtendedFloatingActionButton(
-                    onClick = onOpenVault,
-                    modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    expanded = bottomScroll.state.collapsedFraction < 0.5f,
-                    text = { Text("Vault Archive", style = MaterialTheme.typography.titleSmall) },
-                    icon = {
-                        Image(
-                            painterResource(Res.drawable.lightmend_lantern),
-                            contentDescription = "Lightmending Lantern",
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
-                )
-            }
+            ExtendedFloatingActionButton(
+                onClick = onOpenVault,
+                modifier = Modifier.onGloballyPositioned { fabHeight = it.size.height },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                expanded = bottomScroll.state.collapsedFraction < 0.5f,
+                text = { Text("Vault Archive", style = MaterialTheme.typography.titleSmall) },
+                icon = {
+                    Image(
+                        painterResource(Res.drawable.lightmend_lantern),
+                        contentDescription = "Lightmending Lantern",
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+            )
         }
     ) {
         HorizontalPager(
@@ -195,7 +190,6 @@ fun MainScreen(
                 when (screens[page]) {
                     AppTab.SkyTimes -> SkytimesScreen(
                         modifier,
-                        setFabVisible = { value -> showFab = value },
                         fabPad,
                         tutorialTargetsEnabled
                     )

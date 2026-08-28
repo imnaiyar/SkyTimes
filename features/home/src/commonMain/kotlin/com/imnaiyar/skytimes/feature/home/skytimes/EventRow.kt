@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,16 +61,12 @@ internal fun EventRow(
     }
 
 
-    Row(
+    EventColumnLayout(
         modifier = Modifier
             .fillMaxWidth()
             .padding(all = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(
-            modifier = Modifier.weight(1.5f),
-            horizontalAlignment = Alignment.Start,
-        ) {
+        eventName = {
+            Column(horizontalAlignment = Alignment.Start) {
             Text(
                 text = eventDetails.event.name,
                 style = MaterialTheme.typography.labelMedium,
@@ -83,22 +78,15 @@ internal fun EventRow(
                     color = success().copy(0.55f),
                 )
             }
-        }
-
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center,
-        ) {
+            }
+        },
+        nextTime = {
             Text(
                 text = timeFormatter.format(nextAt, withSeconds = false),
                 style = MaterialTheme.typography.labelMedium,
             )
-        }
-
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
+        },
+        remaining = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (isActive) {
                     Text(
@@ -112,20 +100,16 @@ internal fun EventRow(
                     direction = ClockDirection.DOWN,
                 )
             }
-        }
-
-        Box(
-            modifier = Modifier.weight(0.8f),
-            contentAlignment = Alignment.CenterEnd
-        ) {
+        },
+        toggles = {
             EventToggles(
                 row.isPinned,
                 row.notified,
                 onPinToggle,
                 onReminderToggle,
             )
-        }
-    }
+        },
+    )
 }
 
 

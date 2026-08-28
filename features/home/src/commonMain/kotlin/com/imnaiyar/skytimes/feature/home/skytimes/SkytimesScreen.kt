@@ -3,8 +3,12 @@ package com.imnaiyar.skytimes.feature.home.skytimes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.data.LocalClockRepository
 import com.imnaiyar.skytimes.core.domain.EventTimeUtils
 import com.imnaiyar.skytimes.core.ui.Grid
@@ -50,6 +55,13 @@ fun SkytimesScreen(
             state = lazyGridState,
             contentPadding = fabPad
         ) {
+            item(
+                key = "skytimes-column-header",
+                span = StaggeredGridItemSpan.FullLine,
+            ) {
+                SkyClockColumnHeader()
+            }
+
             items(
                 count = rows.size,
                 key = { rows[it].key },
@@ -94,4 +106,35 @@ fun SkytimesScreen(
             )
         }
     }
+}
+
+@Composable
+private fun SkyClockColumnHeader() {
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+
+    EventColumnLayout(
+        modifier = Modifier.padding(horizontal = 9.dp, vertical = 2.dp),
+        eventName = {
+            Text(
+                text = "Event name",
+                style = MaterialTheme.typography.labelSmall,
+                color = labelColor,
+            )
+        },
+        nextTime = {
+            Text(
+                text = "Next time",
+                style = MaterialTheme.typography.labelSmall,
+                color = labelColor,
+            )
+        },
+        remaining = {
+            Text(
+                text = "Remaining",
+                style = MaterialTheme.typography.labelSmall,
+                color = labelColor,
+            )
+        },
+        toggles = {},
+    )
 }

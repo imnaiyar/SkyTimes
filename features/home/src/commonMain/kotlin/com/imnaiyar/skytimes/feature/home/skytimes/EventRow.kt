@@ -64,43 +64,64 @@ internal fun EventRow(
     }
 
 
+    val textColor = if (isActive) success() else Color.Unspecified
+
     EventColumnLayout(
         modifier = Modifier
             .fillMaxWidth()
             .padding(all = 5.dp),
         eventName = {
-            Column(horizontalAlignment = Alignment.Start) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = eventDetails.event.name,
                     style = MaterialTheme.typography.labelMedium,
+                    color = textColor
                 )
+
                 AnimatedVisibility(isActive) {
                     Text(
-                        text = "Active (Next at ${timeFormatter.format(eventDetails.nextOccurrence)})",
+                        text = "Next at ${
+                            timeFormatter.format(
+                                eventDetails.nextOccurrence,
+                                withSeconds = false
+                            )
+                        }",
                         style = MaterialTheme.typography.labelTiny,
-                        color = success().copy(0.55f),
                     )
                 }
             }
         },
         nextTime = {
-            Text(
-                text = timeFormatter.format(nextAt, withSeconds = false),
-                style = MaterialTheme.typography.labelMedium,
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                AnimatedVisibility(isActive) {
+                    Text(
+                        text = "Ends at",
+                        style = MaterialTheme.typography.labelTiny,
+                        color = textColor
+                    )
+                }
+
+                Text(
+                    text = timeFormatter.format(nextAt, withSeconds = false),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = textColor
+                )
+            }
         },
         remaining = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (isActive) {
+                AnimatedVisibility(isActive) {
                     Text(
                         text = "Ends in",
                         style = MaterialTheme.typography.labelTiny,
+                        color = textColor
                     )
                 }
                 AnimatedTimer(
                     time = countdown,
                     size = MaterialTheme.typography.labelMedium,
                     direction = ClockDirection.DOWN,
+                    color = textColor
                 )
             }
         },

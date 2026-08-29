@@ -1,7 +1,6 @@
 package com.imnaiyar.skytimes.feature.home.skytimes
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,33 +42,13 @@ internal fun EventGridItem(
     }
 
     val isActive = eventDetails.status is Times.Active
-
-    val currentShape = RoundedCornerShape(
-        bottomStart = Grid_ITEM_PADDING,
-        bottomEnd = Grid_ITEM_PADDING,
-        topStart = Grid_ITEM_PADDING,
-        topEnd = Grid_ITEM_PADDING
-    )
-
-
-    val containerColor = if (isActive) GRID_ITEM_BG_COLOR.copy(alpha = 0.5f)
-    else GRID_ITEM_BG_COLOR
-
-    val activeAccentBorder = if (isActive) {
-        BorderStroke(
-            width = 1.dp,
-            color = success().copy(0.55f)
-        )
-    } else {
-        null
-    }
+    
 
     Box {
         Surface(
             shadowElevation = 0.dp,
-            shape = currentShape,
-            color = containerColor,
-            border = activeAccentBorder,
+            shape = RoundedCornerShape(Grid_ITEM_PADDING),
+            color = GRID_ITEM_BG_COLOR,
             modifier = Modifier.contextClickable(onClick),
         ) {
 

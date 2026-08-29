@@ -1,10 +1,11 @@
 package com.imnaiyar.skytimes.feature.home.skytimes
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.data.LocalClockRepository
 import com.imnaiyar.skytimes.core.domain.EventTimeUtils
 import com.imnaiyar.skytimes.core.ui.Grid
+import com.imnaiyar.skytimes.core.ui.MinFlowRowWidth
 import com.imnaiyar.skytimes.core.ui.rememberTimeFormatter
 import com.imnaiyar.skytimes.feature.reminders.rememberReminderFlow
 import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
@@ -51,14 +53,22 @@ fun SkytimesScreen(
     val firstEventCategory by state.firstEventCategory
     val firstEventKey by state.firstEventKey
 
-    Box(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val spacing = Arrangement.spacedBy(16.dp)
+        // manually calculate column, bcz event column header gets misaligned when there's more than one column in the grid layout
+        // so calculate column and replicate column header for each column
+        val columnCount =
+            ((maxWidth + spacing.spacing) / (MinFlowRowWidth.dp + spacing.spacing)).toInt()
+                .coerceAtLeast(1)
         Grid(
             state = lazyGridState,
+            columns = StaggeredGridCells.Fixed(columnCount),
+            horizontalArrangement = spacing,
             contentPadding = fabPad
         ) {
-            item(
-                key = "skytimes-column-header",
-                span = StaggeredGridItemSpan.FullLine,
+            items(
+                count = columnCount,
+                key = { "skytimes-column-header_$it" },
             ) {
                 SkyClockColumnHeader()
             }

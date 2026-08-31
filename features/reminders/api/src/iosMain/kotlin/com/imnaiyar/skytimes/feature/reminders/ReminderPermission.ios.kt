@@ -58,7 +58,14 @@ private class IosReminderPermissionController(
 
     override fun openNotificationSettings() {
         val settingsUrl = NSURL.URLWithString(UIApplicationOpenSettingsURLString) ?: return
-        UIApplication.sharedApplication.openURL(settingsUrl)
+        
+        UIApplication.sharedApplication.openURL(
+            settingsUrl,
+            options = emptyMap<Any?, Any?>(),
+            completionHandler = { success ->
+                if (!success) println("failed to open settings: $settingsUrl")
+            },
+        )
     }
 }
 

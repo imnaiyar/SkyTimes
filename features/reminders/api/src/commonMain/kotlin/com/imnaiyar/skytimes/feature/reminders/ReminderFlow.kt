@@ -1,29 +1,55 @@
 package com.imnaiyar.skytimes.feature.reminders
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.imnaiyar.skytimes.core.common.LocalApplicationScope
 import com.imnaiyar.skytimes.core.common.getPlatform
 import com.imnaiyar.skytimes.core.domain.EventData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 
 private data class ReminderDraft(
@@ -36,33 +62,29 @@ class ReminderFlowController(
     private val reminderRepository: ReminderRepository,
     private val reminderScheduler: ReminderScheduler,
     private val notificationsToggle: NotificationsToggle,
-    private val permissionRequester: ((Boolean) -> Unit) -> Unit,
+    private val permissionController: ReminderPermissionController,
     private val isAndroid: Boolean = getPlatform().name.startsWith("Android"),
 ) {
 
     private var reminderDraft by mutableStateOf<ReminderDraft?>(null)
     private var reminderEditorVisible by mutableStateOf(false)
-    private var exactAlarmVisible by mutableStateOf(false)
-    private var exactAlarmNextAction by mutableStateOf<(() -> Unit)?>(null)
+    private var permissionSheetVisible by mutableStateOf(false)
+    private var permissionSheetNextAction by mutableStateOf<(() -> Unit)?>(null)
+    private var notificationPermissionStatus by mutableStateOf(ReminderPermissionStatus.Unavailable)
+    private var exactAlarmPermissionStatus by mutableStateOf(ReminderPermissionStatus.Unavailable)
 
     private var reminderOffsetMinutes by mutableIntStateOf(0)
 
     fun requestReminderEditor(eventData: EventData) {
-        scope.launch {
-            if (!ensureNotificationPermission()) return@launch
-
+        runWhenNotificationPermissionReady {
             val draft = ReminderDraft(
                 eventData = eventData,
                 existingReminder = reminderRepository.reminders.value.firstOrNull { it.eventId == eventData.key }
             )
 
-            val showEditor = {
-                reminderDraft = draft
-                reminderOffsetMinutes = draft.existingReminder?.offsetMinutes ?: 0
-                reminderEditorVisible = true
-            }
-
-            promptExactAlarmIfNeeded(showEditor)
+            reminderDraft = draft
+            reminderOffsetMinutes = draft.existingReminder?.offsetMinutes ?: 0
+            reminderEditorVisible = true
         }
     }
 
@@ -77,38 +99,70 @@ class ReminderFlowController(
         // do nothing if already enabled
         if (notificationsToggle.isEnabled()) return;
 
-        scope.launch {
-            if (!ensureNotificationPermission()) {
-                notificationsToggle.setEnabled(false)
-                return@launch
+        val persistEnabled: () -> Unit = {
+            scope.launch {
+                notificationsToggle.setEnabled(true)
+                reminderScheduler.refresh()
             }
-
-            val persistEnabled: () -> Unit = {
-                scope.launch {
-                    notificationsToggle.setEnabled(true)
-                    reminderScheduler.refresh()
-                }
-
-            }
-
-            if (showPrompt) promptExactAlarmIfNeeded(persistEnabled)
-            else persistEnabled()
         }
+
+        if (showPrompt) runWhenNotificationPermissionReady(persistEnabled)
+        else persistEnabled()
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun RenderDialogs() {
-        if (exactAlarmVisible) {
-            ExactAlarmDialog(
-                onConfirm = {
-                    reminderScheduler.requestExactAlarm()
-                    exactAlarmNextAction?.invoke()
-                    clearExactAlarmState()
-                },
-                onDismiss = {
-                    exactAlarmNextAction?.invoke()
-                    clearExactAlarmState()
+        val lifecycle = LocalLifecycleOwner.current
+
+        DisposableEffect(lifecycle) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    scope.launch {
+                        refreshPermissionStatuses()
+                    }
                 }
+            }
+
+            lifecycle.lifecycle.addObserver(observer)
+
+            onDispose {
+                lifecycle.lifecycle.removeObserver(observer)
+            }
+        }
+
+        if (permissionSheetVisible) {
+            LaunchedEffect(permissionSheetVisible) {
+                refreshPermissionStatuses()
+            }
+
+            ReminderPermissionBottomSheet(
+                notificationStatus = notificationPermissionStatus,
+                exactAlarmStatus = exactAlarmPermissionStatus,
+                showExactAlarm = isAndroid,
+                onRequestNotifications = {
+                    scope.launch {
+                        notificationPermissionStatus =
+                            permissionController.requestNotificationPermission()
+                        refreshPermissionStatuses()
+                    }
+                },
+                onOpenNotificationSettings = {
+                    permissionController.openNotificationSettings()
+                },
+                onOpenExactAlarmSettings = {
+                    reminderScheduler.requestExactAlarm()
+                },
+                onContinue = {
+                    scope.launch {
+                        refreshPermissionStatuses()
+                        if (notificationPermissionStatus == ReminderPermissionStatus.Granted) {
+                            permissionSheetNextAction?.invoke()
+                            clearPermissionSheet()
+                        }
+                    }
+                },
+                onDismiss = { clearPermissionSheet() }
             )
         }
 
@@ -119,6 +173,9 @@ class ReminderFlowController(
                 eventTitle = draft.eventData.name,
                 offsetMinutes = reminderOffsetMinutes,
                 onOffsetChange = { reminderOffsetMinutes = it.coerceIn(0, 15) },
+                showExactAlarmHint = isAndroid &&
+                        exactAlarmPermissionStatus != ReminderPermissionStatus.Granted,
+                openExactAlarm = { reminderScheduler.requestExactAlarm() },
                 onConfirm = {
                     scope.launch {
                         saveReminder(draft, reminderOffsetMinutes)
@@ -136,32 +193,25 @@ class ReminderFlowController(
         }
     }
 
-    private suspend fun ensureNotificationPermission(): Boolean {
-        if (reminderScheduler.hasPermission()) return true
-
-        // iOS implementation is simple and is handled by schedular
-        // android's depend on activity (needs composable) so has different implementation
-        if (!isAndroid) return reminderScheduler.requestPermission()
-
-        return suspendCancellableCoroutine { continuation ->
-            permissionRequester { granted ->
-                if (continuation.isActive) {
-                    continuation.resume(granted)
-                }
+    private fun runWhenNotificationPermissionReady(action: () -> Unit) {
+        scope.launch {
+            refreshPermissionStatuses()
+            if (notificationPermissionStatus == ReminderPermissionStatus.Granted) {
+                action()
+            } else {
+                permissionSheetNextAction = action
+                permissionSheetVisible = true
             }
         }
     }
 
-    private fun promptExactAlarmIfNeeded(nextAction: () -> Unit) {
-        if (!isAndroid) {
-            nextAction()
-            return
+    private suspend fun refreshPermissionStatuses() {
+        notificationPermissionStatus = permissionController.notificationStatus()
+        exactAlarmPermissionStatus = if (!isAndroid || reminderScheduler.hasExactAlarm()) {
+            ReminderPermissionStatus.Granted
+        } else {
+            ReminderPermissionStatus.Requestable
         }
-
-        if (!reminderScheduler.hasExactAlarm()) {
-            exactAlarmNextAction = nextAction
-            exactAlarmVisible = true
-        } else nextAction()
     }
 
     private suspend fun saveReminder(draft: ReminderDraft, offsetMinutes: Int) {
@@ -175,8 +225,8 @@ class ReminderFlowController(
             offsetMinutes = offsetMinutes,
         )
 
+        notificationsToggle.setEnabled(true)
         reminderRepository.upsert(reminder)
-        setNotificationsEnabled(enabled = true, showPrompt = false)
         reminderScheduler.scheduleReminder(reminder)
         clearReminderEditor()
     }
@@ -195,37 +245,184 @@ class ReminderFlowController(
         reminderEditorVisible = false
     }
 
-    private fun clearExactAlarmState() {
-        exactAlarmVisible = false
-        exactAlarmNextAction = null
+    private fun clearPermissionSheet() {
+        permissionSheetVisible = false
+        permissionSheetNextAction = null
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReminderPermissionBottomSheet(
+    notificationStatus: ReminderPermissionStatus,
+    exactAlarmStatus: ReminderPermissionStatus,
+    showExactAlarm: Boolean,
+    onRequestNotifications: () -> Unit,
+    onOpenNotificationSettings: () -> Unit,
+    onOpenExactAlarmSettings: () -> Unit,
+    onContinue: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "Reminder permissions",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    buildAnnotatedString {
+                        append("Allow notifications so reminders can fire.")
+                        if (showExactAlarm) append(" Without exact alarm, android may delay notifications.")
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            PermissionRow(
+                title = "Notifications",
+                subtitle = when (notificationStatus) {
+                    ReminderPermissionStatus.Granted -> "Ready to show reminder alerts."
+                    ReminderPermissionStatus.SettingsRequired -> "Grant permission through settings."
+                    ReminderPermissionStatus.Unavailable -> "Notification permission is unavailable."
+                    ReminderPermissionStatus.Requestable -> "Required for reminder alerts."
+                },
+                status = notificationStatus,
+                actionLabel = when (notificationStatus) {
+                    ReminderPermissionStatus.Requestable -> "Allow"
+                    ReminderPermissionStatus.SettingsRequired -> "Settings"
+                    else -> null
+                },
+                onAction = when (notificationStatus) {
+                    ReminderPermissionStatus.Requestable -> onRequestNotifications
+                    ReminderPermissionStatus.SettingsRequired -> onOpenNotificationSettings
+                    else -> null
+                }
+            )
+
+            if (showExactAlarm) {
+                PermissionRow(
+                    title = "Exact alarms",
+                    subtitle = when (exactAlarmStatus) {
+                        ReminderPermissionStatus.Granted -> "Reminders can fire at the selected time."
+                        else -> "Optional. Without this, Android may delay reminders."
+                    },
+                    status = exactAlarmStatus,
+                    actionLabel = if (exactAlarmStatus == ReminderPermissionStatus.Granted) null else "Settings",
+                    onAction = if (exactAlarmStatus == ReminderPermissionStatus.Granted) null else onOpenExactAlarmSettings
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text("Not now")
+                }
+                Spacer(Modifier.width(8.dp))
+                Button(
+                    onClick = onContinue,
+                    enabled = notificationStatus == ReminderPermissionStatus.Granted
+                ) {
+                    Text("Continue")
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun ExactAlarmDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
+private fun PermissionRow(
+    title: String,
+    subtitle: String,
+    status: ReminderPermissionStatus,
+    actionLabel: String?,
+    onAction: (() -> Unit)?,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Allow exact alarms?") },
-        text = {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        PermissionStatusIcon(
+            granted = status == ReminderPermissionStatus.Granted,
+            modifier = Modifier.size(14.dp)
+        )
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
             Text(
-                "We use exact alarms so reminders fire at the chosen offset. If you skip this, reminders can be delayed by the system.",
-                style = MaterialTheme.typography.bodyMedium
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
             )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Open settings")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Not now")
-            }
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-    )
+
+        if (actionLabel != null && onAction != null) {
+            Text(
+                actionLabel,
+                modifier = Modifier.clickable(onClick = onAction),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+        }
+    }
+}
+
+@Composable
+private fun PermissionStatusIcon(
+    granted: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val color = if (granted) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.outline
+    }
+
+    Canvas(modifier = modifier) {
+        val strokeWidth = 2.dp.toPx()
+        drawCircle(
+            color = color,
+            style = Stroke(width = strokeWidth)
+        )
+
+        if (granted) {
+            drawLine(
+                color = color,
+                start = Offset(size.width * 0.28f, size.height * 0.52f),
+                end = Offset(size.width * 0.44f, size.height * 0.68f),
+                strokeWidth = strokeWidth,
+                cap = StrokeCap.Round
+            )
+            drawLine(
+                color = color,
+                start = Offset(size.width * 0.44f, size.height * 0.68f),
+                end = Offset(size.width * 0.74f, size.height * 0.34f),
+                strokeWidth = strokeWidth,
+                cap = StrokeCap.Round
+            )
+        }
+    }
 }
 
 @Composable
@@ -233,6 +430,8 @@ private fun ReminderOffsetDialog(
     eventTitle: String,
     offsetMinutes: Int,
     onOffsetChange: (Int) -> Unit,
+    openExactAlarm: () -> Unit,
+    showExactAlarmHint: Boolean,
     onConfirm: () -> Unit,
     onRemove: (() -> Unit)? = null,
     onDismiss: () -> Unit,
@@ -259,6 +458,39 @@ private fun ReminderOffsetDialog(
                     valueRange = 0f..15f,
                     steps = 14
                 )
+
+                if (showExactAlarmHint) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            buildAnnotatedString {
+                                append("Exact alarm permission is off. The reminder will still be saved, but Android may deliver it late.")
+                                append("\n")
+
+                                withLink(
+                                    LinkAnnotation.Clickable(
+                                        "open exact alarm",
+                                        styles = TextLinkStyles(
+                                            SpanStyle(
+                                                MaterialTheme.colorScheme.primary
+                                            )
+                                        ),
+                                        linkInteractionListener = { openExactAlarm() }
+                                    )
+                                ) {
+                                    append("Open settings")
+                                }
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -283,19 +515,25 @@ private fun ReminderOffsetDialog(
 
 @Composable
 fun rememberReminderFlow(): ReminderFlowController {
-    val permissionRequester = rememberNotificationPermissionRequester()
+    val permissionController = rememberReminderPermissionController()
     val scope = LocalApplicationScope.current
     val reminderRepository = LocalReminderRepository.current
     val reminderScheduler = LocalReminderScheduler.current
     val notificationsToggle = LocalNotificationsToggle.current
 
-    return remember(scope, reminderRepository, reminderScheduler, notificationsToggle) {
+    return remember(
+        scope,
+        reminderRepository,
+        reminderScheduler,
+        notificationsToggle,
+        permissionController
+    ) {
         ReminderFlowController(
             scope = scope,
             reminderRepository = reminderRepository,
             reminderScheduler = reminderScheduler,
             notificationsToggle = notificationsToggle,
-            permissionRequester
+            permissionController
         )
     }
 }

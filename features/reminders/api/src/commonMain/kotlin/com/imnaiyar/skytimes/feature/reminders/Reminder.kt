@@ -25,13 +25,22 @@ interface ReminderScheduler {
 }
 
 
-/**
- * This is only needed for android, because requesting permission requires activity
- * and the utility fun for it is a [Composable], so requires different impl.
- * iOS's is simple and is handled by [ReminderScheduler.requestPermission]
- */
+/** Platform controller for notification permission prompts and settings redirects. */
 @Composable
-expect fun rememberNotificationPermissionRequester(): ((Boolean) -> Unit) -> Unit
+expect fun rememberReminderPermissionController(): ReminderPermissionController
+
+enum class ReminderPermissionStatus {
+    Granted,
+    Requestable,
+    SettingsRequired,
+    Unavailable,
+}
+
+interface ReminderPermissionController {
+    suspend fun notificationStatus(): ReminderPermissionStatus
+    suspend fun requestNotificationPermission(): ReminderPermissionStatus
+    fun openNotificationSettings()
+}
 
 @Serializable
 data class Reminder(

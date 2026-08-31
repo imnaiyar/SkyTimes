@@ -23,7 +23,7 @@ import com.imnaiyar.skytimes.core.domain.EventTimeUtils
 import com.imnaiyar.skytimes.core.ui.Grid
 import com.imnaiyar.skytimes.core.ui.MinFlowRowWidth
 import com.imnaiyar.skytimes.core.ui.rememberTimeFormatter
-import com.imnaiyar.skytimes.feature.reminders.rememberReminderFlow
+import com.imnaiyar.skytimes.feature.reminders.ReminderFlowController
 import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,9 +32,9 @@ fun SkytimesScreen(
     modifier: Modifier = Modifier,
     fabPad: PaddingValues,
     tutorialTargetsEnabled: Boolean,
+    reminderFlow: ReminderFlowController,
 ) {
     val state = rememberHomeScreenState()
-    val reminderFlow = rememberReminderFlow()
     val nowState = LocalClockRepository.current.now.collectAsState()
 
     val timeFormatter = rememberTimeFormatter()
@@ -98,9 +98,6 @@ fun SkytimesScreen(
 
             }
         }
-
-        // Reminder-related dialogs (e.g. exact-alarm permission prompts).
-        reminderFlow.RenderDialogs()
 
         state.eventDetailsToShow?.let { eventData ->
             val eventDetails = remember(eventData, nowState.value) {

@@ -28,6 +28,7 @@ data class Infographic(
 )
 
 enum class EventKey {
+    SHARDS,
     GEYSER,
     GRANDMA,
     TURTLE,

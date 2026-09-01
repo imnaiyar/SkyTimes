@@ -41,6 +41,7 @@ import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
 import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.feature.home.shards.LocalShardDate
+import com.imnaiyar.skytimes.feature.reminders.ReminderFlowController
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.format
@@ -49,11 +50,12 @@ import org.jetbrains.compose.resources.painterResource
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.calendar
 import com.imnaiyar.skytimes.feature.home.generated.resources.replay
+import com.imnaiyar.skytimes.feature.home.generated.resources.notifications
 import kotlin.time.Instant
 
 /** Top-bar actions for each main tab, owned by the home feature. */
 @OptIn(ExperimentalMaterial3Api::class)
-fun AppTab.topBarActions(): (@Composable RowScope.(Boolean) -> Unit)? = when (this) {
+fun AppTab.topBarActions(reminderFlow: ReminderFlowController? = null): (@Composable RowScope.(Boolean) -> Unit)? = when (this) {
     AppTab.SkyTimes -> { _ ->
         var timeZone by remember { mutableStateOf(TimeZone.currentSystemDefault()) }
         Column(
@@ -113,6 +115,16 @@ fun AppTab.topBarActions(): (@Composable RowScope.(Boolean) -> Unit)? = when (th
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            reminderFlow?.let { flow ->
+                val reminders = com.imnaiyar.skytimes.feature.reminders.LocalReminderRepository.current.reminders.collectAsState()
+                IconButton(onClick = flow::requestShardReminderEditor) {
+                    Icon(
+                        painterResource(Res.drawable.notifications),
+                        contentDescription = "Shard reminder",
+                        tint = if (reminders.value.any { it.eventId == com.imnaiyar.skytimes.core.domain.EventKey.SHARDS && it.enabled }) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
             TutorialTarget(
                 id = AppTutorialStep.ShardDatePicker.targetId,
                 enabled = tutorialTargetsEnabled

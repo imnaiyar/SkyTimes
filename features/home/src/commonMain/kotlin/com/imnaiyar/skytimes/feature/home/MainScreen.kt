@@ -50,6 +50,7 @@ import com.imnaiyar.skytimes.feature.home.skytimes.SkytimesScreen
 import com.imnaiyar.skytimes.feature.quests.QuestsScreen
 import com.imnaiyar.skytimes.feature.settings.LocalSettingsViewModel
 import com.imnaiyar.skytimes.feature.settings.SettingsScreen
+import com.imnaiyar.skytimes.feature.reminders.rememberReminderFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -65,6 +66,7 @@ fun MainScreen(
     val settings = LocalSettingsViewModel.current.settings.collectAsState()
     val tutorialManager = LocalTutorialManager.current
     val tutorialState by tutorialManager.state.collectAsState()
+    val reminderFlow = rememberReminderFlow()
 
     val defaultScreenIndex = screens.indexOf(settings.value.homeScreen)
 
@@ -177,7 +179,7 @@ fun MainScreen(
                             )
                         },
                         actions = {
-                            screens[page].topBarActions()?.invoke(this, tutorialTargetsEnabled)
+                            screens[page].topBarActions(reminderFlow)?.invoke(this, tutorialTargetsEnabled)
                         }
                     )
                 }
@@ -191,7 +193,8 @@ fun MainScreen(
                     AppTab.SkyTimes -> SkytimesScreen(
                         modifier,
                         fabPad,
-                        tutorialTargetsEnabled
+                        tutorialTargetsEnabled,
+                        reminderFlow
                     )
 
                     AppTab.Quests -> QuestsScreen(modifier, fabPad, tutorialTargetsEnabled)
@@ -205,10 +208,12 @@ fun MainScreen(
                     AppTab.Settings -> SettingsScreen(
                         modifier = modifier,
                         fabPad = fabPad,
-                        onOpenThemeSettings = onOpenThemeSettings
+                        onOpenThemeSettings = onOpenThemeSettings,
+                        reminderFlow = reminderFlow
                     )
                 }
             }
         }
+        reminderFlow.RenderDialogs()
     }
 }

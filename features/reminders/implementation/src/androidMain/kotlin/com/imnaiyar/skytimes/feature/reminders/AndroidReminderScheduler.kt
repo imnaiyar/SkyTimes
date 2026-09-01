@@ -174,8 +174,7 @@ class AndroidReminderScheduler(
             .setContentTitle(Reminder.title(reminder.eventId))
             .setContentText(
                 Reminder.body(
-                    reminder.eventId,
-                    reminder.offsetMinutes
+                    reminder
                 )
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)

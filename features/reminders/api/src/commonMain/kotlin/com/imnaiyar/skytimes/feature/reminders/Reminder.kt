@@ -3,8 +3,12 @@ package com.imnaiyar.skytimes.feature.reminders
 import androidx.compose.runtime.Composable
 import com.imnaiyar.skytimes.core.domain.EventData
 import com.imnaiyar.skytimes.core.domain.EventKey
-import com.imnaiyar.skytimes.core.domain.events
 import com.imnaiyar.skytimes.core.domain.EventTimeUtils
+import com.imnaiyar.skytimes.core.domain.GameTimeZone
+import com.imnaiyar.skytimes.core.domain.events
+import com.imnaiyar.skytimes.core.domain.getShard
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
@@ -43,15 +47,22 @@ interface ReminderPermissionController {
 }
 
 @Serializable
+enum class ShardReminderType { BLACK, RED, BOTH }
+
+@Serializable
 data class Reminder(
     val id: String,
     val eventId: EventKey,
     val enabled: Boolean = true,
     val offsetMinutes: Int = 0,
+    val shardType: ShardReminderType? = null,
     val metadata: Map<String, String> = emptyMap(),
 ) {
     init {
         require(offsetMinutes in 0..15) { "offsetMinutes must be between 0 and 15" }
+        require((eventId == EventKey.SHARDS) == (shardType != null)) {
+            "shardType is only valid for shard reminders"
+        }
     }
 
     companion object {
@@ -59,11 +70,40 @@ data class Reminder(
             eventId.name.lowercase().replace('_', ' ').split(' ')
                 .joinToString(" ") { name -> name.replaceFirstChar { it.titlecase() } }
 
-        fun title(eventId: EventKey): String = capitalizeName(eventId) + " reminder"
+        fun title(eventId: EventKey): String = if (eventId == EventKey.SHARDS) "Shard reminder"
+        else capitalizeName(eventId) + " reminder"
 
-        fun body(eventId: EventKey, offset: Int): String =
-            capitalizeName(eventId) + if (offset > 0) " will start in $offset minutes" else "is active"
+        fun body(reminder: Reminder, notificationTime: Instant = Clock.System.now()): String =
+            if (reminder.eventId == EventKey.SHARDS) {
+                val shardType = shardTypeForNotification(reminder, notificationTime)
+                val shardLabel = when (shardType) {
+                    ShardReminderType.RED -> "A red shard"
+                    ShardReminderType.BLACK -> "A black shard"
+                    ShardReminderType.BOTH, null -> "A shard"
+                }
+                shardLabel + if (reminder.offsetMinutes > 0) {
+                    " will land in ${reminder.offsetMinutes} minutes"
+                } else " is landing"
+            } else {
+                capitalizeName(reminder.eventId) + if (reminder.offsetMinutes > 0) {
+                    " will start in ${reminder.offsetMinutes} minutes"
+                } else " is active"
+            }
     }
+}
+
+private fun shardTypeForNotification(
+    reminder: Reminder,
+    notificationTime: Instant,
+): ShardReminderType? {
+    val configuredType = reminder.shardType ?: return null
+    if (configuredType != ShardReminderType.BOTH) return configuredType
+
+    val date = notificationTime.toLocalDateTime(GameTimeZone).date
+
+    val shard = getShard(date)!!
+
+    return if (shard.isRed) ShardReminderType.RED else ShardReminderType.BLACK
 }
 
 @Serializable
@@ -81,12 +121,34 @@ fun reminderTimes(
 ): List<Instant> {
     if (!reminder.enabled || limit <= 0) return emptyList()
 
+    if (reminder.eventId == EventKey.SHARDS) return shardReminderTimes(reminder, from, limit)
     val event = events.firstOrNull { it.key == reminder.eventId } ?: return emptyList()
+
     return upcomingOccurrences(event, from, limit + 8)
         .map { it.minus(reminder.offsetDuration()) }
         .filter { it >= from }
         .distinct()
         .take(limit)
+}
+
+fun shardReminderTimes(reminder: Reminder, from: Instant, limit: Int): List<Instant> {
+    if (!reminder.enabled || limit <= 0) return emptyList()
+    val type = reminder.shardType ?: return emptyList()
+    val startDate = from.toLocalDateTime(GameTimeZone).date
+    return (0..30).asSequence()
+        .map { LocalDate.fromEpochDays(startDate.toEpochDays() + it) }
+        .mapNotNull(::getShard)
+        .filter { shard ->
+            type == ShardReminderType.BOTH ||
+                    (type == ShardReminderType.RED) == shard.isRed
+        }
+        .flatMap { shard -> shard.occurrences.asSequence().map { it.shardLand } }
+        .map { it.minus(reminder.offsetDuration()) }
+        .filter { it >= from }
+        .distinct()
+        .sorted()
+        .take(limit)
+        .toList()
 }
 
 

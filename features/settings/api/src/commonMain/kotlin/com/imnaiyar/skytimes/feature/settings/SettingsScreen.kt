@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.navigation.LocalTutorialManager
-import com.imnaiyar.skytimes.feature.reminders.rememberReminderFlow
+import com.imnaiyar.skytimes.feature.reminders.ReminderFlowController
 import com.imnaiyar.skytimes.core.ui.Card
 import com.imnaiyar.skytimes.core.ui.Grid
 import com.imnaiyar.skytimes.core.ui.SettingsItem
@@ -48,13 +48,13 @@ import com.imnaiyar.skytimes.core.ui.generated.resources.open_in_browser
 fun SettingsScreen(
     modifier: Modifier,
     fabPad: PaddingValues,
-    onOpenThemeSettings: () -> Unit
+    onOpenThemeSettings: () -> Unit,
+    reminderFlow: ReminderFlowController,
 ) {
     val viewModel = LocalSettingsViewModel.current
     val settings by viewModel.settings.collectAsState()
     val tutorialManager = LocalTutorialManager.current
 
-    val reminderFlow = rememberReminderFlow()
     val uriHandler = LocalUriHandler.current
 
     val haptic = LocalHapticFeedback.current
@@ -243,7 +243,6 @@ fun SettingsScreen(
             }
         }
 
-        reminderFlow.RenderDialogs()
     }
 }
 

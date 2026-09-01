@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -48,6 +49,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.imnaiyar.skytimes.core.common.LocalApplicationScope
 import com.imnaiyar.skytimes.core.common.getPlatform
 import com.imnaiyar.skytimes.core.domain.EventData
+import com.imnaiyar.skytimes.core.domain.EventKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -68,12 +70,23 @@ class ReminderFlowController(
 
     private var reminderDraft by mutableStateOf<ReminderDraft?>(null)
     private var reminderEditorVisible by mutableStateOf(false)
+    private var shardEditorVisible by mutableStateOf(false)
     private var permissionSheetVisible by mutableStateOf(false)
     private var permissionSheetNextAction by mutableStateOf<(() -> Unit)?>(null)
     private var notificationPermissionStatus by mutableStateOf(ReminderPermissionStatus.Unavailable)
     private var exactAlarmPermissionStatus by mutableStateOf(ReminderPermissionStatus.Unavailable)
 
     private var reminderOffsetMinutes by mutableIntStateOf(0)
+    private var shardType by mutableStateOf(ShardReminderType.BOTH)
+
+    fun requestShardReminderEditor() {
+        runWhenNotificationPermissionReady {
+            val existing = reminderRepository.reminders.value.firstOrNull { it.eventId == EventKey.SHARDS }
+            shardType = existing?.shardType ?: ShardReminderType.BOTH
+            reminderOffsetMinutes = existing?.offsetMinutes ?: 0
+            shardEditorVisible = true
+        }
+    }
 
     fun requestReminderEditor(eventData: EventData) {
         runWhenNotificationPermissionReady {
@@ -191,6 +204,22 @@ class ReminderFlowController(
                 onDismiss = { clearReminderEditor() }
             )
         }
+
+        if (shardEditorVisible) {
+            ShardReminderBottomSheet(
+                type = shardType,
+                offsetMinutes = reminderOffsetMinutes,
+                onTypeChange = { shardType = it },
+                onOffsetChange = { reminderOffsetMinutes = it.coerceIn(0, 15) },
+                showExactAlarmHint = isAndroid && exactAlarmPermissionStatus != ReminderPermissionStatus.Granted,
+                openExactAlarm = { reminderScheduler.requestExactAlarm() },
+                onConfirm = { scope.launch { saveShardReminder() } },
+                onRemove = if (reminderRepository.reminders.value.any { it.eventId == EventKey.SHARDS }) {
+                    { scope.launch { removeShardReminder() } }
+                } else null,
+                onDismiss = { shardEditorVisible = false }
+            )
+        }
     }
 
     private fun runWhenNotificationPermissionReady(action: () -> Unit) {
@@ -238,6 +267,23 @@ class ReminderFlowController(
             notificationsToggle.setEnabled(false)
         }
         clearReminderEditor()
+    }
+
+    private suspend fun saveShardReminder() {
+        val reminder = reminderRepository.reminders.value.firstOrNull { it.eventId == EventKey.SHARDS }
+            ?.copy(offsetMinutes = reminderOffsetMinutes, shardType = shardType, enabled = true)
+            ?: Reminder("shards", EventKey.SHARDS, offsetMinutes = reminderOffsetMinutes, shardType = shardType)
+        notificationsToggle.setEnabled(true)
+        reminderRepository.upsert(reminder)
+        reminderScheduler.scheduleReminder(reminder)
+        shardEditorVisible = false
+    }
+
+    private suspend fun removeShardReminder() {
+        reminderScheduler.cancelReminder(EventKey.SHARDS.name)
+        reminderRepository.remove("shards")
+        if (reminderRepository.reminders.value.none(Reminder::enabled)) notificationsToggle.setEnabled(false)
+        shardEditorVisible = false
     }
 
     private fun clearReminderEditor() {
@@ -510,6 +556,66 @@ private fun ReminderOffsetDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ShardReminderBottomSheet(
+    type: ShardReminderType,
+    offsetMinutes: Int,
+    onTypeChange: (ShardReminderType) -> Unit,
+    onOffsetChange: (Int) -> Unit,
+    showExactAlarmHint: Boolean,
+    openExactAlarm: () -> Unit,
+    onConfirm: () -> Unit,
+    onRemove: (() -> Unit)?,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp).padding(bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text("Shard reminders", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("Choose which shards to be reminded about when they land.")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ShardReminderType.entries.forEach { option ->
+                    FilterChip(
+                        selected = type == option,
+                        onClick = { onTypeChange(option) },
+                        label = { Text(option.name.lowercase().replaceFirstChar { it.titlecase() }) }
+                    )
+                }
+            }
+            Text("$offsetMinutes minutes before", style = MaterialTheme.typography.titleMedium)
+            Slider(
+                value = offsetMinutes.toFloat(),
+                onValueChange = { onOffsetChange(it.roundToInt()) },
+                valueRange = 0f..15f,
+                steps = 14
+            )
+            if (showExactAlarmHint) {
+                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer).padding(12.dp)) {
+                    Text(
+                        buildAnnotatedString {
+                            append("Exact alarm permission is off. The reminder will still be saved, but Android may deliver it late.\n")
+                            withLink(LinkAnnotation.Clickable("open exact alarm", styles = TextLinkStyles(SpanStyle(MaterialTheme.colorScheme.primary)), linkInteractionListener = { openExactAlarm() })) {
+                                append("Open settings")
+                            }
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                onRemove?.let { TextButton(onClick = it) { Text("Remove") } }
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+                TextButton(onClick = onConfirm) { Text("Save") }
+            }
+        }
+    }
 }
 
 

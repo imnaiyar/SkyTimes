@@ -99,19 +99,11 @@ private fun shardTypeForNotification(
     val configuredType = reminder.shardType ?: return null
     if (configuredType != ShardReminderType.BOTH) return configuredType
 
-    val targetLanding = notificationTime.plus(reminder.offsetDuration())
     val date = notificationTime.toLocalDateTime(GameTimeZone).date
-    return (0..2).asSequence()
-        .map { LocalDate.fromEpochDays(date.toEpochDays() - 1 + it) }
-        .mapNotNull(::getShard)
-        .flatMap { shard ->
-            shard.occurrences.asSequence().map { occurrence ->
-                (occurrence.shardLand - targetLanding).absoluteValue to shard.isRed
-            }
-        }
-        .minByOrNull { it.first }
-        ?.second
-        ?.let { if (it) ShardReminderType.RED else ShardReminderType.BLACK }
+
+    val shard = getShard(date)!!
+
+    return if (shard.isRed) ShardReminderType.RED else ShardReminderType.BLACK
 }
 
 @Serializable

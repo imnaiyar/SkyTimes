@@ -174,7 +174,7 @@ class IosReminderScheduler(
         val intervalSeconds = ((time - now).inWholeMilliseconds / 1000.0).coerceAtLeast(1.0)
         val content = UNMutableNotificationContent().apply {
             setTitle(Reminder.title(reminder.eventId))
-            setBody(Reminder.body(reminder.eventId, reminder.offsetMinutes))
+            setBody(Reminder.body(reminder, time - reminder.offsetDuration()))
             setSound(UNNotificationSound.defaultSound())
         }
         val trigger: UNNotificationTrigger =

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -16,6 +17,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.imnaiyar.skytimes.core.common.LocalApplicationScope
+import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.data.LocalClockRepository
 import com.imnaiyar.skytimes.core.navigation.LocalTutorialManager
 import com.imnaiyar.skytimes.core.onboarding.TutorialHost
@@ -97,7 +99,8 @@ fun App() {
                         LocalShardDate provides shardDateState,
                         LocalUse24HourClock provides settings.use24HourClock,
                         LocalClockAnimation provides settings.clockAnimation,
-                        LocalApplicationScope provides appContainer.applicationScope
+                        LocalApplicationScope provides appContainer.applicationScope,
+                        LocalSnackBarState provides remember { SnackbarHostState() }
                     ) {
                         TutorialHost(manager = appContainer.tutorialManager) {
                             AppNavigation()

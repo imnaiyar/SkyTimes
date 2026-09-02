@@ -16,6 +16,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -39,6 +41,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.navigation.LocalTutorialManager
 import com.imnaiyar.skytimes.core.navigation.MainRoute
@@ -48,9 +51,9 @@ import com.imnaiyar.skytimes.feature.home.generated.resources.lightmend_lantern
 import com.imnaiyar.skytimes.feature.home.shards.ShardScreen
 import com.imnaiyar.skytimes.feature.home.skytimes.SkytimesScreen
 import com.imnaiyar.skytimes.feature.quests.QuestsScreen
+import com.imnaiyar.skytimes.feature.reminders.rememberReminderFlow
 import com.imnaiyar.skytimes.feature.settings.LocalSettingsViewModel
 import com.imnaiyar.skytimes.feature.settings.SettingsScreen
-import com.imnaiyar.skytimes.feature.reminders.rememberReminderFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -109,6 +112,16 @@ fun MainScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(bottomScroll.nestedScrollConnection),
+        snackbarHost = {
+            SnackbarHost(LocalSnackBarState.current) {
+                Snackbar(
+                    it,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    dismissActionContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        },
         bottomBar = {
             BottomAppBar(scrollBehavior = bottomScroll) {
                 screens.forEachIndexed { index, screen ->
@@ -179,7 +192,8 @@ fun MainScreen(
                             )
                         },
                         actions = {
-                            screens[page].topBarActions(reminderFlow)?.invoke(this, tutorialTargetsEnabled)
+                            screens[page].topBarActions(reminderFlow)
+                                ?.invoke(this, tutorialTargetsEnabled)
                         }
                     )
                 }
@@ -194,7 +208,7 @@ fun MainScreen(
                         modifier,
                         fabPad,
                         tutorialTargetsEnabled,
-                        reminderFlow
+                        reminderFlow,
                     )
 
                     AppTab.Quests -> QuestsScreen(modifier, fabPad, tutorialTargetsEnabled)

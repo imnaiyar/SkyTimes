@@ -15,8 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
@@ -47,6 +47,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.imnaiyar.skytimes.core.common.LocalApplicationScope
+import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.common.getPlatform
 import com.imnaiyar.skytimes.core.domain.EventData
 import com.imnaiyar.skytimes.core.domain.EventKey
@@ -81,7 +82,8 @@ class ReminderFlowController(
 
     fun requestShardReminderEditor() {
         runWhenNotificationPermissionReady {
-            val existing = reminderRepository.reminders.value.firstOrNull { it.eventId == EventKey.SHARDS }
+            val existing =
+                reminderRepository.reminders.value.firstOrNull { it.eventId == EventKey.SHARDS }
             shardType = existing?.shardType ?: ShardReminderType.BOTH
             reminderOffsetMinutes = existing?.offsetMinutes ?: 0
             shardEditorVisible = true
@@ -127,6 +129,9 @@ class ReminderFlowController(
     @Composable
     fun RenderDialogs() {
         val lifecycle = LocalLifecycleOwner.current
+
+        // snackbar host is supplied to scaffold of MainScreen
+        val snackBarHostState = LocalSnackBarState.current
 
         DisposableEffect(lifecycle) {
             val observer = LifecycleEventObserver { _, event ->
@@ -192,12 +197,22 @@ class ReminderFlowController(
                 onConfirm = {
                     scope.launch {
                         saveReminder(draft, reminderOffsetMinutes)
+
+                        snackBarHostState.showSnackbar(
+                            "Reminder set for ${draft.eventData.name} with the offset of $reminderOffsetMinutes minutes.",
+                            withDismissAction = true
+                        )
                     }
+
                 },
                 onRemove = draft.existingReminder?.let {
                     {
                         scope.launch {
                             removeReminder(draft)
+                            snackBarHostState.showSnackbar(
+                                "Reminder disabled for ${draft.eventData.name}.",
+                                withDismissAction = true,
+                            )
                         }
                     }
                 },
@@ -213,9 +228,32 @@ class ReminderFlowController(
                 onOffsetChange = { reminderOffsetMinutes = it.coerceIn(0, 15) },
                 showExactAlarmHint = isAndroid && exactAlarmPermissionStatus != ReminderPermissionStatus.Granted,
                 openExactAlarm = { reminderScheduler.requestExactAlarm() },
-                onConfirm = { scope.launch { saveShardReminder() } },
+                onConfirm = {
+                    scope.launch {
+                        saveShardReminder()
+
+                        snackBarHostState.showSnackbar(
+                            "Reminder saved for shard type: ${
+                                when (shardType) {
+                                    ShardReminderType.RED -> "Red"
+                                    ShardReminderType.BLACK -> "Black"
+                                    else -> "Red and Black"
+                                }
+                            } shard with the offset $reminderOffsetMinutes minute(s).",
+                            withDismissAction = true
+                        )
+                    }
+                },
                 onRemove = if (reminderRepository.reminders.value.any { it.eventId == EventKey.SHARDS }) {
-                    { scope.launch { removeShardReminder() } }
+                    {
+                        scope.launch {
+                            removeShardReminder()
+                            snackBarHostState.showSnackbar(
+                                "Reminder disabled for shards.",
+                                withDismissAction = true
+                            )
+                        }
+                    }
                 } else null,
                 onDismiss = { shardEditorVisible = false }
             )
@@ -270,9 +308,15 @@ class ReminderFlowController(
     }
 
     private suspend fun saveShardReminder() {
-        val reminder = reminderRepository.reminders.value.firstOrNull { it.eventId == EventKey.SHARDS }
-            ?.copy(offsetMinutes = reminderOffsetMinutes, shardType = shardType, enabled = true)
-            ?: Reminder("shards", EventKey.SHARDS, offsetMinutes = reminderOffsetMinutes, shardType = shardType)
+        val reminder =
+            reminderRepository.reminders.value.firstOrNull { it.eventId == EventKey.SHARDS }
+                ?.copy(offsetMinutes = reminderOffsetMinutes, shardType = shardType, enabled = true)
+                ?: Reminder(
+                    "shards",
+                    EventKey.SHARDS,
+                    offsetMinutes = reminderOffsetMinutes,
+                    shardType = shardType
+                )
         notificationsToggle.setEnabled(true)
         reminderRepository.upsert(reminder)
         reminderScheduler.scheduleReminder(reminder)
@@ -282,7 +326,9 @@ class ReminderFlowController(
     private suspend fun removeShardReminder() {
         reminderScheduler.cancelReminder(EventKey.SHARDS.name)
         reminderRepository.remove("shards")
-        if (reminderRepository.reminders.value.none(Reminder::enabled)) notificationsToggle.setEnabled(false)
+        if (reminderRepository.reminders.value.none(Reminder::enabled)) notificationsToggle.setEnabled(
+            false
+        )
         shardEditorVisible = false
     }
 
@@ -576,14 +622,21 @@ private fun ShardReminderBottomSheet(
             modifier = Modifier.fillMaxWidth().padding(16.dp).padding(bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text("Shard reminders", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                "Shard reminders",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
             Text("Choose which shards to be reminded about when they land.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ShardReminderType.entries.forEach { option ->
                     FilterChip(
                         selected = type == option,
                         onClick = { onTypeChange(option) },
-                        label = { Text(option.name.lowercase().replaceFirstChar { it.titlecase() }) }
+                        label = {
+                            Text(
+                                option.name.lowercase().replaceFirstChar { it.titlecase() })
+                        }
                     )
                 }
             }
@@ -595,12 +648,19 @@ private fun ShardReminderBottomSheet(
                 steps = 14
             )
             if (showExactAlarmHint) {
-                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer).padding(12.dp)) {
+                Box(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer).padding(12.dp)
+                ) {
                     Text(
                         buildAnnotatedString {
                             append("Exact alarm permission is off. The reminder will still be saved, but Android may deliver it late.\n")
-                            withLink(LinkAnnotation.Clickable("open exact alarm", styles = TextLinkStyles(SpanStyle(MaterialTheme.colorScheme.primary)), linkInteractionListener = { openExactAlarm() })) {
+                            withLink(
+                                LinkAnnotation.Clickable(
+                                    "open exact alarm",
+                                    styles = TextLinkStyles(SpanStyle(MaterialTheme.colorScheme.primary)),
+                                    linkInteractionListener = { openExactAlarm() })
+                            ) {
                                 append("Open settings")
                             }
                         },

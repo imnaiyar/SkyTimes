@@ -118,7 +118,7 @@ jobs:
           path: ${{ runner.temp }}/skytimes-ios-*.ipa
 
   release:
-    needs: [build-android, build-ios]
+    needs: [ build-android, build-ios ]
     if: >-
       always() &&
       (github.event_name != 'workflow_dispatch' || inputs.platform != 'web') &&
@@ -189,4 +189,4 @@ jobs:
           command: >
             pages deploy
             webApp/build/dist/wasmJs/productionExecutable
-            --project-name=skytimes
+            --project-name=skytimes --branch=main

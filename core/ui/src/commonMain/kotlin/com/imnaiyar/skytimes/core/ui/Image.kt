@@ -32,7 +32,6 @@ import androidx.compose.ui.window.DialogProperties
 import coil3.compose.SubcomposeAsyncImage
 import com.github.panpf.zoomimage.CoilZoomAsyncImage
 import com.github.panpf.zoomimage.rememberCoilZoomState
-import com.imnaiyar.skytimes.core.ui.RoundedCorner
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -52,8 +51,14 @@ fun RemoteImage(
         contentDescription = contentDescription,
         contentScale = contentScale,
         modifier = modifier
-            .clickable { isFullScreen = true }
-            .clip(RoundedCorner),
+            .clip(RoundedCorner)
+            .then(
+                if (allowFullScreen) {
+                    Modifier.clickable { isFullScreen = true }
+                } else {
+                    Modifier
+                }
+            ),
         loading = { LoadingSpinner() }
     )
 

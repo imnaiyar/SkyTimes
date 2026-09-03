@@ -1,5 +1,6 @@
 package com.imnaiyar.skytimes.core.data
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import com.imnaiyar.skytimes.core.common.StartupTask
 import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
@@ -14,6 +15,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
+
+
+val LocalSkyDataRepository = staticCompositionLocalOf<SkyDataRepository> {
+    error("No SkyDataRepository provided")
+}
 
 class SkyDataRepository(
     private val storage: Settings = Settings(),

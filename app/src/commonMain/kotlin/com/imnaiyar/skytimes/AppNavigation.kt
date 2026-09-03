@@ -64,9 +64,9 @@ fun AppNavigation() {
                 )
             }
             entry<VaultRoute> {
-                MainArchive()
+                MainArchive(onNavigateBack = { backStack.removeLastOrNull() })
             }
-            
+
             entry<ThemeSettingsRoute> {
                 ThemePage(onNavigateBack = { backStack.removeLastOrNull() })
             }

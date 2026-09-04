@@ -172,9 +172,9 @@ class SpecialVisitSpirit(guid: String) : SkyEntity(guid) {
 class TravelingSpirit(
     guid: String,
     override var date: LocalDate,
-    override var endDate: LocalDate,
-    val visit: Int
+    override var endDate: LocalDate
 ) : SkyEntity(guid), IPeriod {
+    var visit = 0;
     var number = 0;
     var spirit: Spirit? = null;
     var tree: SpiritTree? = null
@@ -499,7 +499,6 @@ class SkyDataResolver {
                 o.s("guid")!!,
                 o.date("date") ?: LocalDate(1970, 1, 1),
                 o.date("endDate") ?: o.date("date") ?: LocalDate(1970, 1, 1),
-                o.i("visit") ?: 0
             )
         }
         val visits = arr("specialVisits") { o ->
@@ -617,11 +616,20 @@ class SkyDataResolver {
             val o = root.config("spirits")[i].jsonObject; s.tree =
             get(by, o.ref("tree")); s.tree?.spirit = s
         }
+
+        val tsCounts = mutableMapOf<String, Int>()
         d.travelingSpirits.items.forEachIndexed { i, t ->
-            val o = root.config("travelingSpirits")[i].jsonObject; t.number = i + 1; t.spirit =
-            get(by, o.ref("spirit")); t.tree =
+            val o = root.config("travelingSpirits")[i].jsonObject; t.number =
+            i + 1
+            t.spirit =
+                get(by, o.ref("spirit")); t.tree =
             get(by, o.ref("tree")); t.spirit?.travelingSpirits?.add(t); t.tree?.travelingSpirit = t
+
+
+            tsCounts[t.spirit!!.guid] = (tsCounts[t.spirit!!.guid] ?: 0) + 1; t.visit =
+            tsCounts[t.spirit!!.guid]!!
         }
+
 
         d.specialVisits.items.forEachIndexed { i, v ->
             val o = root.config("specialVisits")[i].jsonObject; o.refs("spirits")

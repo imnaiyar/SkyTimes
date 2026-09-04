@@ -11,11 +11,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import com.imnaiyar.skytimes.core.data.LocalSkyDataRepository
+import com.imnaiyar.skytimes.core.navigation.navigateTo
 import com.imnaiyar.skytimes.core.ui.BackScaffold
+import com.imnaiyar.skytimes.feature.vault.nav.EventsRoute
+import com.imnaiyar.skytimes.feature.vault.nav.SeasonsRoute
+import com.imnaiyar.skytimes.feature.vault.nav.SpecialVisitsRoute
+import com.imnaiyar.skytimes.feature.vault.nav.TravelingSpiritsRoute
 
 @Composable
-fun MainArchive(onNavigateBack: () -> Unit) {
+fun MainArchive(onNavigateBack: () -> Unit, navStack: NavBackStack<NavKey>) {
     Box(contentAlignment = Alignment.Center) {
         val skydata by LocalSkyDataRepository.current.data.collectAsState()
 
@@ -38,9 +45,10 @@ fun MainArchive(onNavigateBack: () -> Unit) {
                             CarouselItemType.CarouselSectionItems(
                                 data.name,
                                 data.shortName,
-                                data.imageUrl
+                                data.imageUrl,
                             )
-                        })
+                        }
+                    ) { navStack.navigateTo(SeasonsRoute) }
                 }
 
                 // events
@@ -51,7 +59,7 @@ fun MainArchive(onNavigateBack: () -> Unit) {
                             data.shortName ?: data.name.replace("Days of ", ""),
                             data.imageUrl
                         )
-                    })
+                    }) { navStack.navigateTo(EventsRoute) }
                 }
 
                 // traveling spirit
@@ -65,17 +73,16 @@ fun MainArchive(onNavigateBack: () -> Unit) {
                                 data.spirit?.imageUrl,
                                 imageScale = ContentScale.Fit
                             )
-                        })
+                        }) { navStack.navigateTo(TravelingSpiritsRoute) }
                 }
 
                 // Special visit
-                // TODO: this placed like other for now, but this should show all sv spirits, in a card
                 item {
                     CarouselSection(
                         "Special Visits",
                         skydata!!.specialVisits.items.reversed().map { data ->
                             CarouselItemType.CarouselSpecialVisit(data)
-                        })
+                        }) { navStack.navigateTo(SpecialVisitsRoute) }
                 }
             }
         }

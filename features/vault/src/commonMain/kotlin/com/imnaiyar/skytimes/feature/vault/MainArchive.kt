@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.data.LocalSkyDataRepository
 import com.imnaiyar.skytimes.core.ui.BackScaffold
@@ -34,7 +35,7 @@ fun MainArchive(onNavigateBack: () -> Unit) {
                     CarouselSection(
                         "Seasons",
                         skydata!!.seasons.items.reversed().map { data ->
-                            CarouselSectionItems(
+                            CarouselItemType.CarouselSectionItems(
                                 data.name,
                                 data.shortName,
                                 data.imageUrl
@@ -45,7 +46,7 @@ fun MainArchive(onNavigateBack: () -> Unit) {
                 // events
                 item {
                     CarouselSection("Events", skydata!!.events.items.reversed().map { data ->
-                        CarouselSectionItems(
+                        CarouselItemType.CarouselSectionItems(
                             data.name,
                             data.shortName ?: data.name.replace("Days of ", ""),
                             data.imageUrl
@@ -58,10 +59,11 @@ fun MainArchive(onNavigateBack: () -> Unit) {
                     CarouselSection(
                         "Traveling Spirits",
                         skydata!!.travelingSpirits.items.reversed().map { data ->
-                            CarouselSectionItems(
+                            CarouselItemType.CarouselSectionItems(
                                 (data.spirit?.name ?: "Unknown Spirit") + " (#${data.number})",
                                 data.spirit?.name ?: "Unknown",
-                                data.spirit?.imageUrl
+                                data.spirit?.imageUrl,
+                                imageScale = ContentScale.Fit
                             )
                         })
                 }
@@ -70,13 +72,9 @@ fun MainArchive(onNavigateBack: () -> Unit) {
                 // TODO: this placed like other for now, but this should show all sv spirits, in a card
                 item {
                     CarouselSection(
-                        "Traveling Spirits",
+                        "Special Visits",
                         skydata!!.specialVisits.items.reversed().map { data ->
-                            CarouselSectionItems(
-                                data.name ?: "Special Visit",
-                                "SV",
-                                null
-                            )
+                            CarouselItemType.CarouselSpecialVisit(data)
                         })
                 }
             }

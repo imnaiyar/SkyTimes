@@ -622,6 +622,26 @@ class SkyDataResolver {
             get(by, o.ref("spirit")); t.tree =
             get(by, o.ref("tree")); t.spirit?.travelingSpirits?.add(t); t.tree?.travelingSpirit = t
         }
+
+        d.specialVisits.items.forEachIndexed { i, v ->
+            val o = root.config("specialVisits")[i].jsonObject; o.refs("spirits")
+            .mapNotNull { get<SpecialVisitSpirit>(by, it) }
+            .forEach {
+                val visitSpiritJson = root.config("specialVisitSpirits")
+                    .firstOrNull { candidate -> candidate.jsonObject.s("guid") == it.guid }
+                    ?.jsonObject
+                    ?: error("Special visit spirit ${it.guid} is missing from the source data")
+
+                v.spirits += it
+                it.visit = v
+                it.spirit = get(by, visitSpiritJson.ref("spirit"))
+                it.spirit?.specialVisitSpirits?.add(it)
+                it.tree = get(by, visitSpiritJson.ref("tree"))
+                it.tree?.specialVisitSpirit = it
+            }
+
+            v.area = get(by, o.ref("area")); v.area?.specialVisits?.add(v)
+        }
         d.shops.items.forEachIndexed { i, s ->
             val o = root.config("shops")[i].jsonObject; s.spirit =
             get(by, o.ref("spirit")); s.spirit?.shops?.add(s); o.refs("iaps")

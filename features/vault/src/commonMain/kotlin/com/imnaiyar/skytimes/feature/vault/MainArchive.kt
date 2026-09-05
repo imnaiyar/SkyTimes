@@ -6,27 +6,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import com.imnaiyar.skytimes.core.data.LocalSkyDataRepository
+import com.imnaiyar.skytimes.core.data.SkyData
 import com.imnaiyar.skytimes.core.navigation.navigateTo
 import com.imnaiyar.skytimes.core.ui.BackScaffold
-import com.imnaiyar.skytimes.feature.vault.nav.EventsRoute
-import com.imnaiyar.skytimes.feature.vault.nav.SeasonsRoute
-import com.imnaiyar.skytimes.feature.vault.nav.SpecialVisitsRoute
-import com.imnaiyar.skytimes.feature.vault.nav.TravelingSpiritsRoute
+import com.imnaiyar.skytimes.feature.vault.nav.CategoryList
+import com.imnaiyar.skytimes.feature.vault.nav.ListRoute
 
 @Composable
-fun MainArchive(onNavigateBack: () -> Unit, navStack: NavBackStack<NavKey>) {
+fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackStack<NavKey>) {
     Box(contentAlignment = Alignment.Center) {
-        val skydata by LocalSkyDataRepository.current.data.collectAsState()
 
-        if (skydata == null) return@Box Text(
+        if (skyData == null) return@Box Text(
             "Loading...",
             style = MaterialTheme.typography.displayLarge
         )
@@ -41,48 +36,48 @@ fun MainArchive(onNavigateBack: () -> Unit, navStack: NavBackStack<NavKey>) {
                 item {
                     CarouselSection(
                         "Seasons",
-                        skydata!!.seasons.items.reversed().map { data ->
+                        skyData.seasons.items.reversed().map { data ->
                             CarouselItemType.CarouselSectionItems(
                                 data.name,
                                 data.shortName,
                                 data.imageUrl,
                             )
                         }
-                    ) { navStack.navigateTo(SeasonsRoute) }
+                    ) { navStack.navigateTo(ListRoute(CategoryList.SeasonsList)) }
                 }
 
                 // events
                 item {
-                    CarouselSection("Events", skydata!!.events.items.reversed().map { data ->
+                    CarouselSection("Events", skyData.events.items.reversed().map { data ->
                         CarouselItemType.CarouselSectionItems(
                             data.name,
                             data.shortName ?: data.name.replace("Days of ", ""),
                             data.imageUrl
                         )
-                    }) { navStack.navigateTo(EventsRoute) }
+                    }) { navStack.navigateTo(ListRoute(CategoryList.EventsList)) }
                 }
 
                 // traveling spirit
                 item {
                     CarouselSection(
                         "Traveling Spirits",
-                        skydata!!.travelingSpirits.items.reversed().map { data ->
+                        skyData.travelingSpirits.items.reversed().map { data ->
                             CarouselItemType.CarouselSectionItems(
                                 (data.spirit?.name ?: "Unknown Spirit") + " (#${data.number})",
                                 data.spirit?.name ?: "Unknown",
                                 data.spirit?.imageUrl,
                                 imageScale = ContentScale.Fit
                             )
-                        }) { navStack.navigateTo(TravelingSpiritsRoute) }
+                        }) { navStack.navigateTo(ListRoute(CategoryList.TravelingSpiritsList)) }
                 }
 
                 // Special visit
                 item {
                     CarouselSection(
                         "Special Visits",
-                        skydata!!.specialVisits.items.reversed().map { data ->
+                        skyData.specialVisits.items.reversed().map { data ->
                             CarouselItemType.CarouselSpecialVisit(data)
-                        }) { navStack.navigateTo(SpecialVisitsRoute) }
+                        }) { navStack.navigateTo(ListRoute(CategoryList.SpecialVisitsList)) }
                 }
             }
         }

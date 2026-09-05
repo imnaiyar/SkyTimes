@@ -13,11 +13,10 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import com.imnaiyar.skytimes.core.navigation.AppRoute
 import com.imnaiyar.skytimes.core.navigation.MainRoute
 import com.imnaiyar.skytimes.core.navigation.ThemeSettingsRoute
-import com.imnaiyar.skytimes.core.navigation.VaultRoute
 import com.imnaiyar.skytimes.core.navigation.navigateTo
 import com.imnaiyar.skytimes.feature.home.MainScreen
 import com.imnaiyar.skytimes.feature.settings.ThemePage
-import com.imnaiyar.skytimes.feature.vault.MainArchive
+import com.imnaiyar.skytimes.feature.vault.nav.Archive
 import com.imnaiyar.skytimes.feature.vault.nav.VaultRoutes
 import com.imnaiyar.skytimes.feature.vault.nav.vaultEntries
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -62,13 +61,10 @@ fun AppNavigation() {
         entryProvider = entryProvider {
             entry<MainRoute> {
                 MainScreen(
-                    onOpenVault = { backStack.navigateTo(VaultRoute) },
+                    onOpenVault = { backStack.navigateTo(Archive) },
                     onOpenThemeSettings = { backStack.navigateTo(ThemeSettingsRoute) },
                     backStack
                 )
-            }
-            entry<VaultRoute> {
-                MainArchive(onNavigateBack = { backStack.removeLastOrNull() }, backStack)
             }
 
             entry<ThemeSettingsRoute> {

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,12 +26,14 @@ import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.data.SpecialVisit
 import com.imnaiyar.skytimes.core.ui.RemoteImage
 import com.imnaiyar.skytimes.core.ui.RoundedCorner
-import com.imnaiyar.skytimes.core.ui.Tooltip
 import com.imnaiyar.skytimes.core.ui.generated.resources.Res
 import com.imnaiyar.skytimes.core.ui.generated.resources.chevron_right
 import com.imnaiyar.skytimes.core.ui.theme.labelTiny
@@ -104,10 +107,8 @@ internal fun CarouselSection(
             ) {
                 Box(
                     modifier = Modifier.fillMaxWidth().requiredHeight(150.dp)
-                        .background(
-                            MaterialTheme.colorScheme.secondaryContainer,
-                            RoundedCorner
-                        )
+                        .clip(RoundedCorner)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
                         .clickable(onClick = item.onClick),
                     contentAlignment = Alignment.Center
                 ) {
@@ -137,7 +138,17 @@ internal fun CarouselSection(
 }
 
 @Composable
-private fun SpecialVisitSection(visit: SpecialVisit) {
+private fun BoxScope.SpecialVisitSection(visit: SpecialVisit) {
+
+    if (visit.area?.imageUrl != null) {
+        RemoteImage(
+            visit.area!!.imageUrl!!,
+            modifier = Modifier.matchParentSize().blur(4.dp),
+            contentScale = ContentScale.FillBounds,
+            allowFullScreen = false
+        )
+        Box(Modifier.matchParentSize().background(Color.Black.copy(0.6f), RoundedCorner))
+    }
 
     FlowRow(
         modifier = Modifier.fillMaxSize(),
@@ -150,18 +161,17 @@ private fun SpecialVisitSection(visit: SpecialVisit) {
             Box(
                 modifier = Modifier.requiredSize(boxSize)
                     .background(
-                        MaterialTheme.colorScheme.secondaryFixed.copy(0.3f),
+                        MaterialTheme.colorScheme.secondaryContainer.copy(0.3f),
                         RoundedCorner
                     )
             ) {
-                if (spirit.spirit?.imageUrl !== null) Tooltip(spirit.spirit!!.name) {
+                if (spirit.spirit?.imageUrl !== null)
                     RemoteImage(
                         spirit.spirit!!.imageUrl!!,
                         modifier = Modifier.fillMaxWidth(),
                         contentScale = ContentScale.Fit,
                         allowFullScreen = false
                     )
-                }
                 else Text("?", style = MaterialTheme.typography.labelTiny)
             }
         }

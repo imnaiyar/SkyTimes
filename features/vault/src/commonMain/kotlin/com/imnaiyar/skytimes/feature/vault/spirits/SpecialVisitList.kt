@@ -30,8 +30,12 @@ import com.imnaiyar.skytimes.core.ui.RemoteImage
 import com.imnaiyar.skytimes.core.ui.RoundedCorner
 import com.imnaiyar.skytimes.core.ui.RoundedCornerBottom
 import com.imnaiyar.skytimes.core.ui.RoundedCornerTop
+import com.imnaiyar.skytimes.core.ui.generated.resources.Res
+import com.imnaiyar.skytimes.core.ui.generated.resources.map
+import com.imnaiyar.skytimes.core.ui.generated.resources.person
 import com.imnaiyar.skytimes.core.ui.theme.labelTiny
 import com.imnaiyar.skytimes.feature.vault.common.DateFooterSection
+import com.imnaiyar.skytimes.feature.vault.common.FooterSection
 import com.imnaiyar.skytimes.feature.vault.common.ListScaffold
 
 @Composable
@@ -134,15 +138,18 @@ internal fun SpecialVisitList(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                     modifier = Modifier.padding(10.dp)
                 ) {
-                    if (visit.area != null) DecoratedText(
-                        "Area: ${visit.area!!.name}",
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.clickable(onClick = { onAreaClick(visit.area!!.guid) })
-                    )
-                    Text(
-                        "Total Spirits: ${visit.spirits.size}",
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    if (visit.area != null) {
+                        FooterSection(Res.drawable.map) {
+                            DecoratedText(
+                                "Area: ${visit.area!!.name}",
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.clickable(onClick = { onAreaClick(visit.area!!.guid) })
+                            )
+                        }
+                    }
+
+                    FooterSection("Total Spirits: ${visit.spirits.size}", Res.drawable.person)
+
                     DateFooterSection(visit.date, visit.endDate)
                 }
             }

@@ -43,6 +43,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
 
@@ -144,6 +145,36 @@ internal fun DisplayCard(
 
 
 @Composable
+internal fun FooterSection(text: String, icon: DrawableResource? = null) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        if (icon != null) Icon(
+            painterResource(icon),
+            contentDescription = "Icon",
+            modifier = Modifier.size(12.dp)
+        )
+        Text(text, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+@Composable
+internal fun FooterSection(icon: DrawableResource? = null, content: @Composable () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        if (icon != null) Icon(
+            painterResource(icon),
+            contentDescription = "Icon",
+            modifier = Modifier.size(12.dp)
+        )
+        content()
+    }
+}
+
+@Composable
 internal fun DateFooterSection(dateStart: LocalDate, dateEnd: LocalDate? = null) {
     var dateLabel = dateStart.format(localDateToIso)
 
@@ -159,19 +190,5 @@ internal fun DateFooterSection(dateStart: LocalDate, dateEnd: LocalDate? = null)
         }
     }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Icon(
-            painterResource(Res.drawable.calendar),
-            contentDescription = "Calendar",
-            modifier = Modifier.size(12.dp)
-        )
-
-        Text(
-            text = dateLabel,
-            style = MaterialTheme.typography.labelSmall,
-        )
-    }
+    FooterSection(dateLabel, Res.drawable.calendar)
 }

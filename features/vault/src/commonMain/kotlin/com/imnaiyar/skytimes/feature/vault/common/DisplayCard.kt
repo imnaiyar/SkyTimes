@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,6 +32,8 @@ import com.imnaiyar.skytimes.core.ui.Card
 import com.imnaiyar.skytimes.core.ui.Grid
 import com.imnaiyar.skytimes.core.ui.RemoteImage
 import com.imnaiyar.skytimes.core.ui.RoundedCorner
+import com.imnaiyar.skytimes.core.ui.RoundedCornerBottom
+import com.imnaiyar.skytimes.core.ui.RoundedCornerTop
 import com.imnaiyar.skytimes.core.ui.ScrollToTop
 import com.imnaiyar.skytimes.core.ui.generated.resources.Res
 import com.imnaiyar.skytimes.core.ui.generated.resources.calendar
@@ -92,12 +93,12 @@ internal fun DisplayCard(
                 allowFullScreen = false,
                 modifier = Modifier.fillMaxWidth().height(imageHeight),
                 contentScale = imageScale,
-                shape = RoundedCorner.copy(bottomStart = CornerSize(0f), bottomEnd = CornerSize(0f))
+                shape = RoundedCornerTop
             )
 
             if (footer != null) Card(
                 Modifier.fillMaxWidth(),
-                shape = RoundedCorner.copy(topStart = CornerSize(0f), topEnd = CornerSize(0f)),
+                shape = RoundedCornerBottom,
                 border = null
             ) {
                 Column(
@@ -124,7 +125,7 @@ internal fun DisplayCard(
                 ),
             contentAlignment = Alignment.TopStart
         ) {
-            Column(Modifier.padding(10.dp).height(imageHeight)) {
+            Column(Modifier.padding(10.dp)) {
                 if (titleHeader != null) Text(
                     titleHeader,
                     style = MaterialTheme.typography.labelSmall,

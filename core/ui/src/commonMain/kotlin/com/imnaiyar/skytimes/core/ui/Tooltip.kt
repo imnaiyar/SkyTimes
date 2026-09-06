@@ -13,6 +13,8 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import kotlinx.coroutines.launch
 
 
@@ -22,6 +24,7 @@ private fun _ToolTip(
     tooltipPosition: TooltipAnchorPosition = TooltipAnchorPosition.Below,
     showOnClick: Boolean = true,
     enabled: Boolean,
+    clickableShape: Shape,
     tooltip: @Composable () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -41,7 +44,7 @@ private fun _ToolTip(
             ) { tooltip() }
         },
     ) {
-        Box(modifier = Modifier.clickable {
+        Box(modifier = Modifier.clip(clickableShape).clickable {
             if (showOnClick) scope.launch { tooltipState.show() }
         }) {
             content()
@@ -56,10 +59,19 @@ fun Tooltip(
     tooltipPosition: TooltipAnchorPosition = TooltipAnchorPosition.Below,
     showOnClick: Boolean = true,
     enabled: Boolean = true,
+    clickableShape: Shape = RoundedCorner,
     content: @Composable () -> Unit
 ) {
 
-    _ToolTip(tooltipState, tooltipPosition, showOnClick, enabled, { Text(text) }, content)
+    _ToolTip(
+        tooltipState,
+        tooltipPosition,
+        showOnClick,
+        enabled,
+        clickableShape,
+        { Text(text) },
+        content
+    )
 }
 
 @Composable
@@ -69,8 +81,9 @@ fun Tooltip(
     tooltipPosition: TooltipAnchorPosition = TooltipAnchorPosition.Below,
     showOnClick: Boolean = true,
     enabled: Boolean = true,
+    clickableShape: Shape = RoundedCorner,
     content: @Composable () -> Unit
 ) {
 
-    _ToolTip(tooltipState, tooltipPosition, showOnClick, enabled, tooltip, content)
+    _ToolTip(tooltipState, tooltipPosition, showOnClick, enabled, clickableShape, tooltip, content)
 }

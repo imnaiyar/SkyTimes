@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -27,11 +29,15 @@ import androidx.compose.ui.unit.dp
 import com.imnaiyar.skytimes.core.common.localDateToIso
 import com.imnaiyar.skytimes.core.domain.GameTimeZone
 import com.imnaiyar.skytimes.core.ui.BackScaffold
+import com.imnaiyar.skytimes.core.ui.Card
 import com.imnaiyar.skytimes.core.ui.Grid
 import com.imnaiyar.skytimes.core.ui.RemoteImage
 import com.imnaiyar.skytimes.core.ui.RoundedCorner
+import com.imnaiyar.skytimes.core.ui.ScrollToTop
 import com.imnaiyar.skytimes.core.ui.generated.resources.Res
 import com.imnaiyar.skytimes.core.ui.generated.resources.calendar
+import com.imnaiyar.skytimes.core.ui.showScrollToTop
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.format
@@ -46,8 +52,16 @@ fun <T> ListScaffold(
     onBack: () -> Unit,
     content: @Composable (T) -> Unit
 ) {
-    BackScaffold(title, onBack) {
-        Grid(contentPadding = it + PaddingValues(5.dp)) {
+    val state = rememberLazyStaggeredGridState()
+    val scope = rememberCoroutineScope()
+
+    BackScaffold(title, onBack, bottomBar = {
+        ScrollToTop(
+            state.showScrollToTop(),
+            modifier = Modifier,
+            onClick = { scope.launch { state.animateScrollToItem(0) } })
+    }) {
+        Grid(state = state, contentPadding = it + PaddingValues(5.dp)) {
             items(itemList.size) { i ->
                 val item = itemList[i]
 
@@ -63,30 +77,54 @@ internal fun DisplayCard(
     titleHeader: String? = null,
     imageUrl: String? = null,
     imageScale: ContentScale = ContentScale.FillBounds,
-    scrimAlpha: Float = 1f,
+    scrimAlpha: Float = 0.9f,
     footer: (@Composable ColumnScope.() -> Unit)? = null
 ) {
+    val imageHeight = 200.dp
     Box(
-        Modifier.fillMaxWidth().height(250.dp)
+        Modifier.fillMaxWidth()
             .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCorner)
     ) {
-        RemoteImage(
-            imageUrl ?: "",
-            allowFullScreen = false,
-            modifier = Modifier.matchParentSize(),
-            contentScale = imageScale
-        )
+
+        Column {
+            RemoteImage(
+                imageUrl ?: "",
+                allowFullScreen = false,
+                modifier = Modifier.fillMaxWidth().height(imageHeight),
+                contentScale = imageScale,
+                shape = RoundedCorner.copy(bottomStart = CornerSize(0f), bottomEnd = CornerSize(0f))
+            )
+
+            if (footer != null) Card(
+                Modifier.fillMaxWidth(),
+                shape = RoundedCorner.copy(topStart = CornerSize(0f), topEnd = CornerSize(0f)),
+                border = null
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.padding(10.dp)
+                ) { footer() }
+            }
+        }
+
+        // title over a black scrim
         Box(
             Modifier.matchParentSize()
                 .background(
                     Brush.verticalGradient(
-                        listOf(Color.Black.copy(scrimAlpha), Color.Transparent)
+                        listOf(
+                            Color.Black.copy(alpha = scrimAlpha),
+                            Color.Black.copy(0.2f),
+                            Color.Transparent,
+                            Color.Transparent, // fully faded by 35% of the height
+                        )
+
                     ),
                     RoundedCorner
                 ),
             contentAlignment = Alignment.TopStart
         ) {
-            Column(Modifier.padding(10.dp)) {
+            Column(Modifier.padding(10.dp).height(imageHeight)) {
                 if (titleHeader != null) Text(
                     titleHeader,
                     style = MaterialTheme.typography.labelSmall,
@@ -100,18 +138,6 @@ internal fun DisplayCard(
                 )
             }
         }
-
-        if (footer != null) Box(
-            Modifier.align(Alignment.BottomStart).fillMaxWidth().background(
-                MaterialTheme.colorScheme.surfaceContainer.copy(0.9f),
-                RoundedCorner.copy(topStart = CornerSize(0f), topEnd = CornerSize(0f))
-            )
-        ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-                modifier = Modifier.padding(10.dp)
-            ) { footer() }
-        }
     }
 }
 
@@ -121,7 +147,7 @@ internal fun DateFooterSection(dateStart: LocalDate, dateEnd: LocalDate? = null)
     var dateLabel = dateStart.format(localDateToIso)
 
     if (dateEnd != null) {
-        dateLabel += " --> ${dateEnd.format(localDateToIso)}"
+        dateLabel += " \u279e ${dateEnd.format(localDateToIso)}"
 
         val nowDate = Clock.System.now().toLocalDateTime(GameTimeZone).date
 

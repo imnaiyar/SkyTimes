@@ -10,6 +10,7 @@ import com.imnaiyar.skytimes.core.data.LocalSkyDataRepository
 import com.imnaiyar.skytimes.feature.vault.MainArchive
 import com.imnaiyar.skytimes.feature.vault.events.EventList
 import com.imnaiyar.skytimes.feature.vault.seasons.SeasonList
+import com.imnaiyar.skytimes.feature.vault.spirits.SpecialVisitList
 import com.imnaiyar.skytimes.feature.vault.spirits.TravelingSpiritList
 import kotlinx.serialization.Serializable
 
@@ -23,6 +24,7 @@ enum class CategoryList {
 @Serializable
 sealed interface VaultRoutes : NavKey
 
+@Serializable
 data object Archive : VaultRoutes
 
 @Serializable
@@ -48,8 +50,8 @@ fun EntryProviderScope<NavKey>.vaultEntries(backStack: NavBackStack<NavKey>) {
                 onBack
             )
 
-            CategoryList.SpecialVisitsList -> TravelingSpiritList(
-                data!!.travelingSpirits.items.reversed(),
+            CategoryList.SpecialVisitsList -> SpecialVisitList(
+                data!!.specialVisits.items.reversed(),
                 onBack
             )
         }

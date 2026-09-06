@@ -1,6 +1,8 @@
 package com.imnaiyar.skytimes.core.data
 
+import com.imnaiyar.skytimes.core.domain.GameTimeZone
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -11,6 +13,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.time.Clock
 
 interface IGuid {
     val guid: String
@@ -19,6 +22,11 @@ interface IGuid {
 interface IPeriod {
     val date: LocalDate;
     val endDate: LocalDate
+
+    fun isActive(): Boolean {
+        val now = Clock.System.now().toLocalDateTime(GameTimeZone).date
+        return now in date..endDate
+    }
 }
 
 interface IWiki {
@@ -41,6 +49,7 @@ data class Cost(
 )
 
 open class SkyEntity(override val guid: String) : IGuid
+
 class Area(
     guid: String,
     val name: String,

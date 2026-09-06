@@ -26,20 +26,14 @@ import com.imnaiyar.skytimes.core.navigation.AppTutorialStep
 import com.imnaiyar.skytimes.core.onboarding.TutorialTarget
 import com.imnaiyar.skytimes.core.ui.animated.AnimatedTimer
 import com.imnaiyar.skytimes.core.ui.animated.ClockDirection
+import com.imnaiyar.skytimes.core.ui.success
 import com.imnaiyar.skytimes.core.ui.theme.labelTiny
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.notifications
 import com.imnaiyar.skytimes.feature.home.generated.resources.pin
-import com.materialkolor.ktx.harmonize
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Instant
 
-@Composable
-fun success(): Color {
-    val scheme = MaterialTheme.colorScheme
-
-    return Color(0xFF4CAF50).harmonize(scheme.primary)
-}
 
 @Composable
 internal fun EventRow(

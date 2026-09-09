@@ -3,6 +3,8 @@ package com.imnaiyar.skytimes.feature.vault
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,38 +32,49 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
 
     val activeItems = remember(skyData) {
         val seasons = skyData.seasons.items.filter { it.isActive() }
-        val events = skyData.eventInstances.items.filter { it.isActive() }.map { it.event!! }
+        val events = skyData.eventInstances.items.filter { it.isActive() }
         val travelingSpirits = skyData.travelingSpirits.items.filter { it.isActive() }
-        val specialVisits = skyData.specialVisits.items.filter { it.isActive() }
-
+        val specialVisit = skyData.specialVisits.items.filter { it.isActive() }
         listOf(
             seasons.map {
-                CarouselItemType.CarouselSectionItems(
+                HeroCarouselItem(
                     it.name,
-                    it.shortName,
-                    it.imageUrl
-                )
+                    "Season",
+                    "Ends in ${it.remainingDays()} days",
+                    it.imageUrl,
+                    {})
             },
+
             events.map {
-                CarouselItemType.CarouselSectionItems(
-                    it.name,
-                    it.shortName ?: it.name.replace("Days of ", ""),
-                    it.imageUrl
-                )
+                HeroCarouselItem(
+                    it.event!!.name,
+                    "Event",
+                    "Ends in ${it.remainingDays()} days",
+                    it.event!!.imageUrl,
+                    {})
             },
             travelingSpirits.map {
-                CarouselItemType.CarouselSectionItems(
+                HeroCarouselItem(
                     (it.spirit?.name ?: "Unknown Spirit") + " (#${it.number})",
-                    it.spirit?.name ?: "Unknown",
+                    "Traveling Spirit \u2022 TS #${it.number}",
+                    "Ends in ${it.remainingDays()} days",
                     it.spirit?.imageUrl,
-                )
+                    {})
             },
-            specialVisits.map {
-                CarouselItemType.CarouselSpecialVisit(it)
+
+            specialVisit.map {
+                HeroCarouselItem(
+                    it.name ?: "Unknown Visit",
+                    "Special Visit",
+                    "Ends in ${it.remainingDays()} days",
+                    it.area?.imageUrl,
+                    {},
+                    it.spirits.map { s -> s.spirit?.imageUrl ?: "" }
+                )
             }
+
         ).flatten()
     }
-
 
     val filteredSeasons = remember(query) {
         if (query.isBlank()) skyData.seasons.items
@@ -103,7 +116,8 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
         BackScaffold("Vault Archive", onNavigateBack) {
             LazyColumn(
                 contentPadding = it,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.imePadding()
             ) {
                 item { SearchBar(query) { q -> query = q } }
 
@@ -116,10 +130,14 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
                     }
                 }
 
-                // TODO: use slideshow type of courousel for this one
                 if (query.isBlank() && activeItems.isNotEmpty()) {
                     item {
-                        CarouselSection("Currently Active", activeItems, true)
+                        Text(
+                            "Active Now (${activeItems.size})",
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.padding(start = 12.dp)
+                        )
+                        HeroCarousel(activeItems)
                     }
                 }
 

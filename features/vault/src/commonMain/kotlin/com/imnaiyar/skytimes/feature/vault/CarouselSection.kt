@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.CarouselDefaults
@@ -37,7 +36,6 @@ import com.imnaiyar.skytimes.core.ui.RemoteImage
 import com.imnaiyar.skytimes.core.ui.RoundedCorner
 import com.imnaiyar.skytimes.core.ui.generated.resources.Res
 import com.imnaiyar.skytimes.core.ui.generated.resources.chevron_right
-import com.imnaiyar.skytimes.core.ui.success
 import com.imnaiyar.skytimes.core.ui.theme.labelTiny
 import org.jetbrains.compose.resources.painterResource
 
@@ -64,12 +62,9 @@ sealed interface CarouselItemType {
 internal fun CarouselSection(
     title: String,
     items: List<CarouselItemType>,
-    activeSection: Boolean = false,
     onCategoryClick: (() -> Unit)? = null,
 ) {
     val state = rememberCarouselState { items.size }
-    val textColor = if (activeSection) success()
-    else LocalContentColor.current
 
     Column {
         Row(
@@ -82,7 +77,6 @@ internal fun CarouselSection(
             Text(
                 title,
                 style = MaterialTheme.typography.titleSmall,
-                color = textColor,
                 modifier = Modifier.padding(start = 12.dp)
             )
 
@@ -140,7 +134,7 @@ internal fun CarouselSection(
                 }
 
 
-                Text(label, style = MaterialTheme.typography.labelMedium, color = textColor)
+                Text(label, style = MaterialTheme.typography.labelMedium)
             }
         }
     }

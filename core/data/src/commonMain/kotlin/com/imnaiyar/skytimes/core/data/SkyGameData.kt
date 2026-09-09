@@ -2,6 +2,7 @@ package com.imnaiyar.skytimes.core.data
 
 import com.imnaiyar.skytimes.core.domain.GameTimeZone
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -26,6 +27,11 @@ interface IPeriod {
     fun isActive(): Boolean {
         val now = Clock.System.now().toLocalDateTime(GameTimeZone).date
         return now in date..endDate
+    }
+
+    fun remainingDays(): Int {
+        val now = Clock.System.now().toLocalDateTime(GameTimeZone).date
+        return now.daysUntil(if (isActive()) endDate else date)
     }
 }
 

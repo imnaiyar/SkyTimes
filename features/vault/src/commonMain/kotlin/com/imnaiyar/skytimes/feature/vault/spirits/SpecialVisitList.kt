@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -23,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.data.SpecialVisit
 import com.imnaiyar.skytimes.core.ui.Card
 import com.imnaiyar.skytimes.core.ui.DecoratedText
@@ -37,6 +39,7 @@ import com.imnaiyar.skytimes.core.ui.theme.labelTiny
 import com.imnaiyar.skytimes.feature.vault.common.DateFooterSection
 import com.imnaiyar.skytimes.feature.vault.common.FooterSection
 import com.imnaiyar.skytimes.feature.vault.common.ListScaffold
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun SpecialVisitList(
@@ -46,12 +49,22 @@ internal fun SpecialVisitList(
     onVisitClick: (String) -> Unit = {},
     onAreaClick: (String) -> Unit = {}
 ) {
+    val scope = rememberCoroutineScope()
+    val toast = LocalSnackBarState.current
     ListScaffold(visits, "Special Visits", onBack) { visit ->
         Column(
             Modifier.fillMaxWidth()
                 .clip(RoundedCorner)
                 .background(MaterialTheme.colorScheme.secondaryContainer)
-                .clickable(onClick = { onVisitClick(visit.guid) })
+                .clickable(onClick = {
+                    scope.launch {
+                        toast.showSnackbar(
+                            "This feature is under development.",
+                            withDismissAction = true
+                        )
+                    }
+                    //    onVisitClick(visit.guid)
+                })
         ) {
             Box(Modifier.fillMaxWidth()) {
                 // area image as bg
@@ -106,7 +119,15 @@ internal fun SpecialVisitList(
                                                 0.2f
                                             )
                                         )
-                                        .clickable { spirit?.guid?.let { onSpiritClick(it) } }
+                                        .clickable {
+                                            scope.launch {
+                                                toast.showSnackbar(
+                                                    "This feature is under development.",
+                                                    withDismissAction = true
+                                                )
+                                            }
+                                            //    spirit?.guid?.let { onSpiritClick(it) }
+                                        }
                                 ) {
                                     RemoteImage(
                                         spirit?.imageUrl ?: "",

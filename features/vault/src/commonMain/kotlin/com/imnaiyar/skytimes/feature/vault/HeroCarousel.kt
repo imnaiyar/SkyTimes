@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,6 +41,8 @@ data class HeroCarouselItem(
     val onCLick: () -> Unit,
     /** This is for special visits only to get all images of returning spirits */
     val images: List<String>? = null,
+
+    val isTSSection: Boolean = false
 )
 
 @Composable
@@ -54,67 +57,74 @@ fun HeroCarousel(items: List<HeroCarouselItem>) {
         }
     }
 
-    HorizontalPager(
-        pagerState,
-        modifier = Modifier.fillMaxWidth().height(250.dp).padding(5.dp)
-    ) { page ->
-        val item = items[page]
-        Box(
-            Modifier.fillMaxSize()
-                .clip(RoundedCorner)
-                .background(MaterialTheme.colorScheme.secondaryContainer)
-                .clickable(onClick = item.onCLick)
-        ) {
-            RemoteImage(
-                item.bgImage ?: "",
-                Modifier.matchParentSize(),
-                allowFullScreen = false,
-                contentScale = ContentScale.FillBounds,
-                shape = RoundedCorner
-            )
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val height = when (maxWidth) {
+            in 0.dp..600.dp -> 250.dp
+            in 600.dp..840.dp -> 350.dp
+            else -> 400.dp
+        }
+        HorizontalPager(
+            pagerState,
+            modifier = Modifier.fillMaxWidth().height(height).padding(5.dp)
+        ) { page ->
+            val item = items[page]
+            Box(
+                Modifier.fillMaxSize()
+                    .clip(RoundedCorner)
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .clickable(onClick = item.onCLick)
+            ) {
+                RemoteImage(
+                    item.bgImage ?: "",
+                    Modifier.matchParentSize(),
+                    allowFullScreen = false,
+                    contentScale = if (item.isTSSection) ContentScale.Fit else ContentScale.FillBounds,
+                    shape = RoundedCorner
+                )
 
-            if (item.images != null) {
-                Box(Modifier.matchParentSize().background(Color.Black.copy(0.8f)))
+                // special visits only ui
+                if (item.images != null) {
+                    Box(Modifier.matchParentSize().background(Color.Black.copy(0.8f)))
 
-                Row(
-                    Modifier.align(Alignment.Center).height(200.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    item.images.forEach {
-                        RemoteImage(it, Modifier.weight(1f), allowFullScreen = false)
+                    Row(
+                        Modifier.align(Alignment.Center),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        item.images.forEach {
+                            RemoteImage(it, Modifier.weight(1f), allowFullScreen = false)
+                        }
                     }
                 }
-            }
 
-            // black gradient
-            Box(
-                Modifier.matchParentSize().background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color.Transparent,
-                            Color.Black.copy(0.2f),
-                            Color.Black
+                // black gradient
+                Box(
+                    Modifier.matchParentSize().background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.Transparent,
+                                Color.Black.copy(0.2f),
+                                Color.Black
+                            )
                         )
                     )
                 )
-            )
 
-            Column(
-                Modifier.align(Alignment.BottomStart).padding(10.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    item.headerTitle,
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(item.title, style = MaterialTheme.typography.headlineSmall)
-                Text(
-                    item.subtitle,
-                    style = MaterialTheme.typography.labelMedium
-                )
-
+                Column(
+                    Modifier.align(Alignment.BottomStart).padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        item.headerTitle,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(item.title, style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        item.subtitle,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
             }
         }
     }

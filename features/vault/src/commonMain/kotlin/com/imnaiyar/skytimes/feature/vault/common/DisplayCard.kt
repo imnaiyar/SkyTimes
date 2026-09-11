@@ -1,6 +1,7 @@
 package com.imnaiyar.skytimes.feature.vault.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,11 +21,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.common.localDateToIso
 import com.imnaiyar.skytimes.core.domain.GameTimeZone
 import com.imnaiyar.skytimes.core.ui.BackScaffold
@@ -35,6 +38,7 @@ import com.imnaiyar.skytimes.core.ui.RoundedCorner
 import com.imnaiyar.skytimes.core.ui.RoundedCornerBottom
 import com.imnaiyar.skytimes.core.ui.RoundedCornerTop
 import com.imnaiyar.skytimes.core.ui.ScrollToTop
+import com.imnaiyar.skytimes.core.ui.SnackBarHostLocal
 import com.imnaiyar.skytimes.core.ui.generated.resources.Res
 import com.imnaiyar.skytimes.core.ui.generated.resources.calendar
 import com.imnaiyar.skytimes.core.ui.showScrollToTop
@@ -47,6 +51,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
 
+// TODO: Remove snackbar once features are implemented
 @Composable
 fun <T> ListScaffold(
     itemList: List<T>,
@@ -62,7 +67,7 @@ fun <T> ListScaffold(
             state.showScrollToTop(),
             modifier = Modifier,
             onClick = { scope.launch { state.animateScrollToItem(0) } })
-    }) {
+    }, snackBarHost = { SnackBarHostLocal() }) {
         Grid(state = state, contentPadding = it + PaddingValues(5.dp)) {
             items(itemList.size) { i ->
                 val item = itemList[i]
@@ -83,9 +88,19 @@ internal fun DisplayCard(
     footer: (@Composable ColumnScope.() -> Unit)? = null
 ) {
     val imageHeight = 200.dp
+    val scope = rememberCoroutineScope()
+    val toast = LocalSnackBarState.current
     Box(
-        Modifier.fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCorner)
+        Modifier.fillMaxWidth().clip(RoundedCorner)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .clickable(onClick = {
+                scope.launch {
+                    toast.showSnackbar(
+                        "This feature is under development",
+                        withDismissAction = true
+                    )
+                }
+            })
     ) {
 
         Column {

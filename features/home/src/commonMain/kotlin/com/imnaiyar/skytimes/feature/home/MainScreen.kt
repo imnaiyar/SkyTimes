@@ -16,8 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -41,10 +39,10 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.navigation.AppTab
 import com.imnaiyar.skytimes.core.navigation.LocalTutorialManager
 import com.imnaiyar.skytimes.core.navigation.MainRoute
+import com.imnaiyar.skytimes.core.ui.SnackBarHostLocal
 import com.imnaiyar.skytimes.core.ui.theme.titleTiny
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.lightmend_lantern
@@ -112,16 +110,7 @@ fun MainScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(bottomScroll.nestedScrollConnection),
-        snackbarHost = {
-            SnackbarHost(LocalSnackBarState.current) {
-                Snackbar(
-                    it,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    dismissActionContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
-        },
+        snackbarHost = { SnackBarHostLocal() },
         bottomBar = {
             BottomAppBar(scrollBehavior = bottomScroll) {
                 screens.forEachIndexed { index, screen ->

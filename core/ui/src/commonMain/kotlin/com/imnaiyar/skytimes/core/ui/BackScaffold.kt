@@ -10,9 +10,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import org.jetbrains.compose.resources.painterResource
 import com.imnaiyar.skytimes.core.ui.generated.resources.Res
 import com.imnaiyar.skytimes.core.ui.generated.resources.chevron_right
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * Scaffold with back icon action
@@ -23,6 +23,7 @@ fun BackScaffold(
     onNavigateBack: () -> Unit,
     actions: @Composable (RowScope.() -> Unit) = {},
     bottomBar: @Composable () -> Unit = {},
+    snackBarHost: @Composable () -> Unit = {},
     content: @Composable (padding: PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -41,6 +42,7 @@ fun BackScaffold(
                 }
             )
         },
+        snackbarHost = snackBarHost,
         bottomBar = bottomBar
     ) {
         content(it)

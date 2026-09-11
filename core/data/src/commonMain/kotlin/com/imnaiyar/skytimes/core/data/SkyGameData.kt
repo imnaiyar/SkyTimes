@@ -1,8 +1,10 @@
 package com.imnaiyar.skytimes.core.data
 
 import com.imnaiyar.skytimes.core.domain.GameTimeZone
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.daysUntil
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -513,7 +515,7 @@ class SkyDataResolver {
             TravelingSpirit(
                 o.s("guid")!!,
                 o.date("date") ?: LocalDate(1970, 1, 1),
-                o.date("endDate") ?: o.date("date") ?: LocalDate(1970, 1, 1),
+                o.date("date")!!.plus(3, DateTimeUnit.DAY),
             )
         }
         val visits = arr("specialVisits") { o ->

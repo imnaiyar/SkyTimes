@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,16 +20,32 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.data.SkyData
 import com.imnaiyar.skytimes.core.navigation.navigateTo
 import com.imnaiyar.skytimes.core.ui.BackScaffold
+import com.imnaiyar.skytimes.core.ui.SnackBarHostLocal
 import com.imnaiyar.skytimes.feature.vault.common.SearchBar
 import com.imnaiyar.skytimes.feature.vault.nav.CategoryList
 import com.imnaiyar.skytimes.feature.vault.nav.ListRoute
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackStack<NavKey>) {
     var query by remember { mutableStateOf("") }
+
+    val snackBarState = LocalSnackBarState.current
+    val scope = rememberCoroutineScope()
+
+    val inDevelopmentToast: () -> Unit =
+        {
+            scope.launch {
+                snackBarState.showSnackbar(
+                    "This feature is still in development.",
+                    withDismissAction = true
+                )
+            }
+        }
 
     val activeItems = remember(skyData) {
         val seasons = skyData.seasons.items.filter { it.isActive() }
@@ -42,7 +59,8 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
                     "Season",
                     "Ends in ${it.remainingDays()} days",
                     it.imageUrl,
-                    {})
+                    inDevelopmentToast
+                )
             },
 
             events.map {
@@ -51,7 +69,8 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
                     "Event",
                     "Ends in ${it.remainingDays()} days",
                     it.event!!.imageUrl,
-                    {})
+                    inDevelopmentToast
+                )
             },
             travelingSpirits.map {
                 HeroCarouselItem(
@@ -59,7 +78,9 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
                     "Traveling Spirit \u2022 TS #${it.number}",
                     "Ends in ${it.remainingDays()} days",
                     it.spirit?.imageUrl,
-                    {})
+                    inDevelopmentToast,
+                    isTSSection = true
+                )
             },
 
             specialVisit.map {
@@ -68,7 +89,7 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
                     "Special Visit",
                     "Ends in ${it.remainingDays()} days",
                     it.area?.imageUrl,
-                    {},
+                    inDevelopmentToast,
                     it.spirits.map { s -> s.spirit?.imageUrl ?: "" }
                 )
             }
@@ -113,7 +134,7 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
             filteredTravelingSpirits.isEmpty() && filteredSpecialVisits.isEmpty()
 
     Box(contentAlignment = Alignment.Center) {
-        BackScaffold("Vault Archive", onNavigateBack) {
+        BackScaffold("Vault Archive", onNavigateBack, snackBarHost = { SnackBarHostLocal() }) {
             LazyColumn(
                 contentPadding = it,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -142,51 +163,62 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
                 }
 
                 // Season
-                item {
-                    CarouselSection(
-                        "Seasons",
-                        filteredSeasons.reversed().map { data ->
-                            CarouselItemType.CarouselSectionItems(
-                                data.name,
-                                data.shortName,
-                                data.imageUrl,
-                            )
-                        }
-                    ) { navStack.navigateTo(ListRoute(CategoryList.SeasonsList)) }
+                if (filteredSeasons.isNotEmpty()) {
+                    item {
+                        CarouselSection(
+                            "Seasons",
+                            filteredSeasons.reversed().map { data ->
+                                CarouselItemType.CarouselSectionItems(
+                                    data.name,
+                                    data.shortName,
+                                    data.imageUrl,
+                                    inDevelopmentToast
+                                )
+                            }
+                        ) { navStack.navigateTo(ListRoute(CategoryList.SeasonsList)) }
+                    }
                 }
 
                 // events
-                item {
-                    CarouselSection("Events", filteredEvents.reversed().map { data ->
-                        CarouselItemType.CarouselSectionItems(
-                            data.name,
-                            data.shortName ?: data.name.replace("Days of ", ""),
-                            data.imageUrl
-                        )
-                    }) { navStack.navigateTo(ListRoute(CategoryList.EventsList)) }
+                if (filteredEvents.isNotEmpty()) {
+                    item {
+                        CarouselSection("Events", filteredEvents.reversed().map { data ->
+                            CarouselItemType.CarouselSectionItems(
+                                data.name,
+                                data.shortName ?: data.name.replace("Days of ", ""),
+                                data.imageUrl,
+                                inDevelopmentToast
+                            )
+                        }) { navStack.navigateTo(ListRoute(CategoryList.EventsList)) }
+                    }
                 }
 
                 // traveling spirit
-                item {
-                    CarouselSection(
-                        "Traveling Spirits",
-                        filteredTravelingSpirits.reversed().map { data ->
-                            CarouselItemType.CarouselSectionItems(
-                                (data.spirit?.name ?: "Unknown Spirit") + " (#${data.number})",
-                                data.spirit?.name ?: "Unknown",
-                                data.spirit?.imageUrl,
-                                imageScale = ContentScale.Fit
-                            )
-                        }) { navStack.navigateTo(ListRoute(CategoryList.TravelingSpiritsList)) }
+                if (filteredTravelingSpirits.isNotEmpty()) {
+                    item {
+                        CarouselSection(
+                            "Traveling Spirits",
+                            filteredTravelingSpirits.reversed().map { data ->
+                                CarouselItemType.CarouselSectionItems(
+                                    (data.spirit?.name ?: "Unknown Spirit") + " (#${data.number})",
+                                    data.spirit?.name ?: "Unknown",
+                                    data.spirit?.imageUrl,
+                                    inDevelopmentToast,
+                                    imageScale = ContentScale.Fit,
+                                )
+                            }) { navStack.navigateTo(ListRoute(CategoryList.TravelingSpiritsList)) }
+                    }
                 }
 
                 // Special visit
-                item {
-                    CarouselSection(
-                        "Special Visits",
-                        filteredSpecialVisits.reversed().map { data ->
-                            CarouselItemType.CarouselSpecialVisit(data)
-                        }) { navStack.navigateTo(ListRoute(CategoryList.SpecialVisitsList)) }
+                if (filteredSpecialVisits.isNotEmpty()) {
+                    item {
+                        CarouselSection(
+                            "Special Visits",
+                            filteredSpecialVisits.reversed().map { data ->
+                                CarouselItemType.CarouselSpecialVisit(data, inDevelopmentToast)
+                            }) { navStack.navigateTo(ListRoute(CategoryList.SpecialVisitsList)) }
+                    }
                 }
             }
         }

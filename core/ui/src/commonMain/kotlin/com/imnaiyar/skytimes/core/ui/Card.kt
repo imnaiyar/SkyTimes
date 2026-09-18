@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.core.ui.RoundedCorner
 import androidx.compose.material3.Card as OGCard
 
 @Composable
@@ -19,12 +18,13 @@ fun Card(
     shape: Shape = RoundedCorner,
     color: Color = MaterialTheme.colorScheme.surfaceContainer,
     elevation: CardElevation = CardDefaults.cardElevation(),
+    border: BorderStroke? = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     content: @Composable ColumnScope.() -> Unit
 ) {
     OGCard(
         modifier = modifier,
         colors = CardDefaults.cardColors(color),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = border,
         elevation = elevation,
         shape = shape
     ) {

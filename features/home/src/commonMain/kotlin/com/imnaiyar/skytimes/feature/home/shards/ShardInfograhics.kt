@@ -28,9 +28,10 @@ import com.imnaiyar.skytimes.core.domain.ShardData
 import com.imnaiyar.skytimes.core.domain.SkyHelperCDN
 import com.imnaiyar.skytimes.core.ui.RemoteImage
 import com.imnaiyar.skytimes.core.ui.SlidingToggle
+import com.imnaiyar.skytimes.core.ui.generated.resources.map
 import com.imnaiyar.skytimes.feature.home.generated.resources.Res
 import com.imnaiyar.skytimes.feature.home.generated.resources.data
-import com.imnaiyar.skytimes.feature.home.generated.resources.map
+import com.imnaiyar.skytimes.core.ui.generated.resources.Res as CoreRes
 
 
 @Composable
@@ -76,7 +77,7 @@ fun ShardInfographics(shard: ShardData) {
         )
 
         SlidingToggle(
-            icons = listOf(Res.drawable.map, Res.drawable.data),
+            icons = listOf(CoreRes.drawable.map, Res.drawable.data),
             selectedIndex = if (isFlipped) 1 else 0,
             itemSize = 30.dp,
             useHaptics = true,

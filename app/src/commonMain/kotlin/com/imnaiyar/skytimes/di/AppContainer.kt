@@ -3,6 +3,7 @@ package com.imnaiyar.skytimes.di
 import com.imnaiyar.skytimes.FirstLaunchTutorialFlow
 import com.imnaiyar.skytimes.core.common.AppInitializer
 import com.imnaiyar.skytimes.core.data.ClockRepository
+import com.imnaiyar.skytimes.core.data.SkyDataRepository
 import com.imnaiyar.skytimes.core.onboarding.TutorialManager
 import com.imnaiyar.skytimes.feature.quests.QuestRepository
 import com.imnaiyar.skytimes.feature.reminders.ReminderRepository
@@ -30,13 +31,15 @@ class AppContainer() {
 
     val themeController = ThemeController(settingsRepository, applicationScope)
     val clockRepository = ClockRepository(applicationScope)
+    val skyDataRepository = SkyDataRepository()
     val notificationsToggle = SettingsNotificationsToggle(settingsRepository)
 
 
     val appInitializer = AppInitializer(
         listOf(
             settingsRepository,
-            reminderRepository
+            reminderRepository,
+            skyDataRepository
         )
     )
 

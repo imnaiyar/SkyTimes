@@ -5,7 +5,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -14,10 +13,13 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import com.imnaiyar.skytimes.core.navigation.AppRoute
 import com.imnaiyar.skytimes.core.navigation.MainRoute
 import com.imnaiyar.skytimes.core.navigation.ThemeSettingsRoute
-import com.imnaiyar.skytimes.core.navigation.VaultRoute
+import com.imnaiyar.skytimes.core.navigation.navigateTo
 import com.imnaiyar.skytimes.feature.home.MainScreen
 import com.imnaiyar.skytimes.feature.settings.ThemePage
-import com.imnaiyar.skytimes.feature.vault.MainArchive
+import com.imnaiyar.skytimes.feature.vault.nav.Archive
+import com.imnaiyar.skytimes.feature.vault.nav.VaultRoutes
+import com.imnaiyar.skytimes.feature.vault.nav.vaultEntries
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
@@ -25,12 +27,12 @@ import kotlinx.serialization.modules.polymorphic
  * Explicit polymorphic registration keeps navigation state restorable on every
  * supported Compose Multiplatform target, including iOS and web.
  */
+@OptIn(ExperimentalSerializationApi::class)
 private val appNavigationStateConfiguration = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
-            subclass(MainRoute::class, MainRoute.serializer())
-            subclass(VaultRoute::class, VaultRoute.serializer())
-            subclass(ThemeSettingsRoute::class, ThemeSettingsRoute.serializer())
+            subclassesOfSealed<AppRoute>()
+            subclassesOfSealed<VaultRoutes>()
         }
     }
 }
@@ -38,7 +40,8 @@ private val appNavigationStateConfiguration = SavedStateConfiguration {
 @ExperimentalMaterial3Api
 @Composable
 fun AppNavigation() {
-    val backStack = rememberNavBackStack(appNavigationStateConfiguration, MainRoute)
+    val backStack =
+        rememberNavBackStack(appNavigationStateConfiguration, MainRoute)
 
     NavDisplay(
         backStack = backStack,
@@ -58,23 +61,17 @@ fun AppNavigation() {
         entryProvider = entryProvider {
             entry<MainRoute> {
                 MainScreen(
-                    onOpenVault = { backStack.navigateTo(VaultRoute) },
+                    onOpenVault = { backStack.navigateTo(Archive) },
                     onOpenThemeSettings = { backStack.navigateTo(ThemeSettingsRoute) },
                     backStack
                 )
             }
-            entry<VaultRoute> {
-                MainArchive()
-            }
-            
+
             entry<ThemeSettingsRoute> {
                 ThemePage(onNavigateBack = { backStack.removeLastOrNull() })
             }
+
+            vaultEntries(backStack)
         }
     )
-}
-
-/** Prevents repeated taps from pushing the same destination more than once. */
-private fun NavBackStack<NavKey>.navigateTo(route: AppRoute) {
-    if (lastOrNull() != route) add(route)
 }

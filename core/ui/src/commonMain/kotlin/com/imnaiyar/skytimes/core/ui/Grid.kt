@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.imnaiyar.skytimes.core.ui.MinFlowRowWidth
 
 
 enum class GridType {

@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.imnaiyar.skytimes.core.common.LocalApplicationScope
 import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.data.LocalClockRepository
+import com.imnaiyar.skytimes.core.data.LocalSkyDataRepository
 import com.imnaiyar.skytimes.core.navigation.LocalTutorialManager
 import com.imnaiyar.skytimes.core.onboarding.TutorialHost
 import com.imnaiyar.skytimes.core.ui.LocalClockAnimation
@@ -100,7 +101,8 @@ fun App() {
                         LocalUse24HourClock provides settings.use24HourClock,
                         LocalClockAnimation provides settings.clockAnimation,
                         LocalApplicationScope provides appContainer.applicationScope,
-                        LocalSnackBarState provides remember { SnackbarHostState() }
+                        LocalSnackBarState provides remember { SnackbarHostState() },
+                        LocalSkyDataRepository provides appContainer.skyDataRepository
                     ) {
                         TutorialHost(manager = appContainer.tutorialManager) {
                             AppNavigation()

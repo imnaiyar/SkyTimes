@@ -23,6 +23,7 @@ import com.imnaiyar.skytimes.core.domain.EventDetails
 import com.imnaiyar.skytimes.core.domain.EventTimeUtils
 import com.imnaiyar.skytimes.core.domain.Times
 import com.imnaiyar.skytimes.core.ui.contextClickable
+import com.imnaiyar.skytimes.core.ui.success
 import com.materialkolor.ktx.blend
 import kotlin.time.Instant
 

@@ -60,6 +60,7 @@ import org.jetbrains.compose.resources.painterResource
 fun MainScreen(
     onOpenVault: () -> Unit,
     onOpenThemeSettings: () -> Unit,
+    onOpenAcknowledgements: () -> Unit,
     backStack: NavBackStack<NavKey>
 ) {
     val screens = remember { AppTab.entries }
@@ -212,6 +213,7 @@ fun MainScreen(
                         modifier = modifier,
                         fabPad = fabPad,
                         onOpenThemeSettings = onOpenThemeSettings,
+                        onOpenAcknowledgements = onOpenAcknowledgements,
                         reminderFlow = reminderFlow
                     )
                 }

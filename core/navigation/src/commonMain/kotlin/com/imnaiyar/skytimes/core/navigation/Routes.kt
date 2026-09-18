@@ -13,6 +13,9 @@ data object MainRoute : AppRoute
 @Serializable
 data object ThemeSettingsRoute : AppRoute
 
+@Serializable
+data object AcknowledgementsRoute : AppRoute
+
 
 /** Prevents repeated taps from pushing the same destination more than once. */
 fun NavBackStack<NavKey>.navigateTo(route: NavKey) {

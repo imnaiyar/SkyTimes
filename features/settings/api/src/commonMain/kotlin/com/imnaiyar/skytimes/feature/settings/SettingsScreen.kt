@@ -49,6 +49,7 @@ fun SettingsScreen(
     modifier: Modifier,
     fabPad: PaddingValues,
     onOpenThemeSettings: () -> Unit,
+    onOpenAcknowledgements: () -> Unit,
     reminderFlow: ReminderFlowController,
 ) {
     val viewModel = LocalSettingsViewModel.current
@@ -237,6 +238,18 @@ fun SettingsScreen(
                                 )
                             },
                             onClick = { uriHandler.openUri("https://next.skyhelper.xyz/privacy") }
+                        )
+                        HorizontalDivider()
+                        SettingsItem(
+                            "Acknowledgements",
+                            "Credits for the guides, data, and resources used by SkyTimes",
+                            action = {
+                                Icon(
+                                    painterResource(CoreUiRes.drawable.chevron_right),
+                                    contentDescription = "Open acknowledgements"
+                                )
+                            },
+                            onClick = onOpenAcknowledgements
                         )
                     }
                 }

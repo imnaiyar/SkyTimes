@@ -11,10 +11,12 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.imnaiyar.skytimes.core.navigation.AppRoute
+import com.imnaiyar.skytimes.core.navigation.AcknowledgementsRoute
 import com.imnaiyar.skytimes.core.navigation.MainRoute
 import com.imnaiyar.skytimes.core.navigation.ThemeSettingsRoute
 import com.imnaiyar.skytimes.core.navigation.navigateTo
 import com.imnaiyar.skytimes.feature.home.MainScreen
+import com.imnaiyar.skytimes.feature.settings.AcknowledgementsPage
 import com.imnaiyar.skytimes.feature.settings.ThemePage
 import com.imnaiyar.skytimes.feature.vault.nav.Archive
 import com.imnaiyar.skytimes.feature.vault.nav.VaultRoutes
@@ -63,12 +65,17 @@ fun AppNavigation() {
                 MainScreen(
                     onOpenVault = { backStack.navigateTo(Archive) },
                     onOpenThemeSettings = { backStack.navigateTo(ThemeSettingsRoute) },
+                    onOpenAcknowledgements = { backStack.navigateTo(AcknowledgementsRoute) },
                     backStack
                 )
             }
 
             entry<ThemeSettingsRoute> {
                 ThemePage(onNavigateBack = { backStack.removeLastOrNull() })
+            }
+
+            entry<AcknowledgementsRoute> {
+                AcknowledgementsPage(onNavigateBack = { backStack.removeLastOrNull() })
             }
 
             vaultEntries(backStack)

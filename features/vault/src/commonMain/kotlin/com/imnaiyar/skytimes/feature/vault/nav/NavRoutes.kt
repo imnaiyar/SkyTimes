@@ -33,27 +33,34 @@ data class ListRoute(val category: CategoryList) : VaultRoutes
 
 @Composable
 fun EntryProviderScope<NavKey>.vaultEntries(backStack: NavBackStack<NavKey>) {
-    val data by LocalSkyDataRepository.current.data.collectAsState()
+    val repository = LocalSkyDataRepository.current
+    val data by repository.data.collectAsState()
+    val error by repository.error.collectAsState()
 
     val onBack: () -> Unit = { backStack.removeLastOrNull() }
+    val onRefresh: suspend () -> Result<*> = {
+        repository.refresh(forceRefresh = true)
+    }
 
     entry<Archive> {
-        MainArchive(data!!, onBack, backStack)
+        MainArchive(data, error, onRefresh, onBack, backStack)
     }
 
     entry<ListRoute> { cat ->
-        when (cat.category) {
-            CategoryList.SeasonsList -> SeasonList(data!!.seasons.items.reversed(), onBack)
-            CategoryList.EventsList -> EventList(data!!.events.items.reversed(), onBack)
-            CategoryList.TravelingSpiritsList -> TravelingSpiritList(
-                data!!.travelingSpirits.items.reversed(),
-                onBack
-            )
+        data?.let { currentData ->
+            when (cat.category) {
+                CategoryList.SeasonsList -> SeasonList(currentData.seasons.items.reversed(), onBack)
+                CategoryList.EventsList -> EventList(currentData.events.items.reversed(), onBack)
+                CategoryList.TravelingSpiritsList -> TravelingSpiritList(
+                    currentData.travelingSpirits.items.reversed(),
+                    onBack
+                )
 
-            CategoryList.SpecialVisitsList -> SpecialVisitList(
-                data!!.specialVisits.items.reversed(),
-                onBack
-            )
-        }
+                CategoryList.SpecialVisitsList -> SpecialVisitList(
+                    currentData.specialVisits.items.reversed(),
+                    onBack
+                )
+            }
+        } ?: MainArchive(null, error, onRefresh, onBack, backStack)
     }
 }

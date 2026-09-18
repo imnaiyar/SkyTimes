@@ -1,13 +1,24 @@
 package com.imnaiyar.skytimes.feature.vault
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +35,8 @@ import com.imnaiyar.skytimes.core.common.LocalSnackBarState
 import com.imnaiyar.skytimes.core.data.SkyData
 import com.imnaiyar.skytimes.core.navigation.navigateTo
 import com.imnaiyar.skytimes.core.ui.BackScaffold
+import com.imnaiyar.skytimes.core.ui.Callout
+import com.imnaiyar.skytimes.core.ui.CalloutType
 import com.imnaiyar.skytimes.core.ui.SnackBarHostLocal
 import com.imnaiyar.skytimes.feature.vault.common.SearchBar
 import com.imnaiyar.skytimes.feature.vault.nav.CategoryList
@@ -31,7 +44,86 @@ import com.imnaiyar.skytimes.feature.vault.nav.ListRoute
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackStack<NavKey>) {
+fun MainArchive(
+    skyData: SkyData?,
+    loadError: Throwable?,
+    onRefresh: suspend () -> Result<*>,
+    onNavigateBack: () -> Unit,
+    navStack: NavBackStack<NavKey>
+) {
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    val refresh: () -> Unit = {
+        if (!isRefreshing) {
+            scope.launch {
+                isRefreshing = true
+                try {
+                    onRefresh()
+                } finally {
+                    isRefreshing = false
+                }
+            }
+        }
+    }
+
+    if (skyData == null) {
+        ArchiveFallback(loadError, isRefreshing, refresh, onNavigateBack)
+        return
+    }
+
+    MainArchiveContent(skyData, loadError, isRefreshing, refresh, onNavigateBack, navStack)
+}
+
+@Composable
+private fun ArchiveFallback(
+    loadError: Throwable?,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    BackScaffold(
+        "Vault Archive",
+        onNavigateBack,
+        snackBarHost = { SnackBarHostLocal() }) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                "Archive data is unavailable",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(Modifier.padding(4.dp))
+            Text(
+                loadError?.message ?: "SkyGame data could not be loaded.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(Modifier.padding(8.dp))
+            RefreshButton(isRefreshing, onRefresh)
+            if (loadError != null) {
+                ErrorDetails(loadError)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MainArchiveContent(
+    skyData: SkyData,
+    loadError: Throwable?,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    onNavigateBack: () -> Unit,
+    navStack: NavBackStack<NavKey>
+) {
     var query by remember { mutableStateOf("") }
 
     val snackBarState = LocalSnackBarState.current
@@ -97,7 +189,7 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
         ).flatten()
     }
 
-    val filteredSeasons = remember(query) {
+    val filteredSeasons = remember(query, skyData) {
         if (query.isBlank()) skyData.seasons.items
         else skyData.seasons.items.filter {
             it.name.contains(query, ignoreCase = true) || it.shortName.contains(
@@ -107,7 +199,7 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
         }
     }
 
-    val filteredEvents = remember(query) {
+    val filteredEvents = remember(query, skyData) {
         if (query.isBlank()) skyData.events.items
         else skyData.events.items.filter {
             it.name.contains(query, ignoreCase = true) || it.shortName?.contains(
@@ -117,19 +209,20 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
         }
     }
 
-    val filteredTravelingSpirits = remember(query) {
+    val filteredTravelingSpirits = remember(query, skyData) {
         if (query.isBlank()) skyData.travelingSpirits.items
         else skyData.travelingSpirits.items.filter {
             it.spirit?.name?.contains(query, ignoreCase = true) == true
         }
     }
 
-    val filteredSpecialVisits = remember(query) {
+    val filteredSpecialVisits = remember(query, skyData) {
         if (query.isBlank()) skyData.specialVisits.items
         else skyData.specialVisits.items.filter {
             it.name?.contains(query, ignoreCase = true) == true
         }
     }
+
     val isAllEmpty = filteredSeasons.isEmpty() && filteredEvents.isEmpty() &&
             filteredTravelingSpirits.isEmpty() && filteredSpecialVisits.isEmpty()
 
@@ -140,6 +233,16 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.imePadding()
             ) {
+                if (loadError != null) {
+                    item {
+                        Callout(
+                            text = loadError.message ?: "SkyGame data refresh failed.",
+                            type = CalloutType.ERROR,
+                            title = "Using cached archive data"
+                        )
+                        RefreshButton(isRefreshing, onRefresh)
+                    }
+                }
                 item { SearchBar(query) { q -> query = q } }
 
                 if (isAllEmpty && query.isNotBlank()) return@LazyColumn item {
@@ -222,5 +325,42 @@ fun MainArchive(skyData: SkyData, onNavigateBack: () -> Unit, navStack: NavBackS
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RefreshButton(isRefreshing: Boolean, onRefresh: () -> Unit) {
+    Button(onClick = onRefresh, enabled = !isRefreshing) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (isRefreshing) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+            Text(if (isRefreshing) "Refreshing..." else "Refresh")
+        }
+    }
+}
+
+@Composable
+private fun ErrorDetails(error: Throwable) {
+    var showDetails by remember { mutableStateOf(false) }
+
+    TextButton(onClick = { showDetails = !showDetails }) {
+        Text(if (showDetails) "Hide error details" else "Show error details")
+    }
+
+    AnimatedVisibility(showDetails) {
+        Text(
+            error.stackTraceToString(),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }

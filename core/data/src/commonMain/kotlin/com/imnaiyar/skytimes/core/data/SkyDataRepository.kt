@@ -33,6 +33,8 @@ class SkyDataRepository(
     private val refreshMutex = Mutex()
     private val _data = MutableStateFlow<SkyData?>(null)
     val data: StateFlow<SkyData?> = _data.asStateFlow()
+    private val _error = MutableStateFlow<Throwable?>(null)
+    val error: StateFlow<Throwable?> = _error.asStateFlow()
 
     override suspend fun initialize() {
         refresh().getOrThrow()
@@ -43,6 +45,7 @@ class SkyDataRepository(
         val cached = readCache()
         if (!forceRefresh && cached != null && now - cached.timestamp < CacheLifetime) {
             _data.value = cached.data
+            _error.value = null
             return@withLock Result.success(cached.data)
         }
 
@@ -56,10 +59,12 @@ class SkyDataRepository(
             storage.putString(CacheJsonKey, body)
             storage.putLong(CacheTimestampKey, now.toEpochMilliseconds())
             _data.value = resolved
+            _error.value = null
             resolved
         }
 
         result.exceptionOrNull()?.let { failure ->
+            _error.value = failure
             cached?.let { _data.value = it.data }
         }
         return@withLock result
